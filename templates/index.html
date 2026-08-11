@@ -1,0 +1,3568 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="dark">
+<meta name="description" content="Просмотр повтора боя — {{MAP_NAME}}">
+<title>{{MAP_NAME}}</title>
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="icon" type="image/png" href="../favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+
+{{TOKENS}}
+
+:root {
+    --map-w: 1000;
+    --map-h: 1000;
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    scrollbar-width: thin;
+    scrollbar-color: rgb(255 255 255 / 35%) transparent;
+    background: var(--color-bg);
+}
+
+body {
+    font-family: var(--font-ui);
+
+    background: transparent;
+    color: var(--text);
+    display: flex;
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+    padding: 11px;
+    gap: 11px;
+    box-sizing: border-box;
+}
+
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background: url('../backgrounds.png') center / cover no-repeat, var(--color-bg);
+    filter: brightness(var(--bg-brightness, 1));
+    pointer-events: none;
+}
+
+button {
+    font: inherit;
+    color: inherit;
+}
+
+img {
+    max-width: 100%;
+    display: block;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+#map-area {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    min-width: 0;
+    background: var(--card-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-xl);
+    padding: 16px;
+    overflow: hidden;
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    box-shadow: var(--glass-shadow);
+    transition: box-shadow var(--duration-med) var(--ease-out);
+}
+
+#canvas-wrap {
+    position: relative;
+    width: 100%;
+    max-width: 1000px;
+    max-height: 100%;
+    aspect-ratio: var(--map-w, 1) / var(--map-h, 1);
+    flex-shrink: 1;
+}
+
+canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    background: #101314;
+    border-radius: var(--radius-md);
+    box-shadow: 0 0 0 1px rgb(255 255 255 / 6%), var(--glass-shadow);
+    cursor: grab;
+}
+
+canvas:active { cursor: grabbing; }
+
+#fgCanvas {
+    background: transparent;
+    touch-action: none;
+}
+
+#damage-popups {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.dmg-popup {
+    position: absolute;
+    font-family: var(--font-mono);
+    font-size: 18px;
+    font-weight: 700;
+    white-space: nowrap;
+    text-shadow: 0 0 5px rgba(0, 0, 0, 0.9), 0 0 2px #000, 1px 1px 2px rgba(0, 0, 0, 0.8);
+    pointer-events: none;
+    z-index: 50;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+#map-toolbar {
+    flex-shrink: 0;
+    align-self: flex-end;
+    width: 50px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 8px;
+    background: var(--card-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-xl);
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    box-shadow: var(--glass-shadow);
+}
+
+.zoom-btn,
+.filter-toggle-btn {
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--glass-bg, rgb(255 255 255 / 8%));
+    color: var(--text-secondary);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-border);
+    cursor: pointer;
+    backdrop-filter: blur(var(--glass-blur-sm)) saturate(var(--glass-saturate));
+    -webkit-backdrop-filter: blur(var(--glass-blur-sm)) saturate(var(--glass-saturate));
+    transition: color var(--duration-med) var(--ease-out), box-shadow var(--duration-med) var(--ease-out), border-color var(--duration-med) var(--ease-out), translate var(--duration-fast) var(--ease-out), scale var(--duration-fast) var(--ease-out);
+}
+
+.zoom-btn { font-family: var(--font-mono); font-size: 1.1em; }
+.filter-toggle-btn { font-size: 1em; }
+
+.hits-link-btn {
+    position: relative;
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--glass-bg, rgb(255 255 255 / 8%));
+    color: var(--text-secondary);
+    text-decoration: none;
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-border);
+    cursor: pointer;
+    backdrop-filter: blur(var(--glass-blur-sm)) saturate(var(--glass-saturate));
+    -webkit-backdrop-filter: blur(var(--glass-blur-sm)) saturate(var(--glass-saturate));
+    transition: color var(--duration-med) var(--ease-out), box-shadow var(--duration-med) var(--ease-out), background var(--duration-med) var(--ease-out), border-color var(--duration-med) var(--ease-out), translate var(--duration-fast) var(--ease-out), scale var(--duration-fast) var(--ease-out);
+}
+
+.hits-link-btn::after {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: calc(var(--radius-md) + 3px);
+    padding: 2px;
+    box-sizing: border-box;
+    background: conic-gradient(from 0deg,
+        transparent 0deg,
+        transparent 240deg,
+        rgb(var(--color-accent-rgb) / 0%) 265deg,
+        rgb(var(--color-accent-rgb) / 25%) 305deg,
+        rgb(var(--color-accent-rgb) / 60%) 345deg,
+        rgb(var(--color-accent-rgb) / 0%) 360deg);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    pointer-events: none;
+    opacity: 0;
+    filter: drop-shadow(0 0 3px rgb(var(--color-accent-rgb) / 55%));
+    animation: hits-btn-snake 3s linear 1;
+}
+
+@keyframes hits-btn-snake {
+    0%   { opacity: 1; transform: rotate(0deg); }
+    100% { opacity: 1; transform: rotate(1080deg); }
+}
+.hits-link-btn:hover {
+    color: var(--color-accent);
+    box-shadow: var(--shadow-border-hover);
+    background: rgb(var(--color-accent-soft-rgb) / 45%);
+    translate: 0 -1px;
+}
+.hits-link-btn:active { scale: 0.96; translate: 0 0; }
+.hits-link-btn.is-disabled { opacity: 0.3; pointer-events: none; }
+
+.zoom-btn:hover,
+.filter-toggle-btn:hover {
+    color: var(--text);
+    border-color: var(--glass-border-strong);
+    background: var(--glass-bg-strong, rgb(255 255 255 / 14%));
+    box-shadow: var(--shadow-border-hover);
+    translate: 0 -1px;
+}
+
+.zoom-btn:active,
+.filter-toggle-btn:active { scale: 0.96; translate: 0 0; }
+
+.filter-toggle-btn.is-active {
+    color: var(--color-accent);
+    background: rgb(var(--color-accent-soft-rgb) / 45%);
+    border-color: var(--glass-border-strong);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 16%);
+}
+
+.zoom-level {
+    font-family: var(--font-mono);
+    font-size: 0.6em;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    text-align: center;
+    color: var(--text-dim);
+    background: var(--glass-bg, rgb(255 255 255 / 8%));
+    border: 1px solid var(--glass-border);
+    padding: 5px 2px;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-border);
+    backdrop-filter: blur(var(--glass-blur-sm)) saturate(var(--glass-saturate));
+    -webkit-backdrop-filter: blur(var(--glass-blur-sm)) saturate(var(--glass-saturate));
+    font-variant-numeric: tabular-nums;
+}
+
+.reset-icon          { display: block; }
+.reset-icon.is-spinning { animation: spin 0.45s cubic-bezier(0.4, 0, 0.2, 1) 1; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.map-filter-panel {
+    display: none;
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    z-index: 200;
+    width: 220px;
+    flex-direction: column;
+    gap: 6px;
+    background:
+        linear-gradient(180deg, rgb(255 255 255 / 6%), transparent 50%),
+        var(--panel-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    padding: 10px;
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    box-shadow: var(--glass-shadow);
+}
+
+.map-filter-panel.is-open { display: flex; }
+
+.map-filter-panel__title {
+    font-size: 0.58em;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-align: center;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+}
+
+.map-filter-panel__divider {
+    height: 1px;
+    background: var(--line);
+    margin: 2px 0;
+}
+
+.map-filter-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 10px;
+    border: 1px solid var(--line-lt);
+    border-radius: var(--radius-md);
+    font-size: 0.72em;
+    font-weight: 600;
+    color: var(--text-secondary);
+    background: transparent;
+    cursor: pointer;
+    user-select: none;
+    transition: color 0.16s, border-color 0.16s, background 0.16s, scale 0.15s;
+}
+
+.map-filter-option:active { scale: 0.96; }
+
+.map-filter-option:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+}
+
+.map-filter-option:hover:not(.is-on) {
+    border-color: var(--glass-border-strong);
+    background: rgb(255 255 255 / 6%);
+}
+
+.map-filter-option.is-on {
+    color: var(--text);
+    border-color: var(--line-md);
+    background: var(--line);
+}
+
+.map-filter-option__dot {
+    flex-shrink: 0;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--line-lt);
+    border: 1px solid var(--line-md);
+    transition: background 0.16s, box-shadow 0.16s, border-color 0.16s;
+}
+
+.map-filter-option.is-on .map-filter-option__dot {
+    background: var(--team1);
+    border-color: var(--team1);
+    box-shadow: 0 0 6px var(--team1-mid);
+}
+
+#sidebar {
+    width: 42%;
+    flex: 0 0 42%;
+    min-width: 380px;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+    overflow: hidden;
+    background: transparent;
+    border: none;
+}
+
+.top-card {
+    flex-shrink: 0;
+    background: var(--card-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-xl);
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    box-shadow: var(--glass-shadow-stack);
+}
+
+#sidebar::-webkit-scrollbar             { width: 8px; }
+#sidebar::-webkit-scrollbar-track       { background: transparent; }
+#sidebar::-webkit-scrollbar-thumb       { background: linear-gradient(180deg, rgb(255 255 255 / 45%), rgb(255 255 255 / 22%)); border-radius: var(--radius-sm); }
+#sidebar::-webkit-scrollbar-thumb:hover { background: linear-gradient(180deg, rgb(255 255 255 / 60%), rgb(255 255 255 / 32%)); }
+
+.sb-content {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    gap: 11px;
+    overflow: hidden;
+}
+
+.sb-col {
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+    overflow: hidden;
+}
+
+.sb-col--left { border-right: none; }
+
+.sb-panel-wrap {
+    position: relative;
+    z-index: 5;
+    flex: 0 0 auto;
+    border-bottom: none;
+    background: var(--card-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-xl);
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    box-shadow: var(--glass-shadow-stack);
+}
+
+.sb-grow-wrap {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--card-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-xl);
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    box-shadow: var(--glass-shadow-stack);
+    overflow: hidden;
+}
+
+.sec-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    flex-shrink: 0;
+    font-size: 0.6em;
+    font-weight: 700;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+}
+
+.sec-title--spaced { margin-bottom: 8px; }
+
+.sec-title__line {
+    flex: 1;
+    height: 1.3px;
+    background: linear-gradient(to right, transparent, rgb(255 255 255 / 24%));
+    transition: background var(--duration-slow) var(--ease-out), box-shadow var(--duration-slow) var(--ease-out);
+}
+
+.sec-title__line:first-child {
+    background: linear-gradient(to left, transparent, rgb(255 255 255 / 24%));
+}
+
+.panel:hover          .sec-title__line,
+.dmg-log-panel:hover  .sec-title__line,
+.clans-panel:hover    .sec-title__line,
+.playback-panel:hover .sec-title__line,
+.roster-panel:hover   .sec-title__line {
+    background: linear-gradient(to right, transparent, rgb(var(--color-accent-rgb) / 55%));
+}
+
+.panel:hover          .sec-title__line:first-child,
+.dmg-log-panel:hover  .sec-title__line:first-child,
+.clans-panel:hover    .sec-title__line:first-child,
+.playback-panel:hover .sec-title__line:first-child,
+.roster-panel:hover   .sec-title__line:first-child {
+    background: linear-gradient(to left, transparent, rgb(var(--color-accent-rgb) / 55%));
+}
+
+.sb-header {
+    height: 46px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    overflow: hidden;
+    background: transparent;
+    border-bottom: none;
+}
+
+.sb-header__split {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.sb-header__map-name {
+    flex: 0 0 100%;
+    max-width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.05em;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: flex-basis 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+                max-width 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+                padding-left 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sb-header__split.has-capture .sb-header__map-name {
+    flex: 0 0 31%;
+    max-width: 31%;
+    padding-left: 10px;
+    border-left: 1px solid var(--line);
+    justify-content: flex-start;
+}
+
+.sb-header__capture {
+    position: relative;
+    flex: 0 0 0%;
+    max-width: 0%;
+    min-width: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    overflow: hidden;
+    opacity: 0;
+    transition: flex-basis 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+                max-width 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.3s ease 0.15s;
+}
+
+.sb-header__split.has-capture .sb-header__capture {
+    flex: 1 1 69%;
+    max-width: 69%;
+    padding-right: 10px;
+    opacity: 1;
+}
+
+.sb-header__capture.lines-2 .capture-line { flex: 1 1 50%; }
+.sb-header__capture.lines-1 .capture-line { flex: 1 1 100%; }
+
+.sb-header__capture.is-finishing .capture-line {
+    pointer-events: none;
+    transition: transform 0.4s cubic-bezier(0.55, 0, 1, 0.45), opacity 0.4s ease;
+}
+
+.sb-header__capture.is-finishing .capture-line:nth-child(odd)  { transform: translateX(-18px); opacity: 0; }
+.sb-header__capture.is-finishing .capture-line:nth-child(even) { transform: translateX(18px);  opacity: 0; }
+
+.sb-finish-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+
+.sb-finish-overlay.is-active { pointer-events: auto; }
+
+.sb-finish-overlay__text {
+    font-size: 0.85em;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    text-align: center;
+    white-space: nowrap;
+    opacity: 0;
+    transform: scale(0.8);
+    transition: opacity 1.7s cubic-bezier(0.16, 1, 0.3, 1) 0.4s,
+                transform 1.7s cubic-bezier(0.16, 1, 0.3, 1) 0.4s;
+}
+
+.sb-finish-overlay.is-active .sb-finish-overlay__text {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.sb-finish-overlay__text.win  { color: var(--team1); }
+.sb-finish-overlay__text.lose { color: var(--team2); }
+
+.capture-line {
+    position: relative;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: auto minmax(16px, 1fr) auto auto auto;
+    align-items: center;
+    column-gap: 8px;
+}
+
+.sb-header__capture.lines-2 .capture-line:first-child::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 1px;
+    background: var(--line);
+    opacity: 0.6;
+}
+
+.capture-line__name {
+    grid-column: 1;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.capture-line__bar {
+    grid-column: 2;
+    position: relative;
+    width: 100%;
+    min-width: 0;
+    border-radius: var(--radius-sm);
+    background: var(--line);
+    overflow: hidden;
+    box-shadow: var(--shadow-inset);
+}
+
+.capture-line__bar-fill {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 0%;
+    border-radius: var(--radius-sm);
+    background: var(--line-lt);
+    transition: width 0.15s linear, background-color 0.25s ease;
+}
+
+.capture-line__bar-fill.capturing-us    { background: var(--team1); }
+.capture-line__bar-fill.capturing-enemy { background: var(--team2); }
+
+.capture-line__percent {
+    grid-column: 3;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    color: var(--text-dim);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    transition: color 0.25s ease;
+}
+
+.capture-line__percent.capturing-us    { color: var(--team1); }
+.capture-line__percent.capturing-enemy { color: var(--team2); }
+
+.capture-line__timer {
+    grid-column: 4;
+    justify-self: end;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-family: var(--font-mono);
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+}
+
+.capture-line__clock-icon {
+    flex-shrink: 0;
+    display: block;
+    opacity: 0.9;
+}
+
+.capture-line__meta {
+    grid-column: 5;
+    justify-self: end;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.capture-line__tank-icon {
+    width: auto;
+    display: block;
+    flex-shrink: 0;
+    object-fit: contain;
+}
+
+.capture-line__players {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    color: var(--text-secondary);
+    line-height: 1;
+}
+
+.capture-line.size-lg { column-gap: 12px; }
+.capture-line.size-lg .capture-line__bar         { height: 10px; }
+.capture-line.size-lg .capture-line__name        { font-size: 0.82em; }
+.capture-line.size-lg .capture-line__percent     { font-size: 1.15em; }
+.capture-line.size-lg .capture-line__timer       { font-size: 0.82em; }
+.capture-line.size-lg .capture-line__clock-icon  { width: 10px; height: 10px; }
+.capture-line.size-lg .capture-line__tank-icon   { height: 16px; }
+.capture-line.size-lg .capture-line__players     { font-size: 0.82em; }
+
+.capture-line.size-sm { column-gap: 8px; }
+.capture-line.size-sm .capture-line__bar         { height: 5px; }
+.capture-line.size-sm .capture-line__name        { font-size: 0.64em; }
+.capture-line.size-sm .capture-line__percent     { font-size: 0.86em; }
+.capture-line.size-sm .capture-line__timer       { font-size: 0.64em; }
+.capture-line.size-sm .capture-line__clock-icon  { width: 8px; height: 8px; }
+.capture-line.size-sm .capture-line__tank-icon   { height: 13px; }
+.capture-line.size-sm .capture-line__players     { font-size: 0.64em; }
+
+.clans-panel {
+    position: relative;
+    flex-shrink: 0;
+    overflow: hidden;
+    padding: 4px 20px 14px;
+    border-bottom: none;
+}
+
+.score-row {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 6px;
+}
+
+.clan-name { font-size: 0.85em; font-weight: 700; letter-spacing: 0.6px; }
+.clan-name.ally  { color: var(--team1); }
+.clan-name.enemy { color: var(--team2); }
+
+.clan-slot {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.trophy-icon {
+    display: none;
+    flex-shrink: 0;
+    width: auto;
+    height: 1.2em;
+    filter: drop-shadow(0 0 4px rgb(255 197 61 / 55%)) drop-shadow(0 1px 1px rgb(0 0 0 / 35%));
+}
+
+.trophy-icon.is-visible {
+    display: block;
+    animation: trophy-pop 0.5s var(--ease-spring);
+}
+
+@keyframes trophy-pop {
+    from { transform: scale(0.5); opacity: 0; }
+    to   { transform: scale(1);   opacity: 1; }
+}
+
+.alive-count {
+    font-family: var(--font-mono);
+    font-size: 1.05em;
+    font-weight: 700;
+    padding: 3px 12px;
+    border-radius: var(--radius-full);
+    font-variant-numeric: tabular-nums;
+    backdrop-filter: blur(var(--glass-blur-sm)) saturate(var(--glass-saturate));
+    -webkit-backdrop-filter: blur(var(--glass-blur-sm)) saturate(var(--glass-saturate));
+}
+
+.alive-count.ally {
+    color: var(--team1);
+    background: var(--team1-dim);
+    box-shadow: 0 0 0 1px var(--team1-mid), inset 0 1px 0 rgb(255 255 255 / 10%);
+}
+
+.alive-count.enemy {
+    color: var(--team2);
+    background: var(--team2-dim);
+    box-shadow: 0 0 0 1px var(--team2-mid), inset 0 1px 0 rgb(255 255 255 / 10%);
+}
+
+.score-separator { color: var(--text-secondary); font-weight: 700; }
+
+.hp-bars {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.hp-value {
+    min-width: 65px;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 1.1em;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+}
+
+.hp-value.ally  { color: var(--team1); }
+.hp-value.enemy { color: var(--team2); }
+
+.hp-track {
+    flex: 1;
+    height: 10px;
+    position: relative;
+    display: flex;
+    overflow: hidden;
+    border-radius: var(--radius-full);
+    background: rgb(255 255 255 / 6%);
+    box-shadow: inset 0 1px 4px rgb(0 0 0 / 45%), 0 0 0 1px rgb(255 255 255 / 5%);
+}
+
+.hp-track::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    opacity: 0.55;
+    pointer-events: none;
+}
+
+.hp-track.ally  { justify-content: flex-end; }
+.hp-track.enemy { justify-content: flex-start; }
+
+.hp-track.ally::before  { background: linear-gradient(90deg, rgb(var(--team1-rgb) / 55%) 0%, rgb(var(--team1-rgb) / 0%) 100%); }
+.hp-track.enemy::before { background: linear-gradient(90deg, rgb(var(--team2-rgb) / 0%) 0%, rgb(var(--team2-rgb) / 55%) 100%); }
+
+.hp-track__fill {
+    position: relative;
+    z-index: 1;
+    flex-shrink: 0;
+    height: 100%;
+    border-radius: var(--radius-full);
+    transition: width 0.3s ease;
+}
+
+.hp-track__fill::after {
+    content: '';
+    position: absolute;
+    inset: 0 0 55% 0;
+    border-radius: var(--radius-full) var(--radius-full) 0 0;
+    background: rgb(255 255 255 / 12%);
+}
+
+.hp-track__fill.team-ally  {
+    background: linear-gradient(90deg, #2c9350, var(--team1));
+    box-shadow: 0 0 8px rgb(var(--team1-rgb) / 35%);
+}
+.hp-track__fill.team-enemy {
+    background: linear-gradient(90deg, #8f3a3a, var(--team2));
+    box-shadow: 0 0 8px rgb(var(--team2-rgb) / 35%);
+}
+
+.playback-panel {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 14px 20px 12px;
+}
+
+.timeline {
+    position: relative;
+    height: 24px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.timeline input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    height: 24px;
+    margin: 0;
+    background: transparent;
+    outline: none;
+    cursor: pointer;
+}
+
+.timeline input[type="range"]::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 4px;
+    border-radius: var(--radius-full);
+    background:
+        linear-gradient(to right,
+            #3ddc6d 0%, #3ddc6d var(--progress, 0%),
+            rgb(255 255 255 / 12%) var(--progress, 0%), rgb(255 255 255 / 12%) 100%);
+}
+
+.timeline input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    margin-top: -6px;
+    border-radius: 50%;
+    background:
+        radial-gradient(circle at 30% 24%, rgb(255 255 255 / 95%) 0%, rgb(255 255 255 / 55%) 45%, rgb(225 228 232 / 40%) 100%),
+        linear-gradient(160deg, rgb(255 255 255 / 88%), rgb(206 208 214 / 78%));
+    border: 1px solid rgb(255 255 255 / 55%);
+    cursor: pointer;
+    backdrop-filter: blur(14px) saturate(var(--glass-saturate));
+    -webkit-backdrop-filter: blur(14px) saturate(var(--glass-saturate));
+    box-shadow:
+        0 2px 8px rgb(0 0 0 / 38%),
+        0 0 0 1px rgb(255 255 255 / 10%),
+        inset 0 1px 1px rgb(255 255 255 / 85%),
+        inset 0 -3px 4px rgb(0 0 0 / 12%);
+    transition: transform var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
+    will-change: transform;
+}
+
+.timeline input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
+}
+
+.timeline input[type="range"]::-moz-range-track {
+    width: 100%;
+    height: 4px;
+    border-radius: var(--radius-full);
+    background:
+        linear-gradient(to right,
+            #3ddc6d 0%, #3ddc6d var(--progress, 0%),
+            rgb(255 255 255 / 12%) var(--progress, 0%), rgb(255 255 255 / 12%) 100%);
+}
+
+.timeline input[type="range"]::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background:
+        radial-gradient(circle at 30% 24%, rgb(255 255 255 / 95%) 0%, rgb(255 255 255 / 55%) 45%, rgb(225 228 232 / 40%) 100%),
+        linear-gradient(160deg, rgb(255 255 255 / 88%), rgb(206 208 214 / 78%));
+    border: 1px solid rgb(255 255 255 / 55%);
+    cursor: pointer;
+    backdrop-filter: blur(14px) saturate(var(--glass-saturate));
+    box-shadow:
+        0 2px 8px rgb(0 0 0 / 38%),
+        0 0 0 1px rgb(255 255 255 / 10%),
+        inset 0 1px 1px rgb(255 255 255 / 85%),
+        inset 0 -3px 4px rgb(0 0 0 / 12%);
+    transition: transform 0.15s ease;
+}
+
+.timeline input[type="range"]::-moz-range-thumb:hover { transform: scale(1.15); }
+
+.timeline-times {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 2px 2px -8px;
+    position: relative;
+    z-index: 1;
+    font-family: var(--font-mono);
+    font-size: 0.78em;
+    font-weight: 400;
+    letter-spacing: 0.4px;
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+}
+
+.timeline-times #timeCurrent,
+.timeline-times #timeTotal {
+    transition: color var(--duration-med) var(--ease-out);
+    color: var(--text-secondary);
+}
+
+.playback-panel:hover .timeline-times #timeCurrent {
+    color: var(--color-accent);
+}
+
+.controls-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    width: fit-content;
+    margin: 0 auto;
+    padding: 4px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgb(255 255 255 / 6%);
+    border-radius: var(--radius-full);
+    box-shadow: inset 0 1px 3px rgb(0 0 0 / 30%), inset 0 1px 0 rgb(255 255 255 / 6%);
+    transition: border-color var(--duration-med) var(--ease-out);
+}
+
+.controls-row:hover { border-color: rgb(255 255 255 / 10%); }
+
+.scrub-btn {
+    flex-shrink: 0;
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-secondary);
+    border: 1px solid rgb(255 255 255 / 8%);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background var(--duration-med) var(--ease-out), border-color var(--duration-med) var(--ease-out), color var(--duration-med) var(--ease-out), scale var(--duration-fast) var(--ease-out);
+}
+.scrub-btn:hover {
+    background: rgba(255, 255, 255, 0.09);
+    color: var(--text);
+    border-color: rgb(255 255 255 / 14%);
+}
+.scrub-btn:active { scale: 0.9; }
+.scrub-btn:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+
+.scrub-icon.spin-ccw { animation: spin-ccw 0.32s ease-out 1; }
+.scrub-icon.spin-cw  { animation: spin-cw 0.32s ease-out 1; }
+@keyframes spin-ccw { to { transform: rotate(-360deg); } }
+@keyframes spin-cw  { to { transform: rotate(360deg); } }
+
+.play-btn {
+    position: relative;
+    flex-shrink: 0;
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text);
+    border: 1px solid rgb(255 255 255 / 14%);
+    border-radius: 50%;
+    box-shadow: 0 2px 6px rgb(0 0 0 / 30%), inset 0 1px 0 rgb(255 255 255 / 16%);
+    cursor: pointer;
+    transition: background var(--duration-med) var(--ease-out), border-color var(--duration-med) var(--ease-out), color var(--duration-med) var(--ease-out), scale var(--duration-fast) var(--ease-out);
+}
+
+.play-btn svg {
+    position: absolute;
+    transition: opacity 0.15s cubic-bezier(0.2, 0, 0, 1), scale 0.15s cubic-bezier(0.2, 0, 0, 1), filter 0.15s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.play-btn .icon-play  { opacity: 1; scale: 1;    filter: blur(0); }
+.play-btn .icon-pause { opacity: 0; scale: 0.25; filter: blur(4px); }
+.play-btn.is-active .icon-play  { opacity: 0; scale: 0.25; filter: blur(4px); }
+.play-btn.is-active .icon-pause { opacity: 1; scale: 1;    filter: blur(0); }
+
+.play-btn:hover {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgb(255 255 255 / 20%);
+}
+
+.play-btn:active { scale: 0.92; }
+
+.play-btn:focus-visible,
+.speed-control__btn:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+}
+
+.speed-control {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.speed-control__btn {
+    height: 34px;
+    padding: 0 24px 0 16px;
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-secondary);
+    border: 1px solid rgb(255 255 255 / 8%);
+    border-radius: var(--radius-full);
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: 0.8em;
+    font-weight: 300;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+    outline: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='6' viewBox='0 0 9 6'%3E%3Cpolyline points='1,1 4.5,4.5 8,1' fill='none' stroke='%239a9a9a' stroke-width='1.3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    transition: color var(--duration-med) var(--ease-out), background-color var(--duration-med) var(--ease-out), border-color var(--duration-med) var(--ease-out);
+}
+
+.speed-control__btn:hover  { color: var(--text); background-color: rgba(255, 255, 255, 0.09); border-color: rgb(255 255 255 / 14%); }
+.speed-control__btn:active { scale: 0.96; }
+
+.speed-control__dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 50%;
+    min-width: 88px;
+    z-index: 200;
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    padding: 4px;
+    background:
+        linear-gradient(180deg, rgb(255 255 255 / 8%), transparent 50%),
+        rgba(28, 28, 30, 0.96);
+    border: 1px solid var(--glass-border-strong);
+    border-radius: var(--radius-lg);
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    box-shadow: var(--glass-shadow);
+    transform: translateX(-50%) translateY(-4px);
+    pointer-events: none;
+    transition: max-height 0.2s ease, opacity 0.2s ease, transform 0.2s ease;
+}
+
+.speed-control__dropdown.is-open {
+    max-height: 200px;
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+    pointer-events: auto;
+}
+
+.speed-control__option {
+    padding: 8px 12px;
+    border-radius: var(--radius-md);
+    font-family: var(--font-mono);
+    font-size: 0.75em;
+    font-weight: 400;
+    color: var(--text);
+    text-align: center;
+    cursor: pointer;
+    transition: background 0.14s, color 0.14s, scale 0.15s;
+}
+
+.speed-control__option:hover     { background: rgb(255 255 255 / 10%); color: var(--text); }
+.speed-control__option:active    { scale: 0.96; }
+.speed-control__option.is-selected { color: var(--color-accent); font-weight: 600; }
+
+.roster-panel {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 16px 14px 10px;
+}
+
+.team-filter {
+    position: relative;
+    display: flex;
+    gap: 6px;
+    margin-bottom: 14px;
+    padding: 4px;
+    background: rgba(0, 0, 0, 0.18);
+    border-radius: var(--radius-full);
+    border: 1px solid rgb(255 255 255 / 5%);
+}
+
+.team-filter__pill {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    height: calc(100% - 8px);
+    width: var(--pill-w, 0px);
+    transform: translateX(var(--pill-x, 0px));
+    background: var(--glass-bg-active);
+    border-radius: var(--radius-full);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 10%), 0 1px 4px rgb(0 0 0 / 20%);
+    transition: transform var(--duration-med) var(--ease-spring), width var(--duration-med) var(--ease-spring);
+    pointer-events: none;
+}
+
+.team-filter__btn {
+    position: relative;
+    z-index: 1;
+    flex: 1;
+    padding: 7px 4px;
+    font-family: var(--font-ui);
+    font-size: 0.58em;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-full);
+    box-shadow: none;
+    cursor: pointer;
+    transition: color 0.2s ease, scale 0.15s ease;
+}
+
+.team-filter__btn:hover  { color: var(--text-secondary); }
+.team-filter__btn:active { scale: 0.96; }
+
+.team-filter__btn.is-active { color: var(--text); }
+
+.player-list {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    overflow: hidden;
+}
+
+.player-row {
+    position: relative;
+    flex: 1;
+    flex-shrink: 0;
+    min-height: 0;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 3px 10px 3px 4px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    user-select: none;
+    overflow: hidden;
+    transition: background var(--duration-med) var(--ease-out);
+}
+
+.player-row::before {
+    content: '';
+    display: block;
+    flex-shrink: 0;
+    align-self: center;
+    width: 3px;
+    height: 95%;
+    border-radius: var(--radius-full);
+    background: var(--team-color, var(--line-lt));
+    transition: opacity 0.14s;
+}
+
+.player-row:nth-child(odd)  { background: rgba(255, 255, 255, 0.018); }
+.player-row:nth-child(even) { background: rgba(255, 255, 255, 0.036); }
+
+.player-row::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(115deg, transparent 20%, rgba(255, 255, 255, 0.06) 45%, rgba(255, 255, 255, 0.10) 50%, rgba(255, 255, 255, 0.06) 55%, transparent 80%);
+    background-size: 220% 220%;
+    background-position: 130% 0%;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--duration-med) var(--ease-out), background-position 0.6s var(--ease-out);
+}
+
+.player-row:hover { background: rgba(255, 255, 255, 0.045); }
+.player-row:hover::after { opacity: 1; background-position: -30% 0%; }
+
+.player-row.is-disabled::before { opacity: 0.4; }
+.player-row.is-disabled > *      { opacity: 0.4; }
+
+.player-row__icon {
+    width: 86px;
+    min-width: 86px;
+    height: 24px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    overflow: hidden;
+}
+
+.player-row__icon img {
+    width: auto;
+    height: auto;
+    max-width: 80px;
+    max-height: 24px;
+    object-fit: contain;
+    object-position: left center;
+}
+
+.player-row__icon-placeholder { width: 80px; height: 24px; }
+
+.player-row__info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 1px;
+}
+
+.player-row__nick {
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.2;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.player-row__tank {
+    font-size: 10px;
+    line-height: 1.2;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.player-row__aside {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.player-row__values {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+}
+
+.player-row__dmg {
+    font-family: var(--font-mono);
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+    color: var(--text-dim);
+    font-variant-numeric: tabular-nums;
+}
+
+.player-row__dmg.has-damage { color: var(--text-secondary); }
+
+.player-row__hp {
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+    color: var(--text-secondary);
+    opacity: 0.6;
+    font-variant-numeric: tabular-nums;
+}
+
+.player-row__hp .hp-current { color: var(--text-dim); opacity: 1; }
+.player-row__hp.is-zero .hp-current { color: #ff5555; opacity: 1; }
+
+.player-row__status {
+    width: 12px;
+    flex-shrink: 0;
+    align-self: center;
+    text-align: center;
+    line-height: 1;
+    font-size: 11px;
+    font-weight: bold;
+    color: transparent;
+}
+
+.player-row__status.is-dead { color: var(--danger); }
+
+.dmg-log-panel {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 14px 16px 12px;
+    background: var(--card-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-xl);
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    box-shadow: var(--glass-shadow-stack);
+}
+
+.dmg-log {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding-right: 4px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: rgb(255 255 255 / 35%) transparent;
+}
+
+.dmg-log::-webkit-scrollbar             { width: 6px; }
+.dmg-log::-webkit-scrollbar-track       { background: transparent; }
+.dmg-log::-webkit-scrollbar-thumb       { background: linear-gradient(180deg, rgb(255 255 255 / 40%), rgb(255 255 255 / 18%)); border-radius: var(--radius-sm); transition: background var(--duration-fast) var(--ease-out); }
+.dmg-log::-webkit-scrollbar-thumb:hover { background: linear-gradient(180deg, rgb(255 255 255 / 55%), rgb(255 255 255 / 28%)); }
+
+@keyframes dmg-entry-in {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: none; }
+}
+
+.dmg-entry {
+    animation: dmg-entry-in var(--duration-med) var(--ease-out) backwards;
+    position: relative;
+    flex-shrink: 0;
+    padding: 6px 10px;
+    border-radius: var(--radius-sm);
+    border-left: 2px solid transparent;
+    background: rgba(255, 255, 255, 0.02);
+    font-size: 0.9em;
+    line-height: 1.3;
+    overflow: hidden;
+    transition: background 0.15s ease;
+}
+
+.dmg-entry::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(115deg, transparent 20%, rgba(255, 255, 255, 0.05) 45%, rgba(255, 255, 255, 0.08) 50%, rgba(255, 255, 255, 0.05) 55%, transparent 80%);
+    background-size: 220% 220%;
+    background-position: 130% 0%;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--duration-med) var(--ease-out), background-position 0.6s var(--ease-out);
+}
+
+.dmg-entry:hover { background: rgba(255, 255, 255, 0.045); }
+.dmg-entry:hover::after { opacity: 1; background-position: -30% 0%; }
+
+.dmg-entry.destroyed.ally-kill  { border-left-color: var(--team1); background: rgb(var(--team1-rgb) / 6%); }
+.dmg-entry.destroyed.enemy-kill { border-left-color: var(--team2); background: rgb(var(--team2-rgb) / 6%); }
+
+.dmg-entry .time-tag {
+    margin-right: 4px;
+    font-family: var(--font-mono);
+    font-size: 0.82em;
+    color: var(--text-dim);
+    font-variant-numeric: tabular-nums;
+}
+
+.dmg-entry .attacker-name         { font-weight: 600; }
+.dmg-entry .attacker-name.ally    { color: var(--team1); }
+.dmg-entry .attacker-name.enemy   { color: var(--team2); }
+
+.dmg-entry .target-name           { color: var(--text-secondary); }
+.dmg-entry .target-name.ally      { color: rgb(var(--team1-rgb) / 55%); }
+.dmg-entry .target-name.enemy     { color: rgb(var(--team2-rgb) / 55%); }
+
+.dmg-entry .dmg-value             { font-family: var(--font-mono); font-weight: 600; }
+.dmg-entry .dmg-value.ally-damage  { color: var(--danger); }
+.dmg-entry .dmg-value.enemy-damage { color: var(--team1); }
+
+.dmg-entry .kill-icon { margin-left: 3px; color: #ff6060; }
+
+.ui-tooltip {
+    position: fixed;
+    z-index: 9999;
+    padding: 5px 9px;
+    font-family: var(--font-ui);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    color: var(--text);
+    white-space: nowrap;
+    background: var(--panel-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    backdrop-filter: blur(var(--glass-blur-sm)) saturate(var(--glass-saturate));
+    -webkit-backdrop-filter: blur(var(--glass-blur-sm)) saturate(var(--glass-saturate));
+    box-shadow: var(--glass-shadow-sm);
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(3px);
+    transition: opacity 0.12s, transform 0.12s;
+}
+
+.ui-tooltip.is-visible { opacity: 1; transform: translateY(0); }
+
+@media (max-width: 900px) {
+    #sidebar {
+        width: 46%;
+        flex-basis: 46%;
+        min-width: 320px;
+    }
+}
+
+@media (max-width: 680px) {
+    body {
+        flex-direction: column;
+        height: auto;
+        min-height: 100vh;
+        min-height: 100dvh;
+        overflow-y: auto;
+        padding: 8px;
+        gap: 8px;
+    }
+
+    #map-area {
+        flex: 0 0 auto;
+        height: 45vh;
+        min-height: 240px;
+
+        padding: 12px 50px 12px 12px;
+    }
+
+    #map-toolbar {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        z-index: 150;
+        align-self: auto;
+    }
+
+    #sidebar {
+        width: 100%;
+        flex: 0 0 auto;
+        height: auto;
+        min-height: 55vh;
+        min-width: 0;
+    }
+
+    .sb-content { flex-direction: column; }
+    .sb-col--left { border-right: none; }
+
+    .hp-value { min-width: 48px; font-size: 0.95em; }
+}
+
+@media (max-width: 400px) {
+    #map-area { height: 38vh; }
+
+    .clan-name   { font-size: 0.75em; }
+    .alive-count { font-size: 0.9em; padding: 2px 7px; }
+}
+
+</style>
+</head>
+<body>
+
+<main id="map-area" aria-label="Карта боя">
+    <div id="canvas-wrap">
+        <canvas id="bgCanvas" aria-hidden="true"></canvas>
+
+        <canvas id="fgCanvas"
+                tabindex="0"
+                role="application"
+                aria-label="Интерактивная карта боя. Колесо мыши — масштаб, перетаскивание — перемещение, Пробел — воспроизведение, стрелки — перемотка.">
+        </canvas>
+
+        <div id="damage-popups" aria-hidden="true"></div>
+
+        <div class="map-filter-panel" id="mapFilterPanel"
+             role="dialog" aria-label="Фильтры отображения на карте" aria-modal="false">
+            <h2 class="map-filter-panel__title">Отображение</h2>
+
+            <div class="map-filter-option is-on" id="mfo-paths" data-key="paths"
+                 role="checkbox" aria-checked="true" tabindex="0">
+                <span class="map-filter-option__dot" aria-hidden="true"></span>Путь перемещения
+            </div>
+            <div class="map-filter-option is-on" id="mfo-shots" data-key="shots"
+                 role="checkbox" aria-checked="true" tabindex="0">
+                <span class="map-filter-option__dot" aria-hidden="true"></span>Индикация выстрелов
+            </div>
+            <div class="map-filter-option is-on" id="mfo-damage" data-key="damage"
+                 role="checkbox" aria-checked="true" tabindex="0">
+                <span class="map-filter-option__dot" aria-hidden="true"></span>Отображение урона
+            </div>
+            <div class="map-filter-option is-on" id="mfo-deaths" data-key="deaths"
+                 role="checkbox" aria-checked="true" tabindex="0">
+                <span class="map-filter-option__dot" aria-hidden="true"></span>Иконки смертей
+            </div>
+            <div class="map-filter-option is-on" id="mfo-nicknames" data-key="nicknames"
+                 role="checkbox" aria-checked="true" tabindex="0">
+                <span class="map-filter-option__dot" aria-hidden="true"></span>Ник игрока
+            </div>
+            <div class="map-filter-option" id="mfo-tankNames" data-key="tankNames"
+                 role="checkbox" aria-checked="false" tabindex="0">
+                <span class="map-filter-option__dot" aria-hidden="true"></span>Название танка
+            </div>
+
+            <div class="map-filter-panel__divider" role="separator" aria-hidden="true"></div>
+
+            <div class="map-filter-option" id="mfo-hires" data-key="hires"
+                 role="checkbox" aria-checked="false" tabindex="0">
+                <span class="map-filter-option__dot" aria-hidden="true"></span>Улучшенное разрешение
+            </div>
+        </div>
+    </div>
+</main>
+
+<div id="map-toolbar" role="toolbar" aria-label="Управление картой">
+    <a class="hits-link-btn" id="hitsLinkBtn" href="{{HITS_VIEWER_URL}}" aria-label="Визуализатор попаданий" data-tooltip="Визуализатор попаданий">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.6"/>
+            <circle cx="8" cy="8" r="1.4" fill="currentColor"/>
+            <path d="M8 0.5v3M8 12.5v3M0.5 8h3M12.5 8h3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+    </a>
+    <button class="filter-toggle-btn"
+            id="filterToggleBtn"
+            aria-label="Фильтры отображения"
+            aria-expanded="false"
+            aria-controls="mapFilterPanel"
+            data-tooltip="Фильтры отображения">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M1 3h14M3 8h10M6 13h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+    </button>
+
+    <button class="zoom-btn" id="zoomIn"
+            aria-label="Увеличить карту"
+            data-tooltip="Увеличение">+</button>
+
+    <button class="zoom-btn" id="zoomOut"
+            aria-label="Уменьшить карту"
+            data-tooltip="Уменьшение">−</button>
+
+    <button class="zoom-btn" id="zoomReset"
+            aria-label="Сбросить позицию карты"
+            data-tooltip="Сбросить позицию карты">
+        <svg class="reset-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M13.5 8A5.5 5.5 0 1 1 8 2.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            <polyline points="8,0.5 10,3 7.5,5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        </svg>
+    </button>
+
+    <div class="zoom-level" id="zoomLevel"
+         aria-live="polite" aria-label="Текущий масштаб">100%</div>
+</div>
+
+<aside id="sidebar" aria-label="Информация о бое">
+
+  <div class="top-card">
+    <header class="sb-header" id="sbHeader">
+        <div class="sb-header__split" id="sbHeaderSplit">
+            <div class="sb-header__capture" id="captureIndicator" aria-label="Индикация захвата базы">
+                <div class="sb-finish-overlay" id="sbFinishOverlay" aria-live="polite">
+                    <span class="sb-finish-overlay__text" id="sbFinishText"></span>
+                </div>
+            </div>
+            <h1 class="sb-header__map-name" id="sbHeaderMap" title="{{MAP_NAME}}">{{MAP_NAME}}</h1>
+        </div>
+    </header>
+
+    <section class="clans-panel" aria-label="Счёт боя">
+        <h2 class="sec-title sec-title--spaced">
+            <span class="sec-title__line" aria-hidden="true"></span>
+            СЧЁТ
+            <span class="sec-title__line" aria-hidden="true"></span>
+        </h2>
+
+        <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+            <defs>
+                <linearGradient id="trophyGold" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#fff6d8"/>
+                    <stop offset="45%" stop-color="#ffd25a"/>
+                    <stop offset="100%" stop-color="#e0960f"/>
+                </linearGradient>
+            </defs>
+        </svg>
+
+        <div class="score-row" role="status" aria-live="polite" aria-label="Текущий счёт">
+            <span class="clan-slot ally">
+                <svg class="trophy-icon" id="allyTrophy" viewBox="0 0 32 32" aria-hidden="true">
+                    <path fill="url(#trophyGold)" d="M29,4h-6c-0.022,0-0.04,0.011-0.061,0.012c-0.651-1.124-1.367-1.743-1.419-1.786C21.341,2.08,21.117,2,20.886,2h-9.773   c-0.231,0-0.455,0.08-0.633,0.227c-0.052,0.043-0.769,0.662-1.419,1.786C9.04,4.011,9.022,4,9,4H3C2.715,4,2.444,4.121,2.255,4.333   c-0.19,0.212-0.28,0.495-0.249,0.777c0.34,3.061,2.567,8.938,8.514,9.775c0.648,0.924,1.413,1.858,2.311,2.803   c0.048,0.051,0.112,0.078,0.168,0.117V20h-2c-0.552,0-1,0.447-1,1v3H8c-0.552,0-1,0.447-1,1v4c0,0.553,0.448,1,1,1h16   c0.552,0,1-0.447,1-1v-4c0-0.553-0.448-1-1-1h-2v-3c0-0.553-0.448-1-1-1h-2v-2.194c0.057-0.039,0.12-0.067,0.168-0.117   c0.897-0.944,1.662-1.879,2.311-2.803c5.947-0.837,8.175-6.714,8.514-9.775c0.032-0.282-0.059-0.565-0.249-0.777   C29.556,4.121,29.285,4,29,4z M4.203,6h4.056C8.143,6.453,8.049,6.931,8.016,7.463c-0.101,1.611,0.258,3.279,1.068,4.994   C5.853,11.149,4.629,7.774,4.203,6z M23,28H9v-2h2h10h2V28z M20,24h-8v-2h2h4h2V24z M15,20v-2h2v2H15z M18.01,16H18h-4h-0.01   c-2.783-3.019-4.122-5.833-3.98-8.369C10.117,5.707,11.065,4.479,11.514,4h8.971c0.452,0.482,1.398,1.709,1.505,3.632   C22.131,10.167,20.792,12.981,18.01,16z M22.92,12.449c0.808-1.712,1.165-3.378,1.064-4.987C23.951,6.931,23.857,6.453,23.742,6   h4.047C27.352,7.765,26.111,11.136,22.92,12.449z"/>
+                </svg>
+                <span id="allyClanLabel" class="clan-name ally">{{ALLY_CLAN}}</span>
+            </span>
+            <span id="allyAlive"  class="alive-count ally"  aria-label="Уничтожено союзниками">0</span>
+            <span class="score-separator" aria-hidden="true">/</span>
+            <span id="enemyAlive" class="alive-count enemy" aria-label="Уничтожено противником">0</span>
+            <span class="clan-slot enemy">
+                <span id="enemyClanLabel" class="clan-name enemy">{{ENEMY_CLAN}}</span>
+                <svg class="trophy-icon" id="enemyTrophy" viewBox="0 0 32 32" aria-hidden="true">
+                    <path fill="url(#trophyGold)" d="M29,4h-6c-0.022,0-0.04,0.011-0.061,0.012c-0.651-1.124-1.367-1.743-1.419-1.786C21.341,2.08,21.117,2,20.886,2h-9.773   c-0.231,0-0.455,0.08-0.633,0.227c-0.052,0.043-0.769,0.662-1.419,1.786C9.04,4.011,9.022,4,9,4H3C2.715,4,2.444,4.121,2.255,4.333   c-0.19,0.212-0.28,0.495-0.249,0.777c0.34,3.061,2.567,8.938,8.514,9.775c0.648,0.924,1.413,1.858,2.311,2.803   c0.048,0.051,0.112,0.078,0.168,0.117V20h-2c-0.552,0-1,0.447-1,1v3H8c-0.552,0-1,0.447-1,1v4c0,0.553,0.448,1,1,1h16   c0.552,0,1-0.447,1-1v-4c0-0.553-0.448-1-1-1h-2v-3c0-0.553-0.448-1-1-1h-2v-2.194c0.057-0.039,0.12-0.067,0.168-0.117   c0.897-0.944,1.662-1.879,2.311-2.803c5.947-0.837,8.175-6.714,8.514-9.775c0.032-0.282-0.059-0.565-0.249-0.777   C29.556,4.121,29.285,4,29,4z M4.203,6h4.056C8.143,6.453,8.049,6.931,8.016,7.463c-0.101,1.611,0.258,3.279,1.068,4.994   C5.853,11.149,4.629,7.774,4.203,6z M23,28H9v-2h2h10h2V28z M20,24h-8v-2h2h4h2V24z M15,20v-2h2v2H15z M18.01,16H18h-4h-0.01   c-2.783-3.019-4.122-5.833-3.98-8.369C10.117,5.707,11.065,4.479,11.514,4h8.971c0.452,0.482,1.398,1.709,1.505,3.632   C22.131,10.167,20.792,12.981,18.01,16z M22.92,12.449c0.808-1.712,1.165-3.378,1.064-4.987C23.951,6.931,23.857,6.453,23.742,6   h4.047C27.352,7.765,26.111,11.136,22.92,12.449z"/>
+                </svg>
+            </span>
+        </div>
+
+        <div class="hp-bars" role="group" aria-label="Прочность команд">
+            <span id="hpValAlly" class="hp-value ally" aria-label="HP союзников">0</span>
+            <div class="hp-track ally" id="hpTrackAlly"
+                 role="progressbar" aria-label="Прочность союзников"
+                 aria-valuemin="0" aria-valuemax="100" aria-valuenow="100">
+                <div class="hp-track__fill team-ally" id="hpBarAlly" style="width:100%;"></div>
+            </div>
+            <div class="hp-track enemy" id="hpTrackEnemy"
+                 role="progressbar" aria-label="Прочность противника"
+                 aria-valuemin="0" aria-valuemax="100" aria-valuenow="100">
+                <div class="hp-track__fill team-enemy" id="hpBarEnemy" style="width:100%;"></div>
+            </div>
+            <span id="hpValEnemy" class="hp-value enemy" aria-label="HP противника">0</span>
+        </div>
+    </section>
+  </div>
+
+    <div class="sb-content">
+
+        <div class="sb-col sb-col--left">
+
+            <div class="sb-panel-wrap">
+                <section class="playback-panel" aria-label="Управление воспроизведением">
+                    <h2 class="sec-title">
+                        <span class="sec-title__line" aria-hidden="true"></span>
+                        Воспроизведение
+                        <span class="sec-title__line" aria-hidden="true"></span>
+                    </h2>
+
+                    <div class="timeline">
+                        <input type="range" id="slider"
+                               min="0" max="100" value="0" step="0.5"
+                               aria-label="Временная шкала боя">
+                    </div>
+
+                    <div class="timeline-times" aria-hidden="true">
+                        <span id="timeCurrent">00:00</span>
+                        <span id="timeTotal">00:00</span>
+                    </div>
+
+                    <div class="controls-row">
+                        <button id="rewindBtn" class="scrub-btn" type="button" aria-label="Перемотка назад на 5 секунд">
+                            <svg class="scrub-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                                <path d="M2.5 8A5.5 5.5 0 1 0 8 2.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                                <polyline points="8,0.5 6,3 8.5,5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                            </svg>
+                        </button>
+
+                        <button id="playBtn" class="play-btn"
+                                aria-label="Воспроизвести / Пауза">
+                            <svg class="icon-play"  width="13" height="14" viewBox="0 0 13 14" fill="currentColor" aria-hidden="true">
+                                <path d="M1.5 1.2C1.5 0.5 2.3 0.1 2.9 0.5l9.4 5.8c0.6 0.4 0.6 1.2 0 1.6L2.9 13.5c-0.6 0.4-1.4 0-1.4-0.7V1.2z"/>
+                            </svg>
+                            <svg class="icon-pause" width="12" height="14" viewBox="0 0 12 14" fill="currentColor" aria-hidden="true">
+                                <rect x="0" y="0" width="4" height="14" rx="1.5"/>
+                                <rect x="8" y="0" width="4" height="14" rx="1.5"/>
+                            </svg>
+                        </button>
+
+                        <button id="forwardBtn" class="scrub-btn" type="button" aria-label="Перемотка вперёд на 5 секунд">
+                            <svg class="scrub-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                                <path d="M13.5 8A5.5 5.5 0 1 1 8 2.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                                <polyline points="8,0.5 10,3 7.5,5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                            </svg>
+                        </button>
+
+                        <div class="speed-control" id="speedWrapper">
+                            <button class="speed-control__btn" id="speedBtn"
+                                    aria-label="Скорость воспроизведения"
+                                    aria-haspopup="listbox"
+                                    aria-expanded="false">1.0×</button>
+                            <div class="speed-control__dropdown" id="speedDropdown"
+                                 role="listbox" aria-label="Скорость воспроизведения">
+                                <div class="speed-control__option is-selected" data-value="1" role="option" aria-selected="true">1.0×</div>
+                                <div class="speed-control__option"             data-value="2" role="option" aria-selected="false">2.0×</div>
+                                <div class="speed-control__option"             data-value="4" role="option" aria-selected="false">4.0×</div>
+                                <div class="speed-control__option"             data-value="8" role="option" aria-selected="false">8.0×</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <div class="sb-grow-wrap">
+                <section class="roster-panel" aria-label="Состав команд">
+                    <h2 class="sec-title">
+                        <span class="sec-title__line" aria-hidden="true"></span>
+                        Состав
+                        <span class="sec-title__line" aria-hidden="true"></span>
+                    </h2>
+
+                    <div class="team-filter" role="group" aria-label="Фильтр по команде">
+                        <div class="team-filter__pill" id="teamFilterPill" aria-hidden="true"></div>
+                        <button class="team-filter__btn is-active" data-filter="all">Все</button>
+                        <button class="team-filter__btn"           data-filter="ally">Союзники</button>
+                        <button class="team-filter__btn"           data-filter="enemy">Противник</button>
+                    </div>
+
+                    <div class="player-list" id="playerList"
+                         role="list" aria-label="Игроки"></div>
+                </section>
+            </div>
+        </div>
+
+        <div class="sb-col sb-col--right">
+            <section class="dmg-log-panel" aria-label="Журнал урона">
+                <h2 class="sec-title">
+                    <span class="sec-title__line" aria-hidden="true"></span>
+                    Лог
+                    <span class="sec-title__line" aria-hidden="true"></span>
+                </h2>
+                <div class="dmg-log" id="dmgLog"
+                     role="log" aria-label="События боя" aria-live="polite"></div>
+            </section>
+        </div>
+
+    </div>
+</aside>
+
+<div id="uiTooltip" class="ui-tooltip" role="tooltip" aria-hidden="true"></div>
+
+<script>
+'use strict';
+
+const DATA = {{DATA_PAYLOAD}};
+
+const CONFIG = {
+    CANVAS_W: 1000,
+    CANVAS_H: 1000,
+
+    MARKER_SIZE: 90,
+    POPUP_DURATION: 1.5,
+    TEAM1_COLOR: '#45d66f',
+    TEAM2_COLOR: '#e45a5a',
+    MARKERS_PATH: '../MapElement/',
+    ICONS_PATH: '../icons/',
+    ZOOM_MIN: 0.5,
+    ZOOM_MAX: 8,
+};
+
+const RENDER_SCALE = Math.min(window.devicePixelRatio || 1, 2);
+
+const bgCanvas = document.getElementById('bgCanvas');
+const fgCanvas = document.getElementById('fgCanvas');
+const bgCtx = bgCanvas.getContext('2d');
+const fgCtx = fgCanvas.getContext('2d');
+const slider = document.getElementById('slider');
+const popupsLayer = document.getElementById('damage-popups');
+const dmgLogEl = document.getElementById('dmgLog');
+const headerSplitEl = document.getElementById('sbHeaderSplit');
+const captureIndicatorEl = document.getElementById('captureIndicator');
+const finishOverlayEl = document.getElementById('sbFinishOverlay');
+const finishTextEl = document.getElementById('sbFinishText');
+
+const mapImgLow = new Image();
+const mapImgHigh = new Image();
+let currentMapImg = mapImgLow;
+let highResLoaded = false;
+let highResLoading = false;
+
+if ("{{IMG_SRC_LOW}}") mapImgLow.src = "{{IMG_SRC_LOW}}";
+if ("{{IMG_SRC_HIGH}}") mapImgHigh.src = "{{IMG_SRC_HIGH}}";
+
+const markerImages = {};
+function loadMarkerImages() {
+    if (!DATA.markers || !DATA.markers.length) { drawBackground(); draw(); return; }
+    const uniqueIcons = new Set(DATA.markers.map(m => m.icon));
+    let loaded = 0;
+    uniqueIcons.forEach(iconName => {
+        const img = new Image();
+        img.onload = () => { loaded++; if (loaded === uniqueIcons.size) { drawBackground(); draw(); } };
+        img.onerror = () => { loaded++; };
+        img.src = CONFIG.MARKERS_PATH + iconName;
+        markerImages[iconName] = img;
+    });
+}
+
+const DEATH_ICON_W = 90;
+const DEATH_ICON_H = 88;
+const DEATH_ICON_PATH = 'M29.4231 35.8519C27.0269 35.8519 24.6845 36.5209 22.6921 37.7743C20.6998 39.0278 19.1469 40.8094 18.2299 42.8938C17.3129 44.9783 17.073 47.2719 17.5405 49.4847C18.008 51.6975 19.1618 53.7302 20.8562 55.3255C22.5506 56.9209 24.7093 58.0073 27.0595 58.4475C29.4096 58.8876 31.8456 58.6617 34.0594 57.7983C36.2732 56.9349 38.1654 55.4728 39.4967 53.5969C40.8279 51.7209 41.5385 49.5154 41.5385 47.2593C41.5385 44.2338 40.262 41.3323 37.9899 39.193C35.7179 37.0537 32.6363 35.8519 29.4231 35.8519ZM29.4231 52.1481C28.3961 52.1481 27.3923 51.8614 26.5384 51.3242C25.6845 50.787 25.019 50.0235 24.626 49.1302C24.233 48.2368 24.1302 47.2538 24.3305 46.3055C24.5309 45.3571 25.0254 44.486 25.7516 43.8023C26.4777 43.1186 27.4029 42.6529 28.4101 42.4643C29.4173 42.2757 30.4613 42.3725 31.4101 42.7425C32.3589 43.1125 33.1698 43.7392 33.7403 44.5431C34.3109 45.3471 34.6154 46.2923 34.6154 47.2593C34.6154 48.5559 34.0683 49.7994 33.0946 50.7162C32.1208 51.6331 30.8002 52.1481 29.4231 52.1481ZM60.5769 35.8519C58.1807 35.8519 55.8383 36.5209 53.846 37.7743C51.8536 39.0278 50.3008 40.8094 49.3838 42.8938C48.4668 44.9783 48.2269 47.2719 48.6943 49.4847C49.1618 51.6975 50.3157 53.7302 52.0101 55.3255C53.7044 56.9209 55.8632 58.0073 58.2133 58.4475C60.5635 58.8876 62.9995 58.6617 65.2133 57.7983C67.4271 56.9349 69.3192 55.4728 70.6505 53.5969C71.9818 51.7209 72.6923 49.5154 72.6923 47.2593C72.6923 44.2338 71.4159 41.3323 69.1438 39.193C66.8717 37.0537 63.7901 35.8519 60.5769 35.8519ZM60.5769 52.1481C59.55 52.1481 58.5461 51.8614 57.6922 51.3242C56.8384 50.787 56.1729 50.0235 55.7799 49.1302C55.3869 48.2368 55.284 47.2538 55.4844 46.3055C55.6847 45.3571 56.1793 44.486 56.9054 43.8023C57.6316 43.1186 58.5567 42.6529 59.564 42.4643C60.5712 42.2757 61.6152 42.3725 62.5639 42.7425C63.5127 43.1125 64.3236 43.7392 64.8942 44.5431C65.4647 45.3471 65.7692 46.2923 65.7692 47.2593C65.7692 48.5559 65.2222 49.7994 64.2484 50.7162C63.2747 51.6331 61.954 52.1481 60.5769 52.1481ZM45 0C20.1851 0 0 18.2763 0 40.7407C0 54.6333 7.90529 67.6296 20.7692 75.077V81.4815C20.7692 83.2103 21.4986 84.8683 22.797 86.0908C24.0953 87.3132 25.8562 88 27.6923 88H62.3077C64.1438 88 65.9047 87.3132 67.203 86.0908C68.5014 84.8683 69.2308 83.2103 69.2308 81.4815V75.077C82.0947 67.6296 90 54.6333 90 40.7407C90 18.2763 69.8149 0 45 0ZM64.0904 70.3552C63.5499 70.6374 63.0995 71.0507 62.7861 71.5522C62.4726 72.0537 62.3074 72.6251 62.3077 73.207V81.4815H55.3846V71.7037C55.3846 70.8393 55.0199 70.0103 54.3708 69.3991C53.7216 68.7878 52.8411 68.4444 51.9231 68.4444C51.005 68.4444 50.1246 68.7878 49.4754 69.3991C48.8262 70.0103 48.4615 70.8393 48.4615 71.7037V81.4815H41.5385V71.7037C41.5385 70.8393 41.1738 70.0103 40.5246 69.3991C39.8754 68.7878 38.995 68.4444 38.0769 68.4444C37.1589 68.4444 36.2784 68.7878 35.6292 69.3991C34.9801 70.0103 34.6154 70.8393 34.6154 71.7037V81.4815H27.6923V73.207C27.6926 72.6251 27.5274 72.0537 27.2139 71.5522C26.9005 71.0507 26.4501 70.6374 25.9096 70.3552C14.1966 64.2441 6.92308 52.8978 6.92308 40.7407C6.92308 21.8696 24.0058 6.51852 45 6.51852C65.9942 6.51852 83.0769 21.8696 83.0769 40.7407C83.0769 52.8937 75.8034 64.2441 64.0904 70.3552Z';
+
+function buildDeathIcon(fillColor) {
+    const svg = `<svg width="${DEATH_ICON_W}" height="${DEATH_ICON_H}" viewBox="0 0 ${DEATH_ICON_W} ${DEATH_ICON_H}" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="${DEATH_ICON_PATH}" fill="${fillColor}"/></svg>`;
+    const img = new Image();
+    img.onload = () => draw();
+    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+    return img;
+}
+
+const deathIconAlly = buildDeathIcon(CONFIG.TEAM1_COLOR);
+const deathIconEnemy = buildDeathIcon(CONFIG.TEAM2_COLOR);
+
+const tankIconImages = {};
+function loadTankIcons() {
+    if (!DATA.players || !DATA.players.length) return;
+    const uniqueCodes = new Set();
+    DATA.players.forEach(p => { if (p.tank_code) uniqueCodes.add(p.tank_code); });
+    if (uniqueCodes.size === 0) return;
+    let loaded = 0;
+    uniqueCodes.forEach(code => {
+        const img = new Image();
+        img.onload = () => { loaded++; if (loaded === uniqueCodes.size) draw(); };
+        img.onerror = () => { loaded++; };
+        img.src = `${CONFIG.ICONS_PATH}${code.replace(/:/g, '-')}.png`;
+        tankIconImages[code] = img;
+    });
+}
+
+const MY_TEAM = parseInt(DATA.my_team, 10);
+const playerMap = new Map(DATA.players.map(p => [p.id, p]));
+
+function isAlly(teamNum) { return parseInt(teamNum, 10) === MY_TEAM; }
+function teamColor(teamNum) { return isAlly(teamNum) ? CONFIG.TEAM1_COLOR : CONFIG.TEAM2_COLOR; }
+function playerColor(p) { return teamColor(p.team); }
+
+const CAPTURE_TIMELINE = (DATA.capture_timeline || []).slice().sort((a, b) => a.time - b.time);
+
+function isRealCaptureEntry(entry) {
+    return (entry.players_capturing ?? 0) > 0 || (entry.percent ?? 0) > 0;
+}
+const REAL_CAPTURE_ENTRIES = CAPTURE_TIMELINE.filter(isRealCaptureEntry);
+
+const BASE_OWNER_TEAM = 1;
+const ATTACKING_TEAM = BASE_OWNER_TEAM === 1 ? 2 : 1;
+const WE_ARE_ATTACKING = isAlly(ATTACKING_TEAM);
+const CAPTURE_LEAD_IN = 2.5;
+
+const CAPTURED_BASE_INDICES = [...new Set(REAL_CAPTURE_ENTRIES.map(c => c.base_index))];
+const HAS_ANY_CAPTURE = CAPTURED_BASE_INDICES.length > 0;
+const IS_SINGLE_BASE = CAPTURED_BASE_INDICES.length === 1;
+
+const FIRST_CAPTURE_TIME = HAS_ANY_CAPTURE ? REAL_CAPTURE_ENTRIES[0].time : Infinity;
+const CAPTURE_REVEAL_TIME = Math.max(0, FIRST_CAPTURE_TIME - CAPTURE_LEAD_IN);
+
+const CAPTURE_TANK_ICON = `${CONFIG.ICONS_PATH}china-Ch24_Type64.png`;
+
+const captureLineEls = new Map();
+
+function clockIconMarkup() {
+    return `<svg class="capture-line__clock-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <circle cx="8" cy="8" r="6.6" stroke="currentColor" stroke-width="1.7"/>
+        <path d="M8 4.4V8l2.6 1.9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`;
+}
+
+function formatCaptureClock(seconds) {
+    const total = Math.max(0, Math.ceil(seconds || 0));
+    const m = Math.floor(total / 60);
+    const s = total % 60;
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
+
+function buildCaptureLines() {
+    if (!captureIndicatorEl || !HAS_ANY_CAPTURE) return;
+
+    const sortedIndices = [...CAPTURED_BASE_INDICES].sort((a, b) => a - b);
+    const sizeClass = IS_SINGLE_BASE ? 'size-lg' : 'size-sm';
+
+    captureIndicatorEl.classList.add(IS_SINGLE_BASE ? 'lines-1' : 'lines-2');
+
+    sortedIndices.forEach(baseIndex => {
+        const line = document.createElement('div');
+        line.className = `capture-line ${sizeClass}`;
+        line.innerHTML = `
+            <span class="capture-line__name">БАЗА ${baseIndex}</span>
+            <div class="capture-line__bar">
+                <div class="capture-line__bar-fill" data-role="fill"></div>
+            </div>
+            <span class="capture-line__percent" data-role="percent">0%</span>
+            <span class="capture-line__timer" data-role="timer">${clockIconMarkup()}<span data-role="timer-text">00:00</span></span>
+            <div class="capture-line__meta">
+                <img class="capture-line__tank-icon" src="${CAPTURE_TANK_ICON}" alt="" data-role="tank-icon">
+                <span class="capture-line__players" data-role="players">0</span>
+            </div>
+        `;
+
+        captureIndicatorEl.insertBefore(line, finishOverlayEl || null);
+        captureLineEls.set(baseIndex, {
+            root: line,
+            percentEl: line.querySelector('[data-role="percent"]'),
+            timerTextEl: line.querySelector('[data-role="timer-text"]'),
+            fillEl: line.querySelector('[data-role="fill"]'),
+            playersEl: line.querySelector('[data-role="players"]'),
+        });
+    });
+}
+buildCaptureLines();
+
+function showWinnerTrophy() {
+    if (DATA.winner_team == null) return;
+    const winnerIsAlly = parseInt(DATA.winner_team, 10) === MY_TEAM;
+    const trophy = document.getElementById(winnerIsAlly ? 'allyTrophy' : 'enemyTrophy');
+    const cell = document.getElementById(winnerIsAlly ? 'allyAlive' : 'enemyAlive');
+    if (!trophy || !cell) return;
+    const cellHeight = cell.getBoundingClientRect().height;
+    if (cellHeight > 0) trophy.style.height = cellHeight + 'px';
+    trophy.classList.add('is-visible');
+}
+requestAnimationFrame(showWinnerTrophy);
+
+function captureAtTimeForBase(t, baseIndex) {
+    const list = CAPTURE_TIMELINE;
+    let lo = 0, hi = list.length - 1;
+    while (lo <= hi) {
+        const mid = (lo + hi) >> 1;
+        if (list[mid].time <= t) { lo = mid + 1; } else { hi = mid - 1; }
+    }
+
+    let result = null;
+    for (let i = lo - 1; i >= 0; i--) {
+        if (list[i].base_index === baseIndex) { result = list[i]; break; }
+        if (t - list[i].time > 5) break;
+    }
+    if (result && (t - result.time) > 2.5) return null;
+    return result;
+}
+
+let captureRevealed = false;
+
+const FINISH_DELAY_AFTER_EVENT = 1;
+let finishOverlayShown = false;
+
+function computeFinishMessage(weWon) {
+    const reasonCode = DATA.finish_reason_code;
+    let text;
+    if (reasonCode === 2) {
+        text = 'База захвачена';
+    } else if (reasonCode === 1) {
+        text = weWon ? 'Вся техника противника уничтожена' : 'Вся техника союзников уничтожена';
+    } else {
+        text = weWon ? 'Победа' : 'Поражение';
+    }
+    return { text, cls: weWon ? 'win' : 'lose' };
+}
+
+function computeFinishEventTime() {
+    const reasonCode = DATA.finish_reason_code;
+    const weWon = DATA.winner_team != null && parseInt(DATA.winner_team, 10) === MY_TEAM;
+    const losingTeam = weWon ? (MY_TEAM === 1 ? 2 : 1) : MY_TEAM;
+
+    if (reasonCode === 2) {
+        const fullCaptures = CAPTURE_TIMELINE.filter(c => (c.percent ?? 0) >= 100);
+        if (fullCaptures.length) return { time: fullCaptures[0].time, weWon };
+    } else if (reasonCode === 1) {
+        let lastDeathTime = null;
+        (DATA.damage_events || []).forEach(ev => {
+            if (!ev.is_destroyed) return;
+            const targetPlayer = playerMap.get(ev.target);
+            if (!targetPlayer || targetPlayer.team !== losingTeam) return;
+            if (lastDeathTime === null || ev.time > lastDeathTime) lastDeathTime = ev.time;
+        });
+        if (lastDeathTime !== null) return { time: lastDeathTime, weWon };
+    }
+
+    return { time: Math.max(0, (maxTime || 0) - 5), weWon };
+}
+
+let finishComputed = null;
+
+function triggerFinishOverlay(weWon) {
+    if (finishOverlayShown) return;
+    finishOverlayShown = true;
+
+    if (headerSplitEl) headerSplitEl.classList.add('has-capture');
+    if (captureIndicatorEl) captureIndicatorEl.classList.add('is-finishing');
+
+    const msg = computeFinishMessage(weWon);
+    finishTextEl.textContent = msg.text;
+    finishTextEl.classList.remove('win', 'lose');
+    finishTextEl.classList.add(msg.cls);
+
+    finishOverlayEl.classList.add('is-active');
+}
+
+function resetFinishOverlay() {
+    finishOverlayShown = false;
+    if (captureIndicatorEl) captureIndicatorEl.classList.remove('is-finishing');
+    if (finishOverlayEl) finishOverlayEl.classList.remove('is-active');
+
+    if (headerSplitEl && !captureRevealed) headerSplitEl.classList.remove('has-capture');
+}
+
+function updateFinishOverlay() {
+    if (!finishOverlayEl) return;
+    if (!finishComputed) finishComputed = computeFinishEventTime();
+
+    const showAt = finishComputed.time + FINISH_DELAY_AFTER_EVENT;
+    const shouldShow = currentTime >= showAt;
+
+    if (shouldShow && !finishOverlayShown) {
+        triggerFinishOverlay(finishComputed.weWon);
+    } else if (!shouldShow && finishOverlayShown) {
+
+        resetFinishOverlay();
+    }
+}
+
+function updateCaptureIndicator() {
+    updateFinishOverlay();
+
+    if (!headerSplitEl || !HAS_ANY_CAPTURE) return;
+
+    if (!captureRevealed && currentTime >= CAPTURE_REVEAL_TIME) {
+        captureRevealed = true;
+        headerSplitEl.classList.add('has-capture');
+    }
+    if (!captureRevealed) return;
+
+    captureLineEls.forEach((els, baseIndex) => {
+        const cap = captureAtTimeForBase(currentTime, baseIndex);
+
+        els.fillEl.classList.remove('capturing-us', 'capturing-enemy');
+        els.percentEl.classList.remove('capturing-us', 'capturing-enemy');
+
+        if (!cap) {
+            els.fillEl.style.width = '0%';
+            els.percentEl.textContent = '0%';
+            els.timerTextEl.textContent = '00:00';
+            els.playersEl.textContent = '0';
+            return;
+        }
+
+        const cls = WE_ARE_ATTACKING ? 'capturing-us' : 'capturing-enemy';
+        const pct = Math.max(0, Math.min(100, cap.percent));
+
+        els.fillEl.style.width = `${pct}%`;
+        els.fillEl.classList.add(cls);
+        els.percentEl.textContent = `${Math.round(pct)}%`;
+        els.percentEl.classList.add(cls);
+        els.timerTextEl.textContent = formatCaptureClock(cap.seconds_remaining);
+        els.playersEl.textContent = String(cap.players_capturing ?? 0);
+    });
+}
+
+let maxTime = DATA.duration_sec || 0;
+let currentTime = 0;
+let isPlaying = false;
+let playerFilter = 'all';
+let zoom = 1;
+let panX = 0;
+let panY = 0;
+let isDragging = false;
+let dragStartX = 0;
+let dragStartY = 0;
+let lastFrameTime = null;
+
+const mapFilters = { paths: true, shots: true, damage: true, deaths: true, nicknames: true, tankNames: false, tankIcons: false };
+const MAP_FILTER_DEFAULTS = { ...mapFilters };
+const visibility = {};
+const deathTimeMap = new Map();
+
+const positionIndex = {};
+
+function buildPositionIndex() {
+    for (const pid in DATA.positions) {
+        positionIndex[pid] = { pts: DATA.positions[pid] };
+    }
+}
+
+function getLastPtAtTime(pid, t) {
+    const idx = positionIndex[pid];
+    if (!idx) return null;
+    const pts = idx.pts;
+    let lo = 0, hi = pts.length - 1, result = null;
+    while (lo <= hi) {
+        const mid = (lo + hi) >> 1;
+        if (pts[mid].t <= t) { result = pts[mid]; lo = mid + 1; }
+        else hi = mid - 1;
+    }
+    return result;
+}
+
+function getPathUpToTime(pid, t) {
+    const idx = positionIndex[pid];
+    if (!idx) return [];
+    const pts = idx.pts;
+    let lo = 0, hi = pts.length - 1, end = -1;
+    while (lo <= hi) {
+        const mid = (lo + hi) >> 1;
+        if (pts[mid].t <= t) { end = mid; lo = mid + 1; }
+        else hi = mid - 1;
+    }
+    return end < 0 ? [] : pts.slice(0, end + 1);
+}
+
+let hpSnapshots = [];
+
+function buildHpSnapshots() {
+    const currentHp = {};
+    DATA.players.forEach(p => { currentHp[p.id] = p.max_hp; });
+
+    let totalHp1 = 0, totalHp2 = 0, initHp1 = 0, initHp2 = 0;
+    DATA.players.forEach(p => {
+        if (p.team === 1) { totalHp1 += p.max_hp; initHp1 += p.max_hp; }
+        else { totalHp2 += p.max_hp; initHp2 += p.max_hp; }
+    });
+
+    const sortedEvents = [...DATA.damage_events].sort((a, b) => a.time - b.time);
+    hpSnapshots = [{ t: -Infinity, hp1: totalHp1, hp2: totalHp2, initHp1, initHp2 }];
+
+    sortedEvents.forEach(ev => {
+        const prevHp = currentHp[ev.target];
+        if (prevHp === undefined) return;
+
+        let newHp;
+        if (ev.new_hp !== undefined && ev.new_hp !== null) {
+            newHp = Math.max(0, ev.new_hp);
+        } else if (ev.damage > 0) {
+            newHp = Math.max(0, prevHp - ev.damage);
+        } else {
+            return;
+        }
+
+        const delta = newHp - prevHp;
+        currentHp[ev.target] = newHp;
+
+        const pInfo = playerMap.get(ev.target);
+        if (!pInfo) return;
+        if (pInfo.team === 1) totalHp1 = Math.max(0, totalHp1 + delta);
+        else totalHp2 = Math.max(0, totalHp2 + delta);
+
+        hpSnapshots.push({ t: ev.time, hp1: totalHp1, hp2: totalHp2, initHp1, initHp2 });
+    });
+}
+
+function getHpAtTime(t) {
+    let lo = 0, hi = hpSnapshots.length - 1, result = hpSnapshots[0];
+    while (lo <= hi) {
+        const mid = (lo + hi) >> 1;
+        if (hpSnapshots[mid].t <= t) { result = hpSnapshots[mid]; lo = mid + 1; }
+        else hi = mid - 1;
+    }
+    return result;
+}
+
+const playerDamageTimeline = new Map();
+
+function buildPlayerDamageTimelines() {
+    DATA.players.forEach(p => { playerDamageTimeline.set(p.id, [{ t: -Infinity, cumDmg: 0 }]); });
+    const sortedEvents = [...DATA.damage_events].sort((a, b) => a.time - b.time);
+    sortedEvents.forEach(ev => {
+        if (ev.damage <= 0) return;
+        const timeline = playerDamageTimeline.get(ev.attacker);
+        if (!timeline) return;
+        const prevCum = timeline[timeline.length - 1].cumDmg;
+        timeline.push({ t: ev.time, cumDmg: prevCum + ev.damage });
+    });
+}
+
+function getPlayerDamageAtTime(pid, t) {
+    const timeline = playerDamageTimeline.get(pid);
+    if (!timeline) return 0;
+    let lo = 0, hi = timeline.length - 1, result = timeline[0];
+    while (lo <= hi) {
+        const mid = (lo + hi) >> 1;
+        if (timeline[mid].t <= t) { result = timeline[mid]; lo = mid + 1; }
+        else hi = mid - 1;
+    }
+    return result.cumDmg;
+}
+
+let destroyedCacheTime = null;
+let destroyedCache = null;
+
+function getDestroyedAtTime(t) {
+    if (destroyedCacheTime === t) return destroyedCache;
+    const ids = new Set();
+    for (const ev of DATA.damage_events) {
+        if (ev.is_destroyed && ev.time <= t) ids.add(ev.target);
+    }
+    for (const d of DATA.deaths) {
+        if (d.t <= t) ids.add(d.pid);
+    }
+    destroyedCacheTime = t;
+    destroyedCache = ids;
+    return ids;
+}
+
+const pathCache = new Map();
+
+function invalidatePathCache() {
+    pathCache.clear();
+    destroyedCacheTime = null;
+}
+
+function getPlayerPath(pid, t) {
+    const cached = pathCache.get(pid);
+    if (cached && cached.time === t) return cached;
+
+    const pts = getPathUpToTime(pid, t);
+    let path2d = null;
+    if (pts.length > 0) {
+        path2d = new Path2D();
+        path2d.moveTo(pts[0].x, pts[0].y);
+        for (let i = 1; i < pts.length; i++) path2d.lineTo(pts[i].x, pts[i].y);
+    }
+    const lastPt = pts.length > 0 ? pts[pts.length - 1] : null;
+    const result = { time: t, path2d, lastPt };
+    pathCache.set(pid, result);
+    return result;
+}
+
+function buildPlayerTimelines() {
+    const timelines = new Map();
+    for (const player of DATA.players) {
+        timelines.set(player.id, { checkpoints: [{ t: -Infinity, hp: player.max_hp, dead: false }] });
+    }
+    const sortedEvents = [...DATA.damage_events].sort((a, b) => a.time - b.time);
+    for (const ev of sortedEvents) {
+        const timeline = timelines.get(ev.target);
+        if (!timeline) continue;
+        const prevHp = timeline.checkpoints[timeline.checkpoints.length - 1].hp;
+        let hp = prevHp;
+        if (ev.new_hp !== undefined && ev.new_hp !== null) {
+            hp = Math.max(0, ev.new_hp);
+        } else if (ev.damage > 0) {
+            hp = Math.max(0, prevHp - ev.damage);
+        } else if (!ev.is_destroyed) {
+            continue;
+        }
+        timeline.checkpoints.push({ t: ev.time, hp, dead: ev.is_destroyed || hp <= 0 });
+    }
+    for (const d of DATA.deaths) {
+        const timeline = timelines.get(d.pid);
+        if (timeline && !timeline.checkpoints[timeline.checkpoints.length - 1].dead) {
+            timeline.checkpoints.push({ t: d.t, hp: 0, dead: true });
+        }
+    }
+    return timelines;
+}
+
+function checkpointAt(checkpoints, time) {
+    let lo = 0, hi = checkpoints.length - 1, result = checkpoints[0];
+    while (lo <= hi) {
+        const mid = (lo + hi) >> 1;
+        if (checkpoints[mid].t <= time) { result = checkpoints[mid]; lo = mid + 1; }
+        else hi = mid - 1;
+    }
+    return result;
+}
+
+let playerTimelines = new Map();
+
+function getPlayerStateAtTime(id, t) {
+    const timeline = playerTimelines.get(id);
+    return timeline ? checkpointAt(timeline.checkpoints, t) : { hp: 0, dead: false };
+}
+
+let lastUIUpdate = -1;
+const UI_UPDATE_INTERVAL = 0.1;
+
+function shouldUpdateUI() {
+    if (Math.abs(currentTime - lastUIUpdate) >= UI_UPDATE_INTERVAL || !isPlaying) {
+        lastUIUpdate = currentTime;
+        return true;
+    }
+    return false;
+}
+
+const hpEls = {
+    valAlly: document.getElementById('hpValAlly'),
+    valEnemy: document.getElementById('hpValEnemy'),
+    barAlly: document.getElementById('hpBarAlly'),
+    barEnemy: document.getElementById('hpBarEnemy'),
+    trackAlly: document.getElementById('hpTrackAlly'),
+    trackEnemy: document.getElementById('hpTrackEnemy'),
+    killsAlly: document.getElementById('allyAlive'),
+    killsEnemy: document.getElementById('enemyAlive'),
+};
+
+function updateHPBars() {
+    const snap = getHpAtTime(currentTime);
+    const allyTeam = MY_TEAM;
+    const enemyTeam = MY_TEAM === 1 ? 2 : 1;
+    const allyHP = allyTeam === 1 ? snap.hp1 : snap.hp2;
+    const enemyHP = enemyTeam === 1 ? snap.hp1 : snap.hp2;
+    const allyInit = allyTeam === 1 ? snap.initHp1 : snap.initHp2;
+    const enemyInit = enemyTeam === 1 ? snap.initHp1 : snap.initHp2;
+
+    const destroyedIds = getDestroyedAtTime(currentTime);
+    let allyKills = 0, enemyKills = 0;
+    DATA.players.forEach(p => {
+        if (destroyedIds.has(p.id)) {
+            if (isAlly(p.team)) enemyKills++; else allyKills++;
+        }
+    });
+
+    const allyPct = allyInit > 0 ? allyHP / allyInit * 100 : 0;
+    const enemyPct = enemyInit > 0 ? enemyHP / enemyInit * 100 : 0;
+
+    hpEls.valAlly.textContent = allyHP.toLocaleString();
+    hpEls.valEnemy.textContent = enemyHP.toLocaleString();
+    hpEls.barAlly.style.width = allyPct.toFixed(1) + '%';
+    hpEls.barEnemy.style.width = enemyPct.toFixed(1) + '%';
+    hpEls.trackAlly.setAttribute('aria-valuenow', Math.round(allyPct));
+    hpEls.trackEnemy.setAttribute('aria-valuenow', Math.round(enemyPct));
+    hpEls.killsAlly.textContent = allyKills;
+    hpEls.killsEnemy.textContent = enemyKills;
+}
+
+function formatTime(s) {
+    const m = Math.floor(s / 60);
+    const ss = Math.floor(s % 60);
+    return `${String(m).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
+}
+
+function updateProgress() {
+    slider.style.setProperty('--progress', (maxTime > 0 ? currentTime / maxTime * 100 : 0) + '%');
+    updateCaptureIndicator();
+}
+
+function updateTime() {
+    document.getElementById('timeCurrent').textContent = formatTime(currentTime);
+    document.getElementById('timeTotal').textContent = formatTime(maxTime);
+}
+
+let lastRenderedEventIndex = 0;
+
+function renderDmgLog() {
+    const sorted = DATA.damage_events;
+    let end = 0;
+    let lo = 0, hi = sorted.length - 1;
+    while (lo <= hi) {
+        const mid = (lo + hi) >> 1;
+        if (sorted[mid].time <= currentTime) { end = mid + 1; lo = mid + 1; }
+        else hi = mid - 1;
+    }
+
+    if (end === lastRenderedEventIndex) return;
+
+    if (end < lastRenderedEventIndex) {
+        dmgLogEl.innerHTML = '';
+        lastRenderedEventIndex = 0;
+    }
+
+    const fragment = document.createDocumentFragment();
+    for (let i = lastRenderedEventIndex; i < end; i++) {
+        const ev = sorted[i];
+        const entry = buildDmgLogEntry(ev);
+        fragment.insertBefore(entry, fragment.firstChild);
+    }
+    dmgLogEl.insertBefore(fragment, dmgLogEl.firstChild);
+    lastRenderedEventIndex = end;
+}
+
+function buildDmgLogEntry(ev) {
+    const atk = playerMap.get(ev.attacker);
+    const tgt = playerMap.get(ev.target);
+    const atkClass = atk ? (isAlly(atk.team) ? 'ally' : 'enemy') : '';
+    const tgtClass = tgt ? (isAlly(tgt.team) ? 'ally' : 'enemy') : '';
+    const atkShort = atk ? atk.name.split('[')[0].trim() : ev.attacker;
+    const tgtShort = tgt ? tgt.name.split('[')[0].trim() : ev.target;
+
+    const div = document.createElement('div');
+    div.className = 'dmg-entry' + (ev.is_destroyed ? ' destroyed' : '');
+
+    const timeTag = document.createElement('span');
+    timeTag.className = 'time-tag';
+    timeTag.textContent = `[${formatTime(ev.time)}]`;
+    div.appendChild(timeTag);
+
+    const atkSpan = document.createElement('span');
+    atkSpan.className = 'attacker-name ' + atkClass;
+    atkSpan.textContent = atkShort;
+    div.appendChild(atkSpan);
+
+    if (ev.is_destroyed) {
+        const killClass = atk && isAlly(atk.team) ? 'ally-kill' : 'enemy-kill';
+        div.className = 'dmg-entry destroyed ' + killClass;
+
+        div.appendChild(document.createTextNode(' уничтожил '));
+        const tgtSpan = document.createElement('span');
+        tgtSpan.className = 'target-name ' + tgtClass;
+        tgtSpan.textContent = tgtShort;
+        div.appendChild(tgtSpan);
+
+        const icon = document.createElement('span');
+        icon.className = 'kill-icon';
+        icon.textContent = '☠';
+        div.appendChild(icon);
+    } else {
+        div.appendChild(document.createTextNode(' → '));
+        const tgtSpan = document.createElement('span');
+        tgtSpan.className = 'target-name ' + tgtClass;
+        tgtSpan.textContent = tgtShort;
+        div.appendChild(tgtSpan);
+
+        const dmgClass = atk && isAlly(atk.team) ? 'ally-damage' : 'enemy-damage';
+        const dmgSpan = document.createElement('span');
+        dmgSpan.className = 'dmg-value ' + dmgClass;
+        dmgSpan.textContent = `−${ev.damage}`;
+        div.appendChild(document.createTextNode(' '));
+        div.appendChild(dmgSpan);
+    }
+
+    return div;
+}
+
+const activeLines = [];
+const activePopups = [];
+let lineIdCounter = 0;
+
+function triggerAttackLine(attackerPt, targetPt, damage, targetId) {
+    const id = ++lineIdCounter;
+    activeLines.push({ id, attackerPt, targetPt, damage, targetId, startTime: currentTime, duration: CONFIG.POPUP_DURATION });
+}
+
+function updateAttackLines() {
+    for (let i = activeLines.length - 1; i >= 0; i--) {
+        if (currentTime - activeLines[i].startTime > activeLines[i].duration) activeLines.splice(i, 1);
+    }
+}
+
+function drawAttackLines() {
+    if (!mapFilters.shots) return;
+    activeLines.forEach(line => {
+        fgCtx.save();
+        fgCtx.strokeStyle = '#a855f7';
+        fgCtx.lineWidth = 2.8 / zoom;
+        fgCtx.setLineDash([6 / zoom, 4 / zoom]);
+        fgCtx.globalAlpha = 0.9;
+        fgCtx.beginPath();
+        fgCtx.moveTo(line.attackerPt.x, line.attackerPt.y);
+        fgCtx.lineTo(line.targetPt.x, line.targetPt.y);
+        fgCtx.stroke();
+        fgCtx.restore();
+    });
+}
+
+function updateSinglePopupPosition(popup) {
+    const rect = fgCanvas.getBoundingClientRect();
+    const wrapRect = fgCanvas.parentElement.getBoundingClientRect();
+    const canvasW = rect.width;
+    const canvasH = rect.height;
+    const centerX = CONFIG.CANVAS_W / 2;
+    const centerY = CONFIG.CANVAS_H / 2;
+    const screenX = (popup.targetPt.x - centerX) * zoom + centerX + panX;
+    const screenY = (popup.targetPt.y - centerY) * zoom + centerY + panY;
+    const pixelX = (screenX / CONFIG.CANVAS_W) * canvasW + (rect.left - wrapRect.left);
+    const pixelY = (screenY / CONFIG.CANVAS_H) * canvasH + (rect.top - wrapRect.top);
+    popup.element.style.left = (pixelX - 18) + 'px';
+    popup.element.style.top = (pixelY - 28) + 'px';
+    const elapsed = currentTime - popup.startTime;
+    popup.element.style.transform = `translateY(${-Math.min(elapsed * 18, 24)}px)`;
+}
+
+function showDamagePopup(attackerPt, targetPt, damage, targetId, oldHp) {
+    if (!mapFilters.damage) return;
+    const el = document.createElement('div');
+    el.className = 'dmg-popup';
+    const displayDmg = (damage === 0 && oldHp > 0) ? oldHp : damage;
+    el.textContent = `−${displayDmg}`;
+
+    const targetPlayer = playerMap.get(targetId);
+    const isFriendlyFire = targetPlayer && isAlly(targetPlayer.team);
+    el.style.color = isFriendlyFire ? CONFIG.TEAM1_COLOR : '#ff4444';
+    el.style.opacity = '1';
+    el.style.transform = 'translateY(0)';
+    popupsLayer.appendChild(el);
+
+    const popupData = { element: el, targetPt, startTime: currentTime, duration: CONFIG.POPUP_DURATION };
+    activePopups.push(popupData);
+    updateSinglePopupPosition(popupData);
+}
+
+function updatePopups() {
+    for (let i = activePopups.length - 1; i >= 0; i--) {
+        const popup = activePopups[i];
+        const elapsed = currentTime - popup.startTime;
+        updateSinglePopupPosition(popup);
+        if (elapsed > popup.duration) {
+            popup.element.remove();
+            activePopups.splice(i, 1);
+        } else if (elapsed > popup.duration * 0.7) {
+            const fadeProgress = (elapsed - popup.duration * 0.7) / (popup.duration * 0.3);
+            popup.element.style.opacity = (1 - fadeProgress).toFixed(2);
+        }
+    }
+}
+
+const triggeredEvents = new Set();
+
+function checkDamageEvents() {
+    DATA.damage_events.forEach((ev, idx) => {
+        if (ev.time > currentTime || ev.time < currentTime - 1.5) return;
+        if (triggeredEvents.has(idx)) return;
+
+        const atkPt = getLastPtAtTime(ev.attacker, ev.time);
+        const tgtPt = getLastPtAtTime(ev.target, ev.time);
+        if (!atkPt || !tgtPt) return;
+
+        triggeredEvents.add(idx);
+        triggerAttackLine(atkPt, tgtPt, ev.damage, ev.target);
+        showDamagePopup(atkPt, tgtPt, ev.damage, ev.target, ev.old_hp || 0);
+    });
+}
+
+function resetTriggeredEvents() {
+    triggeredEvents.clear();
+    activeLines.length = 0;
+    activePopups.forEach(p => p.element.remove());
+    activePopups.length = 0;
+    lastRenderedEventIndex = 0;
+    dmgLogEl.innerHTML = '';
+    invalidatePathCache();
+}
+
+let initialized = false;
+
+function init() {
+    if (initialized) return;
+    initialized = true;
+
+    CONFIG.CANVAS_W = DATA.canvas_w || 1000;
+    CONFIG.CANVAS_H = DATA.canvas_h || 1000;
+
+    bgCanvas.width = Math.round(CONFIG.CANVAS_W * RENDER_SCALE);
+    bgCanvas.height = Math.round(CONFIG.CANVAS_H * RENDER_SCALE);
+    fgCanvas.width = Math.round(CONFIG.CANVAS_W * RENDER_SCALE);
+    fgCanvas.height = Math.round(CONFIG.CANVAS_H * RENDER_SCALE);
+
+    document.documentElement.style.setProperty('--map-w', CONFIG.CANVAS_W);
+    document.documentElement.style.setProperty('--map-h', CONFIG.CANVAS_H);
+
+    for (const pid in DATA.positions) {
+        DATA.positions[pid].forEach(pt => { if (pt.t > maxTime) maxTime = pt.t; });
+    }
+    if (DATA.duration_sec > maxTime) maxTime = DATA.duration_sec;
+
+    DATA.players.forEach(p => { visibility[p.id] = true; });
+
+    DATA.damage_events.forEach(ev => {
+        if (!ev.is_destroyed) return;
+        const prevTime = deathTimeMap.get(ev.target);
+        if (prevTime === undefined || ev.time < prevTime) {
+            deathTimeMap.set(ev.target, ev.time);
+        }
+    });
+    DATA.deaths.forEach(d => { if (!deathTimeMap.has(d.pid)) deathTimeMap.set(d.pid, d.t); });
+
+    normalizeDestroyedEvents();
+    DATA.damage_events.sort((a, b) => a.time - b.time);
+
+    buildPositionIndex();
+    buildHpSnapshots();
+    buildPlayerDamageTimelines();
+    playerTimelines = buildPlayerTimelines();
+
+    currentTime = 0.05;
+    slider.max = maxTime;
+    slider.value = currentTime;
+    updateProgress();
+    updateTime();
+    updateHPBars();
+    renderPlayerList();
+    renderDmgLog();
+    setupZoom();
+    loadMarkerImages();
+    loadTankIcons();
+
+    applyTimeFromHash();
+}
+
+function normalizeDestroyedEvents() {
+    const byTarget = new Map();
+    DATA.damage_events.forEach(ev => {
+        if (!byTarget.has(ev.target)) byTarget.set(ev.target, []);
+        byTarget.get(ev.target).push(ev);
+    });
+    DATA.deaths.forEach(d => {
+        const events = byTarget.get(d.pid) || [];
+        if (events.some(ev => ev.is_destroyed)) return;
+        const last = events[events.length - 1];
+        if (last) {
+            last.is_destroyed = true;
+            last.new_hp = 0;
+        } else {
+            DATA.damage_events.push({
+                time: d.t, damage: 0, is_ricochet: false, is_destroyed: true,
+                old_hp: 0, new_hp: 0, attacker: '', target: d.pid,
+            });
+        }
+    });
+}
+
+function applyTransform(ctx) {
+    ctx.setTransform(RENDER_SCALE, 0, 0, RENDER_SCALE, 0, 0);
+    ctx.translate(CONFIG.CANVAS_W / 2 + panX, CONFIG.CANVAS_H / 2 + panY);
+    ctx.scale(zoom, zoom);
+    ctx.translate(-CONFIG.CANVAS_W / 2, -CONFIG.CANVAS_H / 2);
+}
+
+function cssToCanvasScale() {
+    const cssWidth = fgCanvas.clientWidth;
+    return cssWidth > 0 ? CONFIG.CANVAS_W / cssWidth : 1;
+}
+
+function drawBackground() {
+    bgCtx.setTransform(1, 0, 0, 1, 0, 0);
+    bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
+    applyTransform(bgCtx);
+
+    try {
+        if (currentMapImg.complete && currentMapImg.naturalWidth > 0) {
+            bgCtx.drawImage(currentMapImg, 0, 0, CONFIG.CANVAS_W, CONFIG.CANVAS_H);
+        } else {
+            bgCtx.fillStyle = '#141a1d';
+            bgCtx.fillRect(0, 0, CONFIG.CANVAS_W, CONFIG.CANVAS_H);
+            bgCtx.strokeStyle = 'rgba(61,75,82,0.08)';
+            bgCtx.lineWidth = 1 / zoom;
+            bgCtx.beginPath();
+            const stepX = CONFIG.CANVAS_W / 20;
+            const stepY = CONFIG.CANVAS_H / 20;
+            for (let i = 0; i <= CONFIG.CANVAS_W; i += stepX) { bgCtx.moveTo(i, 0); bgCtx.lineTo(i, CONFIG.CANVAS_H); }
+            for (let i = 0; i <= CONFIG.CANVAS_H; i += stepY) { bgCtx.moveTo(0, i); bgCtx.lineTo(CONFIG.CANVAS_W, i); }
+            bgCtx.stroke();
+        }
+    } catch (e) {  }
+
+    drawMapMarkers();
+}
+
+const MARKER_LAYOUT_FRAMES = 600;
+let markerLayoutWaits = 0;
+
+function drawMapMarkers() {
+    if (!DATA.markers || !DATA.markers.length) return;
+
+    const cssWidth = bgCanvas.getBoundingClientRect().width;
+    if (!cssWidth) {
+
+        if (markerLayoutWaits++ < MARKER_LAYOUT_FRAMES) requestAnimationFrame(drawMapMarkers);
+        return;
+    }
+    markerLayoutWaits = 0;
+    const size = CONFIG.MARKER_SIZE * (CONFIG.CANVAS_W / cssWidth);
+
+    bgCtx.save();
+    applyTransform(bgCtx);
+    DATA.markers.forEach(marker => {
+        const img = markerImages[marker.icon];
+        if (!img || !img.complete || img.naturalWidth === 0) return;
+        bgCtx.drawImage(img, marker.x - size / 2, marker.y - size / 2, size, size);
+    });
+    bgCtx.restore();
+}
+
+function draw() {
+    fgCtx.setTransform(1, 0, 0, 1, 0, 0);
+    fgCtx.clearRect(0, 0, fgCanvas.width, fgCanvas.height);
+    applyTransform(fgCtx);
+
+    drawAttackLines();
+    drawPlayerPaths();
+    drawPlayerMarkers();
+    drawPlayerLabels();
+    updateRosterStatuses();
+}
+
+function drawPlayerPaths() {
+    if (!mapFilters.paths) return;
+    for (const pid in DATA.positions) {
+        if (!visibility[pid]) continue;
+        const pInfo = playerMap.get(pid);
+        if (!pInfo) continue;
+        const { path2d } = getPlayerPath(pid, currentTime);
+        if (!path2d) continue;
+
+        fgCtx.strokeStyle = playerColor(pInfo);
+        fgCtx.lineWidth = 2.5 / zoom;
+        fgCtx.lineJoin = 'round';
+        fgCtx.lineCap = 'round';
+        fgCtx.globalAlpha = 0.65;
+        fgCtx.stroke(path2d);
+        fgCtx.globalAlpha = 1;
+    }
+}
+
+function drawPlayerMarkers() {
+    for (const pid in DATA.positions) {
+        if (!visibility[pid]) continue;
+        const pInfo = playerMap.get(pid);
+        if (!pInfo) continue;
+
+        const { lastPt } = getPlayerPath(pid, currentTime);
+
+        if (!lastPt) {
+
+            if (isAlly(pInfo.team)) {
+                const spawnPt = positionIndex[pid]?.pts?.[0];
+                if (spawnPt) {
+                    fgCtx.globalAlpha = 0.75;
+                    fgCtx.fillStyle = playerColor(pInfo);
+                    fgCtx.beginPath();
+                    fgCtx.arc(spawnPt.x, spawnPt.y, 4.5 / zoom, 0, Math.PI * 2);
+                    fgCtx.fill();
+                    fgCtx.strokeStyle = '#141a1d';
+                    fgCtx.lineWidth = 1.5 / zoom;
+                    fgCtx.stroke();
+                    fgCtx.globalAlpha = 1;
+                }
+            }
+            continue;
+        }
+
+        const dead = getPlayerStateAtTime(pid, currentTime).dead;
+        const color = playerColor(pInfo);
+        fgCtx.globalAlpha = 1;
+
+        if (dead && mapFilters.deaths) {
+            drawDeathMarker(lastPt, zoom, isAlly(pInfo.team));
+        } else if (!dead) {
+            fgCtx.fillStyle = color;
+            fgCtx.beginPath();
+            fgCtx.arc(lastPt.x, lastPt.y, 6 / zoom, 0, Math.PI * 2);
+            fgCtx.fill();
+            fgCtx.strokeStyle = '#141a1d';
+            fgCtx.lineWidth = 2 / zoom;
+            fgCtx.stroke();
+        }
+    }
+}
+
+function drawDeathMarker(pt, currentZoom, isAllyTeam) {
+    const icon = isAllyTeam ? deathIconAlly : deathIconEnemy;
+    if (!icon.complete || icon.naturalWidth === 0) return;
+    const w = 22 / currentZoom;
+    const h = w * (DEATH_ICON_H / DEATH_ICON_W);
+    fgCtx.drawImage(icon, pt.x - w / 2, pt.y - h / 2, w, h);
+}
+
+function drawPlayerLabels() {
+    for (const pid in DATA.positions) {
+        if (!visibility[pid]) continue;
+        const pInfo = playerMap.get(pid);
+        if (!pInfo?.name) continue;
+
+        const deathTime = deathTimeMap.has(pid) ? deathTimeMap.get(pid) : Infinity;
+        const dead = deathTime <= currentTime;
+        if (dead && !mapFilters.deaths) continue;
+
+        const effectiveTime = Math.min(currentTime, deathTime);
+        const lastPt = getLastPtAtTime(pid, effectiveTime);
+        if (!lastPt) continue;
+
+        const shortName = pInfo.name.split('[')[0];
+        const tankName = pInfo.tank_name || '';
+        const tankCode = pInfo.tank_code || '';
+        const tankImg = tankIconImages[tankCode];
+        const hasTankIcon = tankImg && tankImg.complete && tankImg.naturalWidth > 0;
+
+        const baseY = lastPt.y - 6 / zoom;
+        const lineHeight = 12 / zoom;
+        const iconHeight = 24 / zoom;
+        const gap = 1 / zoom;
+        const textX = lastPt.x + 11 / zoom;
+
+        const elements = [];
+        if (mapFilters.nicknames) elements.push({ type: 'text', text: shortName, height: lineHeight });
+        if (mapFilters.tankNames && tankName) elements.push({ type: 'text', text: tankName, height: lineHeight });
+        if (mapFilters.tankIcons && hasTankIcon) elements.push({ type: 'icon', img: tankImg, height: iconHeight });
+        if (elements.length === 0) continue;
+
+        const totalHeight = elements.reduce((sum, el) => sum + el.height, 0) + (elements.length - 1) * gap;
+        let currentY = baseY - totalHeight / 2;
+        const textColor = dead ? 'rgba(170,170,170,0.5)' : '#ffffff';
+        const strokeColor = dead ? 'rgba(0,0,0,0.45)' : 'rgba(0,0,0,0.7)';
+        const strokeWidth = dead ? 1.5 : 2;
+
+        elements.forEach(el => {
+            if (el.type === 'text') {
+                fgCtx.save();
+                fgCtx.font = `bold ${lineHeight}px "Chakra Petch", Arial, sans-serif`;
+                fgCtx.textAlign = 'left';
+                fgCtx.textBaseline = 'top';
+                fgCtx.strokeStyle = strokeColor;
+                fgCtx.lineWidth = strokeWidth / zoom;
+                fgCtx.strokeText(el.text, textX, currentY);
+                fgCtx.fillStyle = textColor;
+                fgCtx.fillText(el.text, textX, currentY);
+                fgCtx.restore();
+            } else if (el.type === 'icon') {
+                const iconWidth = el.height * (el.img.naturalWidth / el.img.naturalHeight);
+                fgCtx.save();
+                fgCtx.globalAlpha = dead ? 0.4 : 1.0;
+                fgCtx.drawImage(el.img, textX, currentY, iconWidth, el.height);
+                fgCtx.restore();
+            }
+            currentY += el.height + gap;
+        });
+    }
+}
+
+function updateRosterStatuses() {
+    const destroyedNow = getDestroyedAtTime(currentTime);
+    rowRefs.forEach((refs, pid) => {
+        const dead = destroyedNow.has(pid) && mapFilters.deaths;
+        const mark = dead ? '✖' : '';
+        if (refs.statusSpan.textContent !== mark) {
+            refs.statusSpan.textContent = mark;
+            refs.statusSpan.className = 'player-row__status' + (dead ? ' is-dead' : '');
+        }
+    });
+}
+
+const rowRefs = new Map();
+
+function renderPlayerList() {
+    const list = document.getElementById('playerList');
+    list.innerHTML = '';
+    rowRefs.clear();
+
+    const sorted = [...DATA.players].sort((a, b) => {
+        const ca = isAlly(a.team) ? 0 : 1;
+        const cb = isAlly(b.team) ? 0 : 1;
+        return ca - cb || a.name.localeCompare(b.name);
+    });
+
+    sorted.forEach(p => {
+        if (playerFilter === 'ally' && !isAlly(p.team)) return;
+        if (playerFilter === 'enemy' && isAlly(p.team)) return;
+        list.appendChild(buildPlayerRow(p));
+    });
+
+    requestAnimationFrame(applyPlayerRowHeights);
+}
+
+function applyPlayerRowHeights() {
+    const list = document.getElementById('playerList');
+    if (!list) return;
+    const listH = list.getBoundingClientRect().height;
+    if (listH <= 0) return;
+
+    const slots = Math.max(DATA.players.length, list.children.length, 1);
+    const gap = parseFloat(getComputedStyle(list).rowGap) || 0;
+    const rowHeight = (listH - gap * (slots - 1)) / slots;
+
+    const value = rowHeight > 1 ? rowHeight + 'px' : '';
+    list.querySelectorAll('.player-row').forEach(el => { el.style.maxHeight = value; });
+}
+
+function buildPlayerRow(p) {
+    const color = playerColor(p);
+    const visible = visibility[p.id] !== false;
+    const isDead = getPlayerStateAtTime(p.id, currentTime).dead;
+    const dmg = getPlayerDamageAtTime(p.id, currentTime);
+    const shortName = p.name.split('[')[0].trim();
+    const tankIconSrc = p.tank_code ? `${CONFIG.ICONS_PATH}${p.tank_code.replace(/:/g, '-')}.png` : '';
+
+    const row = document.createElement('div');
+    row.className = 'player-row' + (visible ? '' : ' is-disabled');
+    row.style.setProperty('--team-color', color);
+    row.dataset.pid = p.id;
+    row.setAttribute('role', 'listitem');
+
+    const iconWrap = document.createElement('div');
+    iconWrap.className = 'player-row__icon';
+    if (tankIconSrc) {
+        const img = document.createElement('img');
+        img.src = tankIconSrc;
+        img.alt = p.tank_name || '';
+        img.loading = 'lazy';
+        img.onerror = function () { this.style.visibility = 'hidden'; };
+        iconWrap.appendChild(img);
+    } else {
+        const placeholder = document.createElement('div');
+        placeholder.className = 'player-row__icon-placeholder';
+        iconWrap.appendChild(placeholder);
+    }
+    row.appendChild(iconWrap);
+
+    const info = document.createElement('div');
+    info.className = 'player-row__info';
+    const nickSpan = document.createElement('span');
+    nickSpan.className = 'player-row__nick';
+    nickSpan.textContent = shortName;
+    info.appendChild(nickSpan);
+    const tankSpan = document.createElement('span');
+    tankSpan.className = 'player-row__tank';
+    tankSpan.textContent = p.tank_name || '';
+    info.appendChild(tankSpan);
+    row.appendChild(info);
+
+    const aside = document.createElement('div');
+    aside.className = 'player-row__aside';
+
+    const valuesCol = document.createElement('div');
+    valuesCol.className = 'player-row__values';
+
+    const dmgSpan = document.createElement('span');
+    dmgSpan.className = 'player-row__dmg' + (dmg > 0 ? ' has-damage' : '');
+    dmgSpan.textContent = dmg > 0 ? dmg.toLocaleString() : '—';
+    valuesCol.appendChild(dmgSpan);
+
+    const hpState = getPlayerStateAtTime(p.id, currentTime);
+    const curHp = Math.max(0, Math.round(hpState.hp));
+    const maxHp = p.max_hp || 0;
+    const hpSpan = document.createElement('span');
+    hpSpan.className = 'player-row__hp' + (curHp <= 0 ? ' is-zero' : '');
+    hpSpan.append(`${maxHp} / `);
+    const hpCurrentSpan = document.createElement('span');
+    hpCurrentSpan.className = 'hp-current';
+    hpCurrentSpan.textContent = curHp;
+    hpSpan.appendChild(hpCurrentSpan);
+    valuesCol.appendChild(hpSpan);
+
+    aside.appendChild(valuesCol);
+
+    const statusSpan = document.createElement('span');
+    statusSpan.className = 'player-row__status' + (isDead ? ' is-dead' : '');
+    statusSpan.textContent = isDead ? '✖' : '';
+    aside.appendChild(statusSpan);
+
+    row.appendChild(aside);
+
+    rowRefs.set(p.id, { dmgSpan, hpSpan, hpCurrentSpan, statusSpan });
+
+    row.addEventListener('click', () => {
+        visibility[p.id] = !visibility[p.id];
+        row.classList.toggle('is-disabled', !visibility[p.id]);
+        invalidatePathCache();
+        draw();
+    });
+
+    return row;
+}
+
+function updatePlayerDamages() {
+    DATA.players.forEach(p => {
+        const refs = rowRefs.get(p.id);
+        if (!refs) return;
+
+        const dmg = getPlayerDamageAtTime(p.id, currentTime);
+        const dmgText = dmg > 0 ? dmg.toLocaleString() : '—';
+        if (refs.dmgSpan.textContent !== dmgText) {
+            refs.dmgSpan.textContent = dmgText;
+            refs.dmgSpan.className = 'player-row__dmg' + (dmg > 0 ? ' has-damage' : '');
+        }
+
+        const curHp = Math.max(0, Math.round(getPlayerStateAtTime(p.id, currentTime).hp));
+        const hpText = String(curHp);
+        if (refs.hpCurrentSpan.textContent !== hpText) {
+            refs.hpCurrentSpan.textContent = hpText;
+            refs.hpSpan.className = 'player-row__hp' + (curHp <= 0 ? ' is-zero' : '');
+        }
+    });
+}
+
+(function initGlobalTooltips() {
+    const tooltip = document.getElementById('uiTooltip');
+
+    const TOOLTIP_DELAY = 1000;
+    let showTimer = null;
+    document.querySelectorAll('[data-tooltip]').forEach(el => {
+        el.addEventListener('mouseenter', () => {
+            clearTimeout(showTimer);
+            showTimer = setTimeout(() => {
+                tooltip.textContent = el.dataset.tooltip;
+                const r = el.getBoundingClientRect();
+                tooltip.style.left = (r.left + r.width / 2) + 'px';
+                tooltip.style.top = (r.top - 8) + 'px';
+                tooltip.style.transform = 'translateX(-50%) translateY(calc(-100% + 3px))';
+                tooltip.removeAttribute('aria-hidden');
+                requestAnimationFrame(() => tooltip.classList.add('is-visible'));
+            }, TOOLTIP_DELAY);
+        });
+        el.addEventListener('mouseleave', () => {
+            clearTimeout(showTimer);
+            tooltip.classList.remove('is-visible');
+            tooltip.setAttribute('aria-hidden', 'true');
+        });
+    });
+})();
+
+function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+
+function animateViewTo(targetZoom, targetPanX, targetPanY, duration, onDone) {
+    const startZoom = zoom, startPanX = panX, startPanY = panY;
+    const startTime = performance.now();
+
+    function step(now) {
+        const elapsed = now - startTime;
+        const t = Math.min(elapsed / duration, 1);
+        const e = easeOutCubic(t);
+        zoom = startZoom + (targetZoom - startZoom) * e;
+        panX = startPanX + (targetPanX - startPanX) * e;
+        panY = startPanY + (targetPanY - startPanY) * e;
+
+        document.getElementById('zoomLevel').textContent = Math.round(zoom * 100) + '%';
+        drawBackground();
+        draw();
+        updatePopups();
+
+        if (t < 1) requestAnimationFrame(step);
+        else if (onDone) onDone();
+    }
+    requestAnimationFrame(step);
+}
+
+function resetView() {
+    animateViewTo(1, 0, 0, 500);
+}
+
+let zoomAnimId = null;
+
+function animateZoomTo(targetZoom, mx, my, duration = 220) {
+    targetZoom = Math.max(CONFIG.ZOOM_MIN, Math.min(CONFIG.ZOOM_MAX, targetZoom));
+
+    const halfW = CONFIG.CANVAS_W / 2;
+    const halfH = CONFIG.CANVAS_H / 2;
+
+    let worldX = halfW, worldY = halfH;
+    if (mx !== undefined) {
+        worldX = (mx - halfW - panX) / zoom + halfW;
+        worldY = (my - halfH - panY) / zoom + halfH;
+    }
+
+    const startZoom = zoom;
+    const startTime = performance.now();
+    if (zoomAnimId) cancelAnimationFrame(zoomAnimId);
+
+    function step(now) {
+        const elapsed = now - startTime;
+        const t = Math.min(elapsed / duration, 1);
+        const e = easeOutCubic(t);
+        zoom = startZoom + (targetZoom - startZoom) * e;
+
+        if (mx !== undefined) {
+            panX = mx - halfW - (worldX - halfW) * zoom;
+            panY = my - halfH - (worldY - halfH) * zoom;
+        }
+
+        document.getElementById('zoomLevel').textContent = Math.round(zoom * 100) + '%';
+        drawBackground();
+        draw();
+        updatePopups();
+
+        zoomAnimId = t < 1 ? requestAnimationFrame(step) : null;
+    }
+    zoomAnimId = requestAnimationFrame(step);
+}
+
+function setZoom(newZoom, mx, my) {
+    newZoom = Math.max(CONFIG.ZOOM_MIN, Math.min(CONFIG.ZOOM_MAX, newZoom));
+    const halfW = CONFIG.CANVAS_W / 2;
+    const halfH = CONFIG.CANVAS_H / 2;
+
+    if (mx !== undefined) {
+        const worldX = (mx - halfW - panX) / zoom + halfW;
+        const worldY = (my - halfH - panY) / zoom + halfH;
+        zoom = newZoom;
+        panX = mx - halfW - (worldX - halfW) * zoom;
+        panY = my - halfH - (worldY - halfH) * zoom;
+    } else {
+        zoom = newZoom;
+    }
+
+    document.getElementById('zoomLevel').textContent = Math.round(zoom * 100) + '%';
+    drawBackground();
+    draw();
+    updatePopups();
+}
+
+function setupZoom() {
+    document.getElementById('zoomIn').onclick = () => animateZoomTo(zoom * 1.25);
+    document.getElementById('zoomOut').onclick = () => animateZoomTo(zoom / 1.25);
+
+    document.getElementById('zoomReset').onclick = () => {
+        resetView();
+        const icon = document.querySelector('#zoomReset .reset-icon');
+        icon.style.animation = 'none';
+        icon.offsetWidth;
+        icon.style.animation = '';
+        icon.classList.add('is-spinning');
+        icon.addEventListener('animationend', () => icon.classList.remove('is-spinning'), { once: true });
+    };
+
+    fgCanvas.addEventListener('dblclick', resetView);
+
+    let wheelZoomTarget = zoom;
+    let wheelMx = 0, wheelMy = 0;
+    let wheelRafPending = false;
+
+    fgCanvas.addEventListener('wheel', e => {
+        e.preventDefault();
+        if (zoomAnimId) { cancelAnimationFrame(zoomAnimId); zoomAnimId = null; }
+        if (!wheelRafPending) wheelZoomTarget = zoom;
+
+        wheelZoomTarget = Math.max(CONFIG.ZOOM_MIN, Math.min(CONFIG.ZOOM_MAX, wheelZoomTarget * (e.deltaY > 0 ? 0.9 : 1.1)));
+
+        const scale = cssToCanvasScale();
+        wheelMx = e.offsetX * scale;
+        wheelMy = e.offsetY * scale;
+
+        if (!wheelRafPending) {
+            wheelRafPending = true;
+            requestAnimationFrame(() => {
+                wheelRafPending = false;
+                setZoom(wheelZoomTarget, wheelMx, wheelMy);
+            });
+        }
+    }, { passive: false });
+
+    let dragRafPending = false;
+    let activePointerId = null;
+
+    fgCanvas.addEventListener('pointerdown', e => {
+        if (e.button !== 0 && e.pointerType === 'mouse') return;
+        if (activePointerId !== null) return;
+        activePointerId = e.pointerId;
+        isDragging = true;
+        dragStartX = e.clientX;
+        dragStartY = e.clientY;
+        fgCanvas.setPointerCapture(e.pointerId);
+    });
+    fgCanvas.addEventListener('pointermove', e => {
+        if (!isDragging || e.pointerId !== activePointerId) return;
+
+        const scale = cssToCanvasScale();
+        panX += (e.clientX - dragStartX) * scale;
+        panY += (e.clientY - dragStartY) * scale;
+        dragStartX = e.clientX;
+        dragStartY = e.clientY;
+
+        if (!dragRafPending) {
+            dragRafPending = true;
+            requestAnimationFrame(() => {
+                dragRafPending = false;
+                drawBackground();
+                draw();
+                updatePopups();
+            });
+        }
+    });
+
+    const endDrag = e => {
+        if (e.pointerId !== activePointerId) return;
+        activePointerId = null;
+        isDragging = false;
+        if (fgCanvas.hasPointerCapture(e.pointerId)) fgCanvas.releasePointerCapture(e.pointerId);
+    };
+    fgCanvas.addEventListener('pointerup', endDrag);
+    fgCanvas.addEventListener('pointercancel', endDrag);
+}
+
+const playBtn = document.getElementById('playBtn');
+
+playBtn.onclick = () => {
+    if (currentTime >= maxTime) {
+        currentTime = 0;
+        resetTriggeredEvents();
+        isPlaying = true;
+        playBtn.classList.add('is-active');
+        lastFrameTime = null;
+        requestAnimationFrame(loop);
+        return;
+    }
+    isPlaying = !isPlaying;
+    if (isPlaying) {
+        playBtn.classList.add('is-active');
+        lastFrameTime = null;
+        requestAnimationFrame(loop);
+    } else {
+        playBtn.classList.remove('is-active');
+
+        scheduleHashUpdate();
+    }
+};
+
+function spinScrubIcon(btn, spinClass) {
+    const icon = btn.querySelector('.scrub-icon');
+    if (!icon) return;
+    icon.classList.remove('spin-ccw', 'spin-cw');
+    void icon.offsetWidth;
+    icon.classList.add(spinClass);
+}
+
+const rewindBtn = document.getElementById('rewindBtn');
+const forwardBtn = document.getElementById('forwardBtn');
+
+rewindBtn.addEventListener('click', () => {
+    scrubBy(-5);
+    spinScrubIcon(rewindBtn, 'spin-ccw');
+});
+forwardBtn.addEventListener('click', () => {
+    scrubBy(5);
+    spinScrubIcon(forwardBtn, 'spin-cw');
+});
+rewindBtn.querySelector('.scrub-icon').addEventListener('animationend', function () { this.classList.remove('spin-ccw'); });
+forwardBtn.querySelector('.scrub-icon').addEventListener('animationend', function () { this.classList.remove('spin-cw'); });
+
+function clearTransientPlaybackState() {
+    triggeredEvents.clear();
+    activeLines.length = 0;
+    activePopups.forEach(p => p.element.remove());
+    activePopups.length = 0;
+    invalidatePathCache();
+}
+
+function applyTimeChange() {
+    clearTransientPlaybackState();
+    checkDamageEvents();
+    refreshAllPlaybackUI();
+    updatePopups();
+}
+
+function refreshAllPlaybackUI() {
+    updateProgress();
+    updateTime();
+    updateHPBars();
+    renderDmgLog();
+    updatePlayerDamages();
+    draw();
+}
+
+slider.addEventListener('input', () => {
+    currentTime = parseFloat(slider.value);
+    isPlaying = false;
+    playBtn.classList.remove('is-active');
+    applyTimeChange();
+    scheduleHashUpdate();
+});
+
+function loop(ts) {
+    if (!isPlaying) return;
+    if (lastFrameTime === null) lastFrameTime = ts;
+    const delta = (ts - lastFrameTime) / 1000;
+    lastFrameTime = ts;
+
+    const speed = parseFloat(document.getElementById('speedWrapper').dataset.speed ?? '1');
+    const prevTime = currentTime;
+    currentTime += delta * speed;
+
+    if (currentTime >= maxTime) {
+        currentTime = maxTime;
+        isPlaying = false;
+        playBtn.classList.remove('is-active');
+    }
+
+    if (Math.floor(prevTime * 4) !== Math.floor(currentTime * 4)) {
+        invalidatePathCache();
+    }
+
+    slider.value = currentTime;
+    updateProgress();
+    updateTime();
+    checkDamageEvents();
+    updateAttackLines();
+    updatePopups();
+
+    if (shouldUpdateUI()) {
+        updateHPBars();
+        renderDmgLog();
+        updatePlayerDamages();
+    }
+
+    draw();
+    if (isPlaying) requestAnimationFrame(loop);
+}
+
+document.querySelectorAll('.team-filter__btn').forEach(btn => {
+    btn.onclick = () => {
+        document.querySelectorAll('.team-filter__btn').forEach(b => b.classList.remove('is-active'));
+        btn.classList.add('is-active');
+        playerFilter = btn.dataset.filter;
+        renderPlayerList();
+        updateTeamFilterPill();
+    };
+});
+
+function updateTeamFilterPill() {
+    const pill = document.getElementById('teamFilterPill');
+    const activeBtn = document.querySelector('.team-filter__btn.is-active');
+    const wrap = document.querySelector('.team-filter');
+    if (!pill || !activeBtn || !wrap) return;
+    const wrapRect = wrap.getBoundingClientRect();
+    const btnRect = activeBtn.getBoundingClientRect();
+    pill.style.setProperty('--pill-w', btnRect.width + 'px');
+    pill.style.setProperty('--pill-x', (btnRect.left - wrapRect.left - 4) + 'px');
+}
+
+updateTeamFilterPill();
+window.addEventListener('resize', updateTeamFilterPill);
+
+const mfoHires = document.getElementById('mfo-hires');
+if (!"{{IMG_SRC_HIGH}}") {
+    mfoHires.style.opacity = '0.3';
+    mfoHires.style.pointerEvents = 'none';
+}
+
+mfoHires.addEventListener('click', () => {
+    const wantHigh = !mfoHires.classList.contains('is-on');
+    mfoHires.classList.toggle('is-on', wantHigh);
+
+    if (wantHigh) {
+        if (highResLoaded) {
+            currentMapImg = mapImgHigh;
+            drawBackground();
+            draw();
+        } else if (!highResLoading) {
+            highResLoading = true;
+            mapImgHigh.src = "{{IMG_SRC_HIGH}}";
+        }
+    } else {
+        currentMapImg = mapImgLow;
+        drawBackground();
+        draw();
+    }
+});
+
+mapImgHigh.onload = () => {
+    highResLoaded = true;
+    if (highResLoading) {
+        currentMapImg = mapImgHigh;
+        highResLoading = false;
+        drawBackground();
+        draw();
+    }
+};
+mapImgHigh.onerror = () => {
+    highResLoaded = false;
+    highResLoading = false;
+    mfoHires.classList.remove('is-on');
+    currentMapImg = mapImgLow;
+    drawBackground();
+};
+
+(function initFilterPanel() {
+    const toggleBtn = document.getElementById('filterToggleBtn');
+    const panel = document.getElementById('mapFilterPanel');
+
+    const hasCustomFilters = () =>
+        Object.keys(MAP_FILTER_DEFAULTS).some(k => mapFilters[k] !== MAP_FILTER_DEFAULTS[k]);
+
+    const syncToggleState = () => {
+        toggleBtn.classList.toggle('is-active', panel.classList.contains('is-open') || hasCustomFilters());
+    };
+
+    toggleBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        const isOpen = panel.classList.toggle('is-open');
+        toggleBtn.setAttribute('aria-expanded', isOpen);
+        syncToggleState();
+    });
+
+    document.querySelectorAll('.map-filter-option').forEach(opt => {
+        opt.addEventListener('click', () => {
+            const key = opt.dataset.key;
+            if (key === 'hires') return;
+            mapFilters[key] = !mapFilters[key];
+            opt.classList.toggle('is-on', mapFilters[key]);
+            opt.setAttribute('aria-checked', mapFilters[key]);
+            syncToggleState();
+            invalidatePathCache();
+            draw();
+        });
+
+        opt.addEventListener('keydown', e => {
+            if (e.key !== 'Enter' && e.key !== ' ') return;
+            e.preventDefault();
+            opt.click();
+        });
+    });
+
+    document.addEventListener('click', e => {
+        if (panel.contains(e.target) || e.target === toggleBtn) return;
+        panel.classList.remove('is-open');
+        toggleBtn.setAttribute('aria-expanded', 'false');
+        syncToggleState();
+    });
+})();
+
+(function initSpeedControl() {
+    const wrapper = document.getElementById('speedWrapper');
+    const btn = document.getElementById('speedBtn');
+    const dropdown = document.getElementById('speedDropdown');
+    wrapper.dataset.speed = '1';
+
+    btn.addEventListener('click', e => {
+        e.stopPropagation();
+        dropdown.classList.toggle('is-open');
+        btn.setAttribute('aria-expanded', dropdown.classList.contains('is-open'));
+    });
+
+    dropdown.querySelectorAll('.speed-control__option').forEach(opt => {
+        opt.addEventListener('click', () => {
+            wrapper.dataset.speed = opt.dataset.value;
+            btn.textContent = opt.textContent;
+            dropdown.querySelectorAll('.speed-control__option').forEach(o => {
+                o.classList.remove('is-selected');
+                o.setAttribute('aria-selected', 'false');
+            });
+            opt.classList.add('is-selected');
+            opt.setAttribute('aria-selected', 'true');
+            dropdown.classList.remove('is-open');
+            btn.setAttribute('aria-expanded', 'false');
+        });
+    });
+
+    document.addEventListener('click', () => {
+        dropdown.classList.remove('is-open');
+        btn.setAttribute('aria-expanded', 'false');
+    });
+})();
+
+window.addEventListener('resize', () => {
+    drawBackground();
+    draw();
+    applyPlayerRowHeights();
+});
+
+if (typeof ResizeObserver === 'function') {
+    new ResizeObserver(() => {
+        if (!initialized) return;
+        drawBackground();
+        draw();
+    }).observe(bgCanvas);
+}
+
+function scrubBy(deltaSeconds) {
+    currentTime = Math.min(maxTime, Math.max(0, currentTime + deltaSeconds));
+    slider.value = currentTime;
+    applyTimeChange();
+    scheduleHashUpdate();
+}
+
+const HASH_PARAM_TIME = 't';
+
+function readTimeFromHash() {
+    const hash = location.hash.replace(/^#/, '');
+    if (!hash) return null;
+    const value = new URLSearchParams(hash).get(HASH_PARAM_TIME);
+    const seconds = parseFloat(value);
+    return Number.isFinite(seconds) && seconds >= 0 ? seconds : null;
+}
+
+let hashUpdateTimer = null;
+
+function scheduleHashUpdate() {
+    clearTimeout(hashUpdateTimer);
+    hashUpdateTimer = setTimeout(() => {
+        const seconds = Math.round(currentTime);
+        const hash = seconds > 0 ? `#${HASH_PARAM_TIME}=${seconds}` : ' ';
+        history.replaceState(null, '', hash === ' ' ? location.pathname + location.search : hash);
+    }, 400);
+}
+
+function seekTo(seconds) {
+    currentTime = Math.min(maxTime, Math.max(0, seconds));
+    slider.value = currentTime;
+    applyTimeChange();
+}
+
+function applyTimeFromHash() {
+    const seconds = readTimeFromHash();
+    if (seconds === null) return;
+    isPlaying = false;
+    playBtn.classList.remove('is-active');
+    seekTo(seconds);
+}
+
+window.addEventListener('hashchange', applyTimeFromHash);
+
+document.addEventListener('keydown', e => {
+
+    const interactive = e.target instanceof Element &&
+        e.target.closest('input, textarea, select, button, a[href], [contenteditable], [role="checkbox"]');
+    if (interactive) return;
+
+    if (e.code === 'Space') {
+        e.preventDefault();
+        playBtn.click();
+    } else if (e.code === 'ArrowRight') {
+        e.preventDefault();
+        scrubBy(5);
+    } else if (e.code === 'ArrowLeft') {
+        e.preventDefault();
+        scrubBy(-5);
+    }
+});
+
+(function initHitsLink() {
+    const link = document.getElementById('hitsLinkBtn');
+    if (link && !link.getAttribute('href')) {
+        link.classList.add('is-disabled');
+    }
+})();
+
+mapImgLow.addEventListener('load', init);
+mapImgLow.addEventListener('error', init);
+if (!"{{IMG_SRC_LOW}}" || mapImgLow.complete) init();
+</script>
+</body>
+</html>

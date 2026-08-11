@@ -1,0 +1,1646 @@
+1	Боевой робот	Clinger	china:Ch00_ClingeBot_SH
+2	NC-31	Renault NC-31	china:Ch06_Renault_NC31
+3	Bái Láng	Bái Láng	china:Ch24_Type64_SH
+4	T-26G FT	T-26G FT	china:Ch30_T-26G_FT
+5	VAE Type B	Vickers Mk. E Type B	china:Ch07_Vickers_MkE_Type_BT26
+6	T-26 CN	T-26 CN	china:Ch53_T_26_China
+7	Vickers 6 t	Vickers 6 ton	china:Ch60_Vickers_TypeB
+8	M3G FT	M3G FT	china:Ch31_M3G_FT
+9	Chi-Ha	Type 2597 Chi-Ha	china:Ch08_Type97_Chi_Ha
+10	SU-76G FT	SU-76G FT	china:Ch32_SU-76G_FT
+11	M5A1 Stuart	M5A1 Stuart	china:Ch09_M5
+12	60G FT	60G FT	china:Ch33_60G_FT
+13	Type T-34	Type T-34	china:Ch21_T34
+14	WZ-131G FT	WZ-131G FT	china:Ch34_WZ131G_FT
+15	59-16	59-16	china:Ch15_59_16
+16	Type 64	Type 64	china:Ch24_Type64
+17	Type 58	Type 58	china:Ch20_Type58
+18	T-34-2G FT	T-34-2G FT	china:Ch35_T-34-2G_FT
+19	BZ-58	BZ-58	china:Ch51_BZ_58
+20	IS-2	IS-2	china:Ch10_IS2
+21	GPT-58	GPT-58	china:Ch70_GPT_58
+22	Type 62	Type 62	china:Ch02_Type62
+23	WZ-131	WZ-131	china:Ch16_WZ_131
+24	T-34-1	T-34-1	china:Ch04_T34_1
+25	WZ-120-1G FT FL	WZ-120-1G FT FL	china:Ch39_WZ120_1G_FT_FL
+26	WZ-111-1G FT	WZ-111-1G FT	china:Ch36_WZ111_1G_FT
+27	WZ-120-1G FT	WZ-120-1G FT	china:Ch39_WZ120_1G_FT
+28	110	110	china:Ch11_110_IGR
+29	112 FL	112 FL	china:Ch23_112_FL
+30	BZ-166	BZ-166	china:Ch50_BZ_166
+31	617Q	STT-617Q	china:Ch63_STT_617Q
+32	WZ-57-I	WZ-57-I	china:Ch74_WZ_57_I
+33	WZ-111	WZ-111	china:Ch03_WZ-111
+34	Alpine Tiger	WZ-111 Alpine Tiger	china:Ch03_WZ_111_A
+35	110	110	china:Ch11_110
+36	112	112	china:Ch23_112
+37	WZ-113-II	WZ-113-II	china:Ch46_113_140
+38	BZ-176	BZ-176	china:Ch47_BZ_176
+39	BZ-74-1	BZ-74-1	china:Ch56_BZ_74_1
+40	WZ-111 6	WZ-111 model 6	china:Ch58_111_Vz51
+41	GPT-166	GPT-166	china:Ch71_GPT_166
+42	GPT-166 (T)	GPT-166 Test	china:Ch71_GPT_166_T
+43	WZ-132	WZ-132	china:Ch17_WZ131_1_WZ132_IGR
+44	WZ-132	WZ-132	china:Ch17_WZ131_1_WZ132
+45	WZ-132 FL	WZ-132 FL	china:Ch17_WZ131_1_WZ132_FL
+46	M41D	M41D	china:Ch42_WalkerBulldog_M41D
+47	122 TM	122 TM	china:Ch43_WZ_122_2
+48	ZZT-58	ZZT-58	china:Ch62_ZZT_58
+49	Type 59	Type 59	china:Ch01_Type59
+50	Type 59 G	Type 59 G	china:Ch01_Type59_Gold
+51	T-34-2	T-34-2	china:Ch05_T34_2
+52	T-34-3	T-34-3	china:Ch14_T34_3
+53	59-Patton	59-Patton	china:Ch26_59_Patton
+54	First Warrior	Type 59 First Warrior	china:Ch65_Type59_IC4_3DSt
+55	WZ-120G FT	WZ-120G FT	china:Ch40_WZ120G_FT
+56	WZ-111G FT	WZ-111G FT	china:Ch37_WZ111G_FT
+57	WZ-120G FT	WZ-120G FT	china:Ch40_WZ120G_FT
+58	WZ-111 1-4 FL	WZ-111 model 1-4 FL	china:Ch12_111_1_2_3_FL
+59	WZ-114	WZ-114	china:Ch45_WZ_114
+60	BZ-68	BZ-68	china:Ch49_BZ_68
+61	WZ-111 1-4	WZ-111 model 1-4	china:Ch12_111_1_2_3
+62	BZ-58-2	BZ-58-2	china:Ch59_BZ58_2
+63	Yong Bing	Yong Bing	china:Ch63_Yong_Bing
+64	GPT-68	GPT-68	china:Ch72_GPT_68
+65	WZ-132A	WZ-132A	china:Ch28_WZ_132A
+66	DZT-159	DZT-159	china:Ch61_DZT_159
+67	Dragon's Soul	DZT-159 Dragon's Soul	china:Ch61_DZT_159_CFE_A
+68	Ziqiang	Ziqiang	china:Ch66_121_2_Ziqiang
+69	WZ-120	WZ-120	china:Ch18_WZ-120
+70	WZ-113G FT	WZ-113G FT	china:Ch38_WZ113G_FT
+71	WZ-113G FT 7x7	WZ-113G FT 7x7	china:Ch38_WZ113G_FT_7x7
+72	114 SP2	114 SP2	china:Ch44_114_SP2
+73	BZ-75	BZ-75	china:Ch48_BZ_75
+74	BZ-75 7x7	BZ-75 7x7	china:Ch48_BZ_75_7x7
+75	116-F3	116-F3	china:Ch52_WZ_122_6_F3
+76	BZT-70	BZT-70	china:Ch57_BZT_70
+77	Divine Valor	Divine Valor	china:Ch62_BZ_75_M
+78	113	113	china:Ch22_113
+79	113	113	china:Ch22_113P
+80	113 BO	113 Beijing Opera	china:Ch22_113_Beijing_Opera
+81	WZ-111 5A	WZ-111 model 5A	china:Ch41_WZ_111_5A
+82	WZ-111-5A 7х7	WZ-111-5A 7х7	china:Ch41_WZ_111_5A_7x7
+83	WZ-111-5A BB	WZ-111-5A BB	china:Ch41_WZ_111_5A_bob
+84	WZ-111 MT	WZ-111 MT	china:Ch41_WZ_111_MT
+85	WZ-111 QL	WZ-111 Qilin	china:Ch41_WZ_111_QL
+86			china:Ch41_WZ_111_TEST
+87	116-F3	116-F3	china:Ch52_WZ_122_6_F3
+88	BZ-72-1	BZ-72-1	china:Ch54_BZ_72_1
+89	BZ-74-1	BZ-74-1	china:Ch56_BZ_74_1
+90	GPT-75	GPT-75	china:Ch73_GPT_75
+91	GPT-75 (T)	GPT-75 Test	china:Ch73_GPT_75_T
+92	WZ-132-1	WZ-132-1	china:Ch29_Type_62C_prot
+93	DZT-159	DZT-159	china:Ch61_DZT_159
+94	121	121	china:Ch19_121
+95	121 7x7	121 7x7	china:Ch19_121_7x7
+96	121	121	china:Ch19_121_IGR
+97	121B	121B	china:Ch25_121_mod_1971B
+98	Царь	Царь обезьян	china:Ch25_121_mod_1971B_MK
+99	PTZ-78	PTZ-78	china:Ch70_PTZ_78
+100	BZT-70	BZT-70	china:Ch57_BZT_70
+101	BZT-70 (T)	BZT-70 Test	china:Ch57_BZT_70_T
+102	BZ-79	BZ-79	china:Ch67_BZ_79
+103	113 T	113 T	china:Ch22_113_T
+104	Спутник	Спутник	czech:Cz00_COSM_Gravizapa
+105	Спутник	Спутник	czech:Cz00_COSM_Gravizapa_02
+106	Метеор	Метеор	czech:Cz00_COSM_Pepelac
+107		Метеор	czech:Cz00_COSM_Pepelac_02
+108	K-housenka	Kolohousenka	czech:Cz06_Kolohousenka
+109	LT vz. 35	LT vz. 35	czech:Cz03_LT_vz35
+110	LT vz. 38	LT vz. 38	czech:Cz10_LT_vz38
+111	Pzw.39	Pzw.39	czech:Cz29_Pzw_39
+112	Škoda T 15A	Škoda T 15A	czech:Cz22_Skoda_T_15A
+113	ST vz. 39	ST vz. 39	czech:Cz11_V_8_H
+114	Tatra Т-III	Tatra Т-III	czech:Cz31_Tatra_T_III
+115	Škoda T 24	Škoda T 24	czech:Cz09_T_24
+116	Škoda T 40	Škoda T 40	czech:Cz01_Skoda_T40
+117	Škoda T 25	Škoda T 25	czech:Cz08_T_25
+118	Škoda T 45	Škoda T 45	czech:Cz15_Skoda_T-45_Prem
+119	Vz. 44-1	Vz. 44-1	czech:Cz19_Vz_44_1
+120	Škoda T 17	Škoda T 17	czech:Cz23_Skoda_T_17
+121	T-34/100	Konštrukta T-34/100	czech:Cz05_T34_100
+122	Sekera	SD-122/49 Sekera	czech:Cz39_SD_122_49_Sekera
+123	ShPTK-TVP	ShPTK-TVP 100	czech:Cz20_ShPTK_TVP_100_mm
+124	Šotek	Šotek	czech:Cz20_ShPTK_TVP_100_mm_CO
+125	SZDV Vz. 50	SZDV Vz. 50	czech:Cz38_SZDV_vz50
+126	Škoda T 56	Škoda T 56	czech:Cz14_Skoda_T-56
+127	Projekt ION	Projekt ION	czech:Cz14_Skoda_T-56_WT24_3Dst
+128	TNH 105/1000	TNH 105/1000	czech:Cz18_TNH_105_1000
+129	TST	TST	czech:Cz21_TST
+130	Blesk	Vz. 64 Blesk	czech:Cz24_Vz_64_Blesk
+131	Squall	Vz. 68 Squall	czech:Cz33_Vz_68_Squall
+132	TVP VTU	TVP VTU Koncept	czech:Cz07_TVP_46
+133	TVP VTU	TVP VTU Koncept	czech:Cz07_TVP_46
+134	Škoda T 27	Škoda T 27	czech:Cz13_T_27
+135	Jezevec	Jezevec	czech:Cz36_Jezevec
+136	Dravec	Vz. 59 Dravec	czech:Cz37_Vz_59_Dravec
+137	Projekt SAT	Projekt SAT	czech:Cz38_Projekt_SAT
+138	Klevets	Klevets	czech:Cz35_Klevets
+139	TT-130M	TT-130M	czech:Cz35_T56_G
+140	Lišák v.2	Lišák v.2	czech:Cz36_Lisak_v2
+141	TNH T Vz. 51	TNH T Vz. 51	czech:Cz16_TNH_T_vz51
+142	TBT	TBT	czech:Cz30_TBT
+143	Vz. 58 K	Vz. 58 Koncept	czech:Cz32_Vz_58_Koncept
+144	Šelma	LPT-67 Šelma	czech:Cz28_LPT_67_Selma
+145	Ogar	ZŤS Vz.63-1 Ogar	czech:Cz43_Ogar
+146	Škoda T 50	Škoda T 50	czech:Cz02_TVP_T50
+147	Škoda T 50 FL	Škoda T 50 FL	czech:Cz02_TVP_T50_FL
+148	Jasan	Vz. 62 Jasan	czech:Cz39_STMP_Vz_62_Jasan
+149	Vlkodav	SDT-58 Vlkodav	czech:Cz37_SDT_58_Vlkodav
+150	DBV-152	DBV-152	czech:Cz40_DBV_152
+151	Vz. 55	Vz. 55	czech:Cz17_Vz_55
+152	Warrior	Gothic Warrior	czech:Cz17_Vz_55_CN
+153	Vz. 60S	Vz. 60S	czech:Cz21_Vz_60S
+154	Dravec	Vz. 60S Dravec	czech:Cz21_Vz_60S_Dravec
+155	Tesák	Vz. 71 Tesák	czech:Cz34_Vz_71_Tesak
+156	TVP T 50/51	TVP T 50/51	czech:Cz04_T50_51
+157	PTV-51	PTV-51	czech:Cz04_T50_51_FEP23
+158	TVP T 50/51 (И)	TVP T 50/51 (И)	czech:Cz04_T50_51_ISP
+159	Jiskra	Jiskra	czech:Cz04_T50_51_Waf_Hound_3DSt
+160	Стриж	Стриж, вар. 3	france:F00_AMD_Panhard_178B_02
+161	Мистраль	Мистраль	france:F00_AMD_Panhard_178B_03
+162	FT	Renault FT	france:F01_RenaultFT
+163	Василиск	Василиск	france:F43_AMC_35_H
+164	Arlequin	Arlequin	france:F43_AMC_35_SH
+165	FT AC	Renault FT AC	france:F30_RenaultFT_AC
+166	FT BS	Renault FT 75 BS	france:F20_RenaultBS
+167	D1	D1	france:F02_D1
+168	AM Gendron	AM 39 Gendron-Somua	france:F111_AM39_Gendron_Somua
+169	H35	Hotchkiss H35	france:F12_Hotchkiss_H35
+170	R35/FCM 36	Renault R35/FCM 36	france:F138_Renault_R35_FCM_36
+171	AMR P.103	AMR P.103	france:F39_AMR_P103
+172	AMR 35	AMR 35	france:F42_AMR_35
+173	R35	Renault R35	france:F49_RenaultR35
+174	FCM 36	FCM 36	france:F50_FCM36_20t
+175	FCM36Pak40	FCM 36 Pak 40	france:F27_FCM_36Pak40
+176	UE 57	Renault UE 57	france:F52_RenaultUE57
+177	Lorr. 39L AM	Lorraine 39L AM	france:F21_Lorraine39_L_AM
+178	FCM 2C	FCM 2C	france:F77_FCM_2C
+179	AMX 38	AMX 38	france:F13_AMX38
+180	D2	D2	france:F03_D2
+181	Somua S35	Somua S35	france:F44_Somua_S35
+182	SAu 40	Somua SAu 40	france:F32_Somua_Sau_40
+183	AMX 105 AM	AMX 105 AM mle. 47	france:F66_AMX_Ob_Am105
+184	B1	B1	france:F04_B1
+185	AMX 40	AMX 40	france:F14_AMX40
+186	AMX 40 Marat	AMX 40 Marat	france:F14_AMX40_portal
+187	SARL 42	SARL 42	france:F70_SARL42
+188	M10 RBFM	M10 RBFM	france:F112_M10_RBFM
+189	S35 CA	S35 CA	france:F33_S_35CA
+190	S35 CA	S35 CA	france:F33_S_35CA_IGR
+191	AMX 13 AM	AMX 13 105 AM mle. 50	france:F22_AMX_105AM
+192	leFH18B2	105 leFH18B2	france:F28_105_leFH18B2
+193	leFH18B2	105 leFH18B2	france:F28_105_leFH18B2_IGR
+194	BDR G1 B	BDR G1 B	france:F05_BDR_G1B
+195	AMX 13 FL 11	AMX 13 (FL 11)	france:F124_AMX_13FL11
+196	AMX ELC bis	AMX ELC bis	france:F62_ELC_AMX
+197	ELC AMX	ELC AMX	france:F62_ELC_AMX_IGR
+198	G1 R	Renault G1	france:F11_Renault_G1R
+199	ARL V39	ARL V39	france:F34_ARL_V39
+200	САУ	САУ	france:F23_AMX_13F3AM_MapsTraining_Dummy_SPG_2
+201	AMX 13 F3	AMX 13 F3 AM	france:F23_AMX_13F3AM
+202	ARL 44	ARL 44	france:F06_ARL_44
+203	CDT	Char de transition	france:F129_ARL_44_BPXIV
+204	AMX ELC 901	AMX ELC 901	france:F127_AMX_ELC_901
+205	AMX 12 t	AMX 12 t	france:F15_AMX_12t
+206	AMD 178B	Panhard AMD 178B	france:F109_AMD_Panhard_178B
+207	M4A1 FL 10	M4A1 FL 10	france:F85_M4A1_FL10
+208	Bret. Panther	Bretagne Panther	france:F113_Bretagne_Panther
+209	AMX AC 46	AMX AC mle. 46	france:F1035_AMX_AC_Mle1946_bootcamp
+210	AMX AC 46	AMX AC mle. 46	france:F35_AMX_AC_Mle1946
+211	Lorr. 155 50	Lorraine 155 mle. 50	france:F24_Lorraine155_50
+212	AMX M4 45	AMX M4 mle. 45	france:F07_AMX_M4_1945
+213	AMX 13 75	AMX 13 75	france:F16_AMX_13_75
+214	AMX 13 75 FL	AMX 13 75 FL	france:F16_AMX_13_75_FL
+215	AMX 13 57	AMX 13 57	france:F69_AMX13_57_100
+216	AMX 13 57F	AMX 13 57 GF	france:F69_AMX13_57_100_GrandFinal
+217	EBR Hotch.	Hotchkiss EBR	france:F107_Hotchkiss_EBR
+218	AMX AC 48	AMX AC mle. 48	france:F36_AMX_AC_Mle1948_IGR
+219	SFAC 105	SFAC 105	france:F128_SFAC_105
+220	Schneider Oie	Schneider 105 DCA Oie	france:F128_Schneider_90_105_DCA_Oie
+221	Coutelas	Coutelas	france:F131_Coutelas
+222	Alby	Lorraine 120 Alby	france:F134_Lorraine_120_Alby
+223	AMX AC 48	AMX AC mle. 48	france:F36_AMX_AC_Mle1948
+224	AMX AC 48 FL	AMX AC mle. 48 FL	france:F36_AMX_AC_Mle1948_FL
+225	AMX Cda 105	AMX Canon d'assaut 105	france:F89_Canon_dassaut_de_105
+226	Lorr. 155 51	Lorraine 155 mle. 51	france:F25_Lorraine155_51
+227	AMX 50 100	AMX 50 100	france:F08_AMX_50_100_IGR
+228	AMX M4 49 FL	AMX M4 mle. 49 FL	france:F74_AMX_M4_1949_FL
+229	Tracteur D	AMX Tracteur D	france:F130_AMX_Tracteur_D
+230	AMX M4 49	AMX M4 mle. 49	france:F74_AMX_M4_1949
+231	AMX M4 49 L	AMX M4 mle. 49 Liberté	france:F74_AMX_M4_1949_Liberte
+232	AMX 50 100	AMX 50 100	france:F08_AMX_50_100
+233	AMX 50 100 FL	AMX 50 100 FL	france:F08_AMX_50_100_FL
+234	FCM 50 t	FCM 50 t	france:F65_FCM_50t
+235	Somua SM	Somua SM	france:F84_Somua_SM
+236	Char AP58	Char Lourd AP58	france:F126_Char_Lourd_AP58
+237	Brennos	Brennos	france:F131_Brennos
+238	AMX 65 t	AMX 65 t	france:F81_Char_de_65t
+239	ELC EVEN 90 FL	ELC EVEN 90 FL	france:F97_ELC_EVEN_90_FL
+240	B-C 12 t	Bat.-Châtillon 12 t	france:F87_Batignolles-Chatillon_12t
+241	B-C 12 t FL	Bat.-Châtillon 12 t FL	france:F87_Batignolles-Chatillon_12t_FL
+242	ELC EVEN 90	ELC EVEN 90	france:F97_ELC_EVEN_90
+243	EBR 75 FL 10	Panhard EBR 75 (FL 10)	france:F106_Panhard_EBR_75_Mle1954
+244	Lynx 6x6	Panhard AML Lynx 6x6	france:F110_Lynx_6x6
+245	Lynx 6x6 ЛФ	Panhard AML Lynx 6x6 ЛФ	france:F110_Lynx_6x6_FL
+246	M4A1 Rev. FL	M4A1 Revalorisé FL	france:F73_M4A1_Revalorise_FL
+247	A.P. AMX 30	AltProto AMX 30	france:F117_Alt_Proto_AMX_30
+248	AMX CDC	AMX Chasseur de chars	france:F68_AMX_Chasseur_de_char_46
+249	M4A1 Rev.	M4A1 Revalorisé	france:F73_M4A1_Revalorise
+250	Bourrasque	Bat.-Châtillon Bourrasque	france:F116_Bat_Chatillon_Bourrasque
+251	Mistral	Bat.-Châtillon Mistral	france:F116_Bat_Chatillon_Bourrasque_02
+252	Miel	Miel	france:F116_Bat_Chatillon_Bourrasque_DV
+253	Lorr. 40 t	Lorraine 40 t	france:F19_Lorraine40t
+254	Fantôme	Lorraine 40t Fantôme	france:F19_Lorraine40t_02
+255	R. Mortelle	AMX CDC Rafale Mortelle	france:F68_AMX_Chasseur_de_char_46_02
+256	Foch	AMX 50 Foch	france:F37_AMX50_Foch
+257	B-C 155 55	Bat.-Châtillon 155 55	france:F67_Bat_Chatillon155_55
+258	AMX M4 51 FL	AMX M4 mle. 51 FL	france:F83_AMX_M4_Mle1949_Bis_FL
+259	AMX 50 120	AMX 50 120	france:F09_AMX_50_120
+260	Sentinelle	Sentinelle	france:F130_Sentinelle
+261	Lorraine 50 t	Lorraine 50 t	france:F115_Lorraine_50t
+262	Terrifiant	Terrifiant	france:F139_Terrifiant
+263	AMX M4 51	AMX M4 mle. 51	france:F83_AMX_M4_Mle1949_Bis
+264	AMX 13 90	AMX 13 90	france:F17_AMX_13_90_IGR
+265	Char Mle. 75	Char Mle. 75	france:F118_Char_Mle_75
+266	Projet Louis	Projet Louis	france:F120_Projet_Louis
+267	ERAC 105 P.	ERAC 105 Proto	france:F123_ERAC_105_Proto
+268	AMX 13 90	AMX 13 90	france:F17_AMX_13_90
+269	AMX 13 90 FL	AMX 13 90 FL	france:F17_AMX_13_90_FL
+270	EBR 90	Panhard EBR 90	france:F100_Panhard_EBR_90
+271	VCS 6x6	VCS 6x6 TS 90	france:F122_VCS_6x6_TS90
+272	Vercingétorix	Vercingétorix	france:F132_Vercingetorix
+273	Leox	Leox	france:F137_LEOX
+274	AMX 30	AMX 30 1er prototype	france:F71_AMX_30_prototype
+275	Char Futur 4	Char Futur 4	france:F114_Projet_4_1
+276	Char Murat	Char Murat	france:F119_Char_Murat
+277	Fantôme	Fantôme	france:F140_Fantome
+278	B-C 25 t AP	Bat.-Châtillon 25 t AP	france:F75_Char_de_25t
+279	Gendarme	120 AC «Gendarme»	france:F129_Schneider_120_AC_Gendarme
+280	Roland	Roland	france:F135_Schneider_120_AC_Gendarme_02
+281	Tornade	Tornade	france:F137_Tornade
+282	Foch 155	AMX 50 Foch (155)	france:F64_AMX_50Fosh_155
+283	Foch B	AMX 50 Foch B	france:F64_AMX_50Fosh_B
+284	Foch B 7x7	AMX 50 Foch B 7x7	france:F64_AMX_50Fosh_B_7x7
+285	B-C 155 58 T	Bat.-Châtillon 155 58 T	france:F1038_Bat_Chatillon155_58_T
+286	B-C 155 58	Bat.-Châtillon 155 58	france:F38_Bat_Chatillon155_58
+287	B-C CS 59	B-C CS 59	france:F38_Bat_Chatillon155_58_FEP23
+288	AMX 50 B	AMX 50 B	france:F10_AMX_50B
+289	AMX 50 B (И)	AMX 50 B (И)	france:F10_AMX_50B_ISP
+290	AMX 50 B BB	AMX 50 B BB	france:F10_AMX_50B_bob
+291	(A) AMX 50 B	(A) AMX 50 B	france:F10_AMX_50B_fallout
+292	Projet 57	Projet 57	france:F133_Projet_57
+293	Ampere	Projet 57 Ampere	france:F133_Projet_57_Ampere
+294	AMX M4 54	AMX M4 mle. 54	france:F82_AMX_M4_Mle1949_Ter
+295	AMX 54 7x7	AMX M4 mle. 54 7x7	france:F82_AMX_M4_Mle1949_Ter_7x7
+296	AMX 13 105	AMX 13 105	france:F88_AMX_13_105
+297	AMX 13 105 7	AMX 13 105 7x7	france:F88_AMX_13_105_7x7
+298	EBR 105	Panhard EBR 105	france:F108_Panhard_EBR_105
+299	EBR 40	Panhard EBR 40 ter	france:F108_Panhard_EBR_105_FEP23
+300	AMX 30 B	AMX 30 B	france:F72_AMX_30
+301	Projet Murat	Projet Murat	france:F119_Projet_Murat
+302	B-C 25 t	Bat.-Châtillon 25 t	france:F18_Bat_Chatillon25t
+303	B-C 25 t 7x7	Bat.-Châtillon 25 t 7x7	france:F18_Bat_Chatillon25t_7x7
+304	B-C 25 t	Bat.-Châtillon 25 t	france:F18_Bat_Chatillon25t_IGR
+305	B-C 25 t (И)	B-C 25 t Испытательный	france:F18_Bat_Chatillon25t_ISP
+306	Foudre	Foudre	france:F18_Bat_Chatillon25t_hound_TLXXL
+307	Projet F	ARL Projet F	france:F134_ARL_Projet_F
+308	Imbattable	AMX 67 Imbattable	france:F136_AMX_67_Imbattable
+309	AS-XX 40 t	AS-XX 40 t	france:F135_AS_XX_40_t
+310			germany:Env_Artillery
+311	Медведь	Медведь	germany:G04_PzVI_Tiger_I_SHXXI_B
+312	Walküre	Walküre	germany:G24_VK3002DB_SH
+313	Ратте	Ратте	germany:G00_Ratte
+314	Брандер	Брандер	germany:G00_Bomber_SH
+315	Coastal Bunker	Coastal Bunker	germany:G00_Pillbox_Gun_10cm_SM24
+316	Coastal Bunker	Coastal Bunker	germany:G00_Pillbox_Gun_15cm_SM24
+317	Coastal Bunker	Coastal Bunker	germany:G00_Pillbox_Gun_38cm_SM24
+318	Coastal Bunker	Coastal Bunker	germany:G00_Pillbox_Gun_7_5cm_SM24
+319	Coastal Bunker	Coastal Bunker	germany:G00_Pillbox_Tank_Turret_SM24
+320	L.Tr.	Leichttraktor	germany:G12_Ltraktor
+321	Заяц	Заяц	germany:G25_PzII_Luchs_SHXXI_B
+322	Волк	Волк	germany:G77_PzIV_Schmalturm_SHXXI_B
+323	Pz.Jäg. I	Panzerjäger I	germany:G21_PanzerJager_I
+324	G.Pz. Mk. VI	G.Pz. Mk. VI (e)	germany:G93_GW_Mk_VIe
+325	Pz. II	Pz.Kpfw. II	germany:G06_PzII
+326	Pz. II	Pz.Kpfw. II	germany:G06_PzII_hb25
+327	Pz. 35 (t)	Pz.Kpfw. 35 (t)	germany:G07_Pz35t
+328	Pz. 35 (t)	Pz.Kpfw. 35 (t)	germany:G07_Pz35t_hb25
+329	Pz. II D	Pz.Kpfw. II Ausf. D	germany:G108_PzKpfwII_AusfD
+330	MKA	MKA	germany:G139_MKA
+331	Pz. 35 R	Pz.Kpfw. 35 R	germany:G160_Pz_Kpfw_35_R_mit_T_26_Turm
+332	Pz. 38H	Pz.Kpfw. 38H 735 (f)	germany:G33_H39_captured
+333	Pz. I	Pz.Kpfw. I	germany:G53_PzI
+334	Pz. IV D	Pz.Kpfw. IV Ausf. D	germany:G80_Pz_IV_AusfD_bootcamp
+335	Marder II	Marder II	germany:G20_Marder_II
+336	Marder II	Marder II	germany:G20_Marder_II_hb25
+337	Marder II (Elite)	Marder II (Elite)	germany:G20_Marder_II_hb25_Elite
+338	Bison	Sturmpanzer I Bison	germany:G11_Bison_I
+339	Wespe	Wespe	germany:G19_Wespe
+340	Pz. 38 (t)	Pz.Kpfw. 38 (t)	germany:G08_Pz38t
+341	Pz. 38 (t)	Pz.Kpfw. 38 (t)	germany:G08_Pz38t_hb25
+342	Pz. 38 (t) (Elite)	Pz.Kpfw. 38 (t)(Elite)	germany:G08_Pz38t_hb25_Elite
+343	Pz. 38 (t)	Pz.Kpfw. 38 (t)	germany:G08_Pz38t_hb25_artyspotter
+344	Pz. III E	Pz.Kpfw. III Ausf. E	germany:G102_Pz_III
+345	Pz. III E	Pz.Kpfw. III Ausf. E	germany:G102_Pz_III_hb25
+346	Pz. III E	Pz.Kpfw. III Ausf. E	germany:G102_Pz_III_hb25_artyhunter
+347	Pz. III E WT	Pz.Kpfw. III Ausf. E WT	germany:G1102_Pz_III_WT_bot
+348	Toldi III	43 M. Toldi III	germany:G117_Toldi_III
+349	Pz. M 15	Pz.Kpfw. M 15	germany:G161_Pz_Kpfw_M15_38_t
+350	V–4/40	Straussler V–4/40	germany:G179_Straussler_V4
+351	Pz. II J	Pz.Kpfw. II Ausf. J	germany:G36_PzII_J
+352	Pz. T 15	Pz.Kpfw. T 15	germany:G50_T-15
+353	Pz. I C	Pz.Kpfw. I Ausf. C	germany:G63_PzI_ausf_C
+354	Pz. I C	Pz.Kpfw. I Ausf. C	germany:G63_PzI_ausf_C_hb25
+355	Pz. I C	Pz.Kpfw. I Ausf. C	germany:G63_PzI_ausf_C_hb25_artyhunter
+356	Pz. II G	Pz.Kpfw. II Ausf. G	germany:G82_Pz_II_AusfG
+357	Pz. II G	Pz.Kpfw. II Ausf. G	germany:G82_Pz_II_AusfG_hb25
+358	Gr.Tr.	Großtraktor - Krupp	germany:G100_Gtraktor_Krupp
+359	B.W.(Rh) 	Rheinmetall Begleitwagen	germany:G175_Rheinmetall_Begleitwagen
+360	Pz. S35	Pz.Kpfw. S35 739 (f)	germany:G34_S35_captured
+361	Pz. IV A	Pz.Kpfw. IV Ausf. A	germany:G83_Pz_IV_AusfA
+362	Hetzer	Jagdpanzer 38(t) Hetzer	germany:G09_Hetzer
+363	ПТ-САУ	ПТ-САУ	germany:G09_Hetzer_MapsTraining_Dummy_ATSPG_1
+364	Hetzer Elite	Hetzer Elite	germany:G09_Hetzer_hb25_Elite
+365	StuG III B	StuG III Ausf. B	germany:G101_StuG_III
+366	StuG III B	StuG III Ausf. B	germany:G101_StuG_III_hb25
+367	StuG III B Elite	StuG III Ausf. B Elite	germany:G101_StuG_III_hb25_Elite
+368	Pz.Sfl. IC	Pz.Sfl. IC	germany:G151_Pz_Sfl_IC
+369	Marder 38T	Marder 38T	germany:G39_Marder_III
+370	Marder 38T	Marder 38T	germany:G39_Marder_III_hb25
+371	St.Pz. II	Sturmpanzer II	germany:G22_Sturmpanzer_II
+372	Pz.Sfl. IVb	Pz.Sfl. IVb	germany:G95_Pz_Sfl_IVb
+373	Pz. B2	Pz.Kpfw. B2 740 (f)	germany:G35_B-1bis_captured
+374	D.W. 2	Durchbruchswagen 2	germany:G90_DW_II
+375	Тяжёлый танк	Тяжёлый танк	germany:G90_DW_II_MapsTraining_Dummy_HT_1
+376	D.W. 2	Durchbruchswagen 2	germany:G90_DW_II_hb25
+377	Luchs	Pz.Kpfw. II Luchs	germany:G1025_PzII_Luchs_StoryMode
+378	Luchs	Pz.Kpfw. II Luchs	germany:G1025_PzII_Luchs_StoryModeStealth
+379	Luchs WT	Pz.Kpfw. II Luchs WT	germany:G1025_PzII_Luchs_WT_bot
+380	Luchs	Pz.Kpfw. II Luchs	germany:G25_PzII_Luchs
+381	Luchs	Pz.Kpfw. II Luchs	germany:G25_PzII_Luchs_hb25
+382	Pz. 38 nA	Pz.Kpfw. 38 (t) n.A.	germany:G52_Pz38_NA
+383	Pz. III J	Pz.Kpfw. III Ausf. J	germany:G1010_PzIII_AusfJ_NewOnBoarding
+384	Pz. III J	Pz.Kpfw. III Ausf. J	germany:G1010_PzIII_AusfJ_StoryModeStealth
+385	Pz. III J	Pz.Kpfw. III Ausf. J	germany:G10_PzIII_AusfJ
+386	Pz. III J	Pz.Kpfw. III Ausf. J	germany:G10_PzIII_AusfJ_hb25
+387	Pz. III J (Elite)	Pz.Kpfw. III Ausf. J (Elite)	germany:G10_PzIII_AusfJ_hb25_Elite
+388	Pz. III J	Pz.Kpfw. III Ausf. J	germany:G10_PzIII_AusfJ_hb25_artyspotter
+389	Pz. IV D	Pz.Kpfw. IV Ausf. D	germany:G80_Pz_IV_AusfD
+390	Pz. IV D	Pz.Kpfw. IV Ausf. D	germany:G80_Pz_IV_AusfD_hb25
+391	Pz. IV D (Elite)	Pz.Kpfw. IV Ausf. D (Elite)	germany:G80_Pz_IV_AusfD_hb25_Elite
+392	VK 20.01 D	VK 20.01 (D)	germany:G86_VK2001DB
+393	StuG III G	StuG III Ausf. G	germany:G05_StuG_40_AusfG
+394	StuG III G	StuG III Ausf. G	germany:G05_StuG_40_AusfG_IGR
+395	StuG III G	StuG III Ausf. G	germany:G05_StuG_40_AusfG_hb25
+396	StuG IV	StuG IV	germany:G104_Stug_IV
+397	StuG IV	StuG IV	germany:G104_Stug_IV_hb25
+398	StuG III Kaba	StuG III Ausf. F Kabasan	germany:G191_StuG_IIIF_CFE_A
+399	Pz.Sfl. IVc	Pz.Sfl. IVc	germany:G76_Pz_Sfl_IVc
+400	Grille	Grille	germany:G1023_Grille_StoryModeStealth
+401	Grille	Grille	germany:G23_Grille
+402	VK 65.01 (H)	VK 65.01 (H)	germany:G122_VK6501H
+403	Pz. KW I	Pz.Kpfw. KW I (r)	germany:G163_Pz_Kpfw_KW_Ir_mit_75mm_kwk40
+404	BT-42 Jatk.	BT-42 Jatkosota HS	germany:G173_BT42_DIT
+405	Leopard	VK 16.02 Leopard	germany:G26_VK1602
+406	Leopard Elite	VK 16.02 Leopard Elite	germany:G26_VK1602_hb25_Elite
+407	Pz. III K	Pz.Kpfw. III Ausf. K	germany:G107_PzKpfwIII_AusfK
+408	Pz. III K	Pz.Kpfw. III Ausf. K	germany:G107_PzKpfwIII_AusfK_hb25
+409	Pz. III K	Pz.Kpfw. III Ausf. K	germany:G107_PzKpfwIII_AusfK_hb25_artyspotter
+410	Pz. III K (Elite)	Pz.Kpfw. III Ausf. K (Elite)	germany:G107_PzKpfwIII_AusfKhb25_Elite
+411	Pz. IV H	Pz.Kpfw. IV Ausf. H	germany:G1081_Pz_IV_AusfH_NewOnBoarding
+412	Pz. IV H	Pz.Kpfw. IV Ausf. H	germany:G1081_Pz_IV_AusfH_StoryModeStealth
+413	Pz. IV H WT	Pz.Kpfw. IV Ausf. H WT	germany:G1081_Pz_IV_AusfH_WT_bot
+414	Turán III PT	Turán III prototípus	germany:G116_Turan_III_prot
+415	Pz. 38 (K)	Pz.Kpfw. 38 (K)	germany:G124_Pz_Kpfw_38_K
+416	VK 30.01 H	VK 30.01 (H)	germany:G13_VK3001H
+417	Pz. IV F2	Pz.Kpfw. IV Ausf. F2	germany:G170_PzKpfwIV_Ausf_F2
+418	Pz. III/IV	Pz.Kpfw. III/IV	germany:G28_PzIII_IV
+419	Pz. III/IV	Pz.Kpfw. III/IV	germany:G28_PzIII_IV_hb25
+420	Pz. V/IV	Pz.Kpfw. V/IV	germany:G32_PzV_PzIV
+421	Pz. V/IV A	Pz.Kpfw. V/IV Alpha	germany:G32_PzV_PzIV_ausf_Alfa
+422	Pz. T 25	Pz.Kpfw. T 25	germany:G46_T-25
+423	Pz. IV hydr.	Pz.Kpfw. IV hydrostat.	germany:G70_PzIV_Hydro
+424	Pz. IV hydr.	Pz.Kpfw. IV hydrostat.	germany:G70_PzIV_Hydro_hb25
+425	Pz. IV	Pz.Kpfw. IV	germany:G79_Pz_IV_AusfGH
+426	Pz. IV H	Pz.Kpfw. IV Ausf. H	germany:G81_Pz_IV_AusfH
+427	Pz. IV H Ankou	Pz.Kpfw. IV Ausf. H Ankou	germany:G81_Pz_IV_AusfH_GuP
+428	Pz. IV H	Pz.Kpfw. IV Ausf. H	germany:G81_Pz_IV_AusfH_hb25
+429	Pz.Kpfw. IV H Elite	Pz.Kpfw. IV Ausf. H Elite	germany:G81_Pz_IV_AusfH_hb25_Elite
+430	ПТ-САУ	ПТ-САУ	germany:G40_Nashorn_MapsTraining_Dummy_ATSPG_2
+431	Nashorn	Nashorn	germany:G40_Nashorn
+432	Nashorn	Nashorn	germany:G40_Nashorn_hb25
+433	Dicker Max	Dicker Max	germany:G41_DickerMax
+434	Jg.Pz. IV	Jagdpanzer IV	germany:G17_JagdPzIV
+435	Jg.Pz. IV	Jagdpanzer IV	germany:G17_JagdPzIV_hb25
+436	Hummel	Hummel	germany:G02_Hummel
+437	Hummel	Hummel	germany:G1002_Hummel_NewOnBoarding
+438	VK 36.01 H WT	VK 36.01 (H) WT	germany:G1015_VK3601H_WT_bot
+439	VK 30.01 P	VK 30.01 (P)	germany:G27_VK3001P
+440	Tiger 131	Tiger 131	germany:G136_Tiger_131
+441	Tiger 217	Tiger 217	germany:G137_PzVI_Tiger_217
+442	VK 36.01 H	VK 36.01 (H)	germany:G15_VK3601H
+443	VK 36.01 K 41	VK 36.01 KwK 41 7,5 cm	germany:G15_VK3601H_C
+444	VK 36.01 H	VK 36.01 (H)	germany:G15_VK3601H_hb25
+445	VK 30.01 P	VK 30.01 (P)	germany:G1027_VK3001P_NewOnBoarding
+446	VK 30.01 P	VK 30.01 (P)	germany:G27_VK3001P
+447	VK 28.01 WT	VK 28.01 WT	germany:G1066_VK2801_WT_bot
+448	VK 28.01 105	VK 28.01 mit 10,5 cm L/28	germany:G158_VK2801_105_SPXXI
+449	VK 28.01 105 Elite	VK 28.01 mit 10,5 cm L/28 Elite	germany:G158_VK2801_105_SPXXI_hb25_Elite
+450	VK 28.01	VK 28.01	germany:G66_VK2801
+451	Pz. V BP	Pz.Kpfw. V Berge-Panther	germany:G32_PzV_PzIV_CN
+452	Pz. V BP A	Pz. V Berge-Panther Alpha	germany:G32_PzV_PzIV_ausf_Alfa_CN
+453	Pz. IV S.	Pz.Kpfw. IV Schmalturm	germany:G77_PzIV_Schmalturm
+454	VK 30.01 D	VK 30.01 (D)	germany:G87_VK3002DB_V1
+455	VK 30.02 M	VK 30.02 (M)	germany:G96_VK3002M
+456	E 25	E 25	germany:G48_E-25_IGR
+457	Steyr WT	Krupp-Steyr Waffenträger	germany:G109_Steyr_WT
+458	Steyr WT	Krupp-Steyr Waffenträger	germany:G109_Steyr_WT_hb25
+459	St. Emil	Sturer Emil	germany:G43_Sturer_Emil
+460	E 25	E 25	germany:G48_E-25
+461	E 25	E 25	germany:G48_E-25_hb25
+462	St. Emil	Sturer Emil	germany:G43_Sturer_Emil
+463	St. Emil	Sturer Emil	germany:G43_Sturer_Emil_hb25
+464	JPanther	Jagdpanther	germany:G1018_JagdPanther_NewOnBoarding
+465	JPanther	Jagdpanther	germany:G1018_JagdPanther_StoryModeStealth
+466	JPanther	Jagdpanther	germany:G18_JagdPanther
+467	JPanther	Jagdpanther	germany:G18_JagdPanther_hb25
+468	G.W. Panther	G.W. Panther	germany:G49_G_Panther
+469	Tiger I L/56	Tiger I L/56	germany:G04_PzVI_Tiger_IA
+470	Tiger I	Tiger I	germany:G04_PzVI_Tiger_I_IGR
+471	Tiger I (yч.)	Tiger I (yч.)	germany:G04_PzVI_Tiger_I_MapsTraining_Player_HT_2
+472	Tiger I	Tiger I	germany:G1004_PzVI_Tiger_I_WT_bot
+473	VK 45.02 B7	VK 45.02 (P) Ausf. B7	germany:G58_VK4502P7
+474	VK 45.02 B7 Kommandant	VK 45.02 B7 Kommandant	germany:G58_VK4502P7_hb25_Boss
+475	Tiger (P)	Tiger (P)	germany:G1057_PzVI_Tiger_P_NewOnBoarding
+476	Tiger II (H)	Tiger II (H)	germany:G16_PzVIB_Tiger_II_F
+477	Tiger II Kuro.	Tiger II Kuromorimine	germany:G172_PzVIB_Tiger_II_DIT
+478	Tiger (P)	Tiger (P)	germany:G57_PzVI_Tiger_P
+479	Tiger (P)	Tiger (P)	germany:G57_PzVI_Tiger_P_hb25
+480	Tiger I	Tiger I	germany:G04_PzVI_Tiger_I
+481	Tiger I FL	Tiger I FL	germany:G04_PzVI_Tiger_I_FL
+482	Tiger I	Tiger I	germany:G04_PzVI_Tiger_I_hb25
+483	Tiger I (Elite)	Tiger I (Elite)	germany:G04_PzVI_Tiger_I_hb25_Elite
+484	Tiger I	Tiger I	germany:G1004_PzVI_Tiger_I_StoryMode
+485	Tiger I	Tiger I	germany:G1004_PzVI_Tiger_I_StoryModeStealth
+486	VK 45.03	VK 45.03	germany:G118_VK4503
+487	VK 45.03	VK 45.03	germany:G118_VK4503_hb25
+488	SP I C	Spähpanzer SP I C	germany:G113_SP_I_C
+489	Aufkl.Panther	Aufklärungspanzer Panther	germany:G85_Auf_Panther
+490	Panther	Panther	germany:G03_PzV_Panther_IGR
+491	Panther WT	Panther	germany:G1003_PzV_Panther_WT_bot
+492	Panther	Panther	germany:G03_PzV_Panther
+493	Panther	Panther	germany:G03_PzV_Panther_hb25
+494	Panther Elite	Panther Elite	germany:G03_PzV_Panther_hb25_Elite
+495	Panther	Panther	germany:G1003_PzV_Panther_StoryModeStealth
+496	VK 30.02 D	VK 30.02 (D)	germany:G24_VK3002DB
+497	VK 30.02 D	VK 30.02 (D)	germany:G24_VK3002DB_hb25
+498	Panther/M10	Panther/M10	germany:G78_Panther_M10
+499	Ferdinand FL	Ferdinand FL	germany:G37_Ferdinand_FL
+500	Ferdinand	Ferdinand	germany:G37_Ferdinand_IGR
+501	JgTig.8,8 cm	8,8 cm Pak 43 Jagdtiger	germany:G65_JagdTiger_SdKfz_185_IGR
+502	GST Turm	Kpz. 3 GST Turm	germany:G174_Kpz3_GST_Turm
+503	Ferdinand	Ferdinand	germany:G37_Ferdinand
+504	Jagdtiger Pr.	Jagdtiger Prototype	germany:G44_JagdTigerH
+505	JgTig.8,8 cm	8,8 cm Pak 43 Jagdtiger	germany:G65_JagdTiger_SdKfz_185
+506	KanJPz	Kanonenjagdpanzer	germany:G112_KanonenJagdPanzer
+507	KanJPz 105	Kanonenjagdpanzer 105	germany:G112_KanonenJagdPanzer_105
+508	Skorpion G	Rheinmetall Skorpion G	germany:G114_Rheinmetall_Skorpian
+509	Skorpion	Rheinmetall Skorpion	germany:G114_Skorpian
+510	KanJPz 2	Kanonenjagdpanzer 2	germany:G178_KanJpz_2
+511	Windhund	Windhund	germany:G184_Windhund
+512	Rhm.-B. WT	Rhm.-Borsig Waffenträger	germany:G99_RhB_Waffentrager
+513	Ferdinand	Ferdinand	germany:G1037_Ferdinand_StoryMode
+514	Ferdinand	Ferdinand	germany:G1037_Ferdinand_StoryModeStealth
+515	Ferdinand	Ferdinand	germany:G37_Ferdinand
+516	Ferdinand	Ferdinand	germany:G37_Ferdinand_hb25
+517	Ferdinand Elite	Ferdinand Elite	germany:G37_Ferdinand_hb25_Elite
+518	JPanther II	Jagdpanther II	germany:G71_JagdPantherII
+519	JPanther II	Jagdpanther II	germany:G71_JagdPantherII_hb25
+520	G.W. Tiger P	G.W. Tiger (P)	germany:G94_GW_Tiger_P
+521	Tiger II	Tiger II	germany:G1016_PzVIB_Tiger_II_WT_bot
+522	Tiger II	Tiger II	germany:G16_PzVIB_Tiger_II_IGR
+523	Löwe FL	Löwe FL	germany:G51_Lowe_FL
+524	VK 100.01 P	VK 100.01 (P)	germany:G115_Typ_205B
+525	VK 100.01 B	VK 100.01 (P) Ausf. B	germany:G115_Typ_205_4_Jun
+526	VK 168.01 P	VK 168.01 (P)	germany:G138_VK168_02
+527	Mauerbrecher	VK 168.01 Mauerbrecher	germany:G138_VK168_02_Mauerbrecher
+528	VK 75.01 K	VK 75.01 (K)	germany:G141_VK7501K
+529	VK 45.02 A	VK 45.02 (P) Ausf. A	germany:G67_VK4502A
+530	E 75 TS	E 75 TS	germany:G143_E75_TS
+531	E 65 Zwilling	E 65 Zwilling	germany:G177_E65_Zwilling
+532	Doppel	E 75 Ausf B Doppel	germany:G196_E_75_Ausf_B_Doppel
+533	Löwe	Löwe	germany:G51_Lowe
+534	Löwe Kommandant	Löwe Kommandant	germany:G51_Lowe_hb25_Boss
+535	Tiger II	Tiger II	germany:G1016_PzVIB_Tiger_II_NewOnBoarding
+536	Tiger II	Tiger II	germany:G1016_PzVIB_Tiger_II_StoryMode
+537	Tiger II	Tiger II	germany:G16_PzVIB_Tiger_II
+538	Tiger II FL	Tiger II FL	germany:G16_PzVIB_Tiger_II_FL
+539	Tiger II	Tiger II	germany:G16_PzVIB_Tiger_II_hb25
+540	Tiger II Kommandant	Tiger II Kommandant	germany:G16_PzVIB_Tiger_II_hb25_Boss
+541	Tiger II Elite	Tiger II Elite	germany:G16_PzVIB_Tiger_II_hb25_Elite
+542	VK 45.02 A	VK 45.02 (P) Ausf. A	germany:G67_VK4502A
+543	HWK 12	HWK 12	germany:G1126_HWK_12_WT_bot
+544	Aufkl.Pz. V	Aufklärungspanzer V	germany:G85_Aufklarungspanzer_V
+545	Aufkl.Pz. V Elite	Aufklärungspanzer V Elite	germany:G85_Aufklarungspanzer_V_hb25_Elite
+546	M 41 90 mm	leKpz M 41 90 mm	germany:G120_M41_90
+547	M 41 90 GF	leKpz M 41 90 mm GF	germany:G120_M41_90_GrandFinal
+548	HWK 12	HWK 12	germany:G126_HWK_12
+549	HWK 12 FL	HWK 12 FL	germany:G126_HWK_12_FL
+550	HWK 30	HWK 30	germany:G140_HWK_30
+551	LKpz 70 (K)	Leichter Kpz. 70 (K)	germany:G166_LKpz_70_K
+552	Panther II	Panther II	germany:G1064_Panther_II_WT_bot
+553	Pz. 58 FL	Panzer 58 FL	germany:G119_Panzer58_FL
+554	Panther II	Panther II	germany:G64_Panther_II_IGR
+555	M48 RPz	M48A2 Räumpanzer	germany:G142_M48RPz
+556	Panther II	Panther II	germany:G64_Panther_II
+557	Panther II FL	Panther II FL	germany:G64_Panther_II_FL
+558	Panther 8,8	Panther mit 8,8 cm L/71	germany:G106_PzKpfwPanther_AusfF
+559	Pz. 58	Panzer 58	germany:G119_Panzer58
+560	Schwarzpz.58	Schwarzpanzer 58	germany:G119_Panzer58_BF
+561	Pz. 58 Mutz	Panzer 58 Mutz	germany:G119_Pz58_Mutz
+562	Kpz 07 RH	Kampfpanzer 07 RH	germany:G154_Kpz_07_RH
+563	White Dragon	White Dragon	germany:G154_Kpz_07_RH_LN
+564	Pr.68 (P)	Kpz. Pr.68 (P)	germany:G164_Kpz_Pr_68_P
+565	Panther II	Panther II	germany:G64_Panther_II_hb25
+566	Indien-Pz.	Indien-Panzer	germany:G88_Indien_Panzer
+567	T 55 (T)	T 55 Test	germany:G1105_T-55_NVA_DDR_T
+568	Jagdtiger FL	Jagdtiger FL	germany:G44_JagdTiger_FL
+569	Jagdtiger	Jagdtiger	germany:G1044_JagdTiger_StoryMode
+570	Jg.Pz. E 90	Jagdpanzer E 90	germany:G176_Jagdpanzer_E90
+571	Jagdtiger	Jagdtiger	germany:G44_JagdTiger
+572	Jagdtiger Kommandant	Jagdtiger Kommandant	germany:G44_JagdTiger_hb25_Boss
+573	Kpz 3 Pr.07HK	Kampfpanzer 3 Prj. 07 HK	germany:G159_KPZ_3_Project_07_HK
+574	TIII Jäger	KJPZ TIII Jäger	germany:G168_KJpz_T_III
+575	WT auf Pz. IV	Waffenträger auf Pz. IV	germany:G97_Waffentrager_IV
+576	TIII Jäger	KJPZ TIII Jäger	germany:G168_KJpz_T_III
+577	G.W. Tiger	G.W. Tiger	germany:G45_G_Tiger
+578	E 75	E 75	germany:G1055_E-75_WT_bot
+579	Mäuschen	Mäuschen	germany:G1110_Typ_205_WT_bot
+580	Mäuschen	Mäuschen	germany:G110_Typ_205
+581	Tiger-Maus	Pz.Kpfw. Tiger-Maus 120t	germany:G167_Tiger_Maus_120t
+582	VK 45.02 B	VK 45.02 (P) Ausf. B	germany:G58_VK4502P
+583	E 77	E 77	germany:G171_E77
+584	Aufgabe 57	Aufgabe 57	germany:G193_Aufgabe_57
+585	E 77	E 77	germany:G171_E77
+586	Находка-4	Е 77 «Находка-4»	germany:G171_E77_02
+587	E 75	E 75	germany:G55_E-75
+588	E 75 FL	E 75 FL	germany:G55_E-75_FL
+589	Ru 251	Ru 251	germany:G1103_RU_251_WT_bot
+590	Ru 251	Spähpanzer Ru 251	germany:G103_RU_251
+591	E 50	E 50	germany:G1054_E-50_WT_bot
+592	E 50 FL	E 50 FL	germany:G54_E-50_FL
+593	E 50	E 50	germany:G54_E-50
+594	Kunze Panzer	Kunze Panzer	germany:G147_Kunze_Panzer
+595	Kpz EK I	Kpz. Erich Konzept I	germany:G165_Erich_Konzept_I
+596	Leopard PT A	Leopard Prototyp A	germany:G91_Pro_Ag_A
+597	T 55A	T 55A	germany:G105_T-55_NVA_DDR
+598	Kpz 50 t	Kampfpanzer 50 t	germany:G144_Kpz_50t
+599	T 54D	T 54D	germany:G169_T_54D
+600	Дот	Дот	germany:G00_Artilleriebunker
+601	Огнемёт	Огнемёт	germany:G00_Feuerbunker
+602	StuG Maus	StuG Maus 17 cm	germany:G181_StuG_Maus_17cm
+603	Jg.Pz. E 100	Jagdpanzer E 100	germany:G72_JagdPz_E100
+604	Jg. E 100 7x7	Jagdpanzer E 100 7x7	germany:G72_JagdPz_E100_7x7
+605	StuG E 100	Sturmgeschütz E 100	germany:G72_JagdPz_E100_FEP23
+606	Grille 15	Grille 15	germany:G121_Grille_15_L63
+607	Grille 15 (И)	Grille 15 (И)	germany:G121_Grille_15_L63_ISP
+608	Sturmtiger	Sturmtiger	germany:G178_Sturmtiger_V1
+609	Phönix	WT auf E 100 Phönix	germany:G98_WT_auf_E_100_Phonix
+610	WT E 100	Waffenträger auf E 100	germany:G98_Waffentrager_E100
+611	WT E 100 Mod	Waffenträger auf E 100 (P) Mod	germany:G98_Waffentrager_E100_P
+612	WT 12	WT 12	germany:G98_Waffentrager_E100_WO
+613	РСЗО	РСЗО	germany:G00_Startgestell
+614	G.W. E 100	G.W. E 100	germany:G61_G_E
+615	Maus WT	Maus WT	germany:G1042_Maus_WT_bot
+616	E 100 WT	E 100 WT	germany:G1056_E-100_WT_bot
+617	Pz.Kpfw. VII	Pz.Kpfw. VII	germany:G1134_PzKpfw_VII_WT_bot
+618	Maus	Maus	germany:G1042_Maus_StoryMode
+619	Pz.Kpfw. VII	Pz.Kpfw. VII	germany:G134_PzKpfw_VII
+620	Pz.Kpfw. VII 7x7	Pz.Kpfw. VII 7x7	germany:G134_PzKpfw_VII_7x7
+621	Schwertwal	Schwertwal	germany:G186_Schwertwal
+622	Feuerbär	Е 100 Feuerbär	germany:G189_E100_02
+623	Maus	Maus	germany:G42_Maus
+624	Maus 7v7	Maus 7v7	germany:G42_Maus_7x7
+625	Flakmaus	Flakpanzer VIII Flakmaus	germany:G42_Maus_FEP23
+626	Maus	Maus	germany:G42_Maus_IGR
+627	Maus (И)	Maus Испытательный	germany:G42_Maus_ISP
+628	Maus Kommandant	Maus Kommandant	germany:G42_Maus_hb25_Boss
+629	E 100	E 100	germany:G56_E-100
+630	VK 72.01 K	VK 72.01 (K)	germany:G92_VK7201
+631	Kpz. 07 P(E)	Kampfpanzer 07 P(E)	germany:G162_Project_Kpz_07P_E
+632	Rhm. Pzw.	Rheinmetall Panzerwagen	germany:G125_Spz_57_Rh
+633	LKpz.70 K	LKpz.70 K	germany:G166_LKpz_70_K
+634	E 50 M	E 50 Ausf. M	germany:G1073_E50_Ausf_M_WT_bot
+635	Alkett	E 50 GT Alkett Prod.	germany:G194_E_50_GT_Alkett_Prod
+636	E 50 M	E 50 Ausf. M	germany:G73_E50_Ausf_M
+637	E 50 M 7x7	E 50 Ausf. M 7x7	germany:G73_E50_Ausf_M_7x7
+638	E 50 M (И)	E 50 M Испытательный	germany:G73_E50_Ausf_M_ISP
+639	Erich Kn. I	Erich Konzept I	germany:G165_Erich_Konzept_I
+640	Leopard 1	Leopard 1	germany:G89_Leopard1
+641	Leopard 1 (И)	Leopard 1 (И)	germany:G89_Leopard1_ISP
+642	Leopard 1 BB	Leopard 1 BB	germany:G89_Leopard1_bob
+643	WT	Waffenträger	germany:G98_Waffentrager_E100_TLXXL
+644	BT	Blitzträger	germany:G98_Waffentrager_E100_TLXXL_S
+645	Hirschkäfer	Hirschkäfer	germany:G189_Hirschkafer
+646	Mausekönig	Mausekönig	germany:G182_Mausekonig
+647	Taschenratte	Taschenratte	germany:G187_Taschenratte
+648	Eisbär	Eisbär	germany:G184_EisBaer
+649	Borkenkäfer	leKpz Borkenkäfer	germany:G188_LeKpz_Borkenkafer
+650	Leopard 120	Leopard 120 Verbessert	germany:G185_Leopard_120_Verbessert
+651	R35	Renault R35	intunion:Un07_Renault_R35
+652	H39 IDF	Hotchkiss H39 IDF	intunion:Un08_Hotchkiss_H_39_IDF
+653	Locust	Locust	intunion:Un09_Locust
+654	Locust IDF	Locust IDF	intunion:Un09_Locust_IDF
+655	Sherman K.	Sherman Krupp IDF	intunion:Un10_Sherman_Krupp_IDF
+656	Sherman IDF	M3 «Sherman» IDF	intunion:Un11_Sherman_M3_IDF
+657	Cromwell VII	Cromwell VII	intunion:Un01_Cromwell_VII
+658	Degem Yud	Degem Yud	intunion:Un03_Degem_Yud
+659	SBM-44 (T)	SBM-44 Test	intunion:Un1015_SBM_44_T
+660	SBM-44	SBM-44	intunion:Un15_SBM_44
+661	Britva	Vz. 68-2 Britva	intunion:Un24_Vz_68_2_Britva
+662	Vickers MBT	Vickers MBT EXP	intunion:Un04_Vickers_MBT_EXP
+663	Vickers ЛФ	Vickers MBT EXP ЛФ	intunion:Un04_Vickers_MBT_EXP_FL
+664	Romach	M47 Romach	intunion:Un06_M47_Romach
+665	Shot Kal	Shot Kal Alef	intunion:Un05_Shot_Kal_Alef
+666	Merkava М48	Merkava М48	intunion:Un12_Merkava_M48
+667	Т-54А	Т-54А	intunion:Un13_T-54
+668	T-54D	T-54D	intunion:Un14_T54D
+669	Řezačka (T)	RDT-62 Řezačka Test	intunion:Un1017_RDT_62_T
+670	Řezačka	RDT-62 Řezačka	intunion:Un17_RDT_62
+671	Merkava LP	Merkava LP	intunion:Un02_Merkava_LP
+672	Fiat 3000	Fiat 3000	italy:It04_Fiat_3000
+673	L6/40	L6/40	italy:It05_Carro_L6_40
+674	M14/41	M14/41	italy:It06_M14_41
+675	M15/42	M15/42	italy:It03_M15_42
+676	Sahariano	M16/43 Sahariano	italy:It29_Carro_Celere_Sahariano
+677	P26/40	P26/40	italy:It07_P26_40
+678	Semovente	Semovente M41	italy:It28_Semovente_M41_Da_75_18
+679	P.43	P.43	italy:It11_P43
+680	Bassotto	Semovente M43 Bassotto	italy:It27_M43_da_105_25_Bassoto
+681	P.43 bis	P.43 bis	italy:It10_P43_bis
+682	SMV CC-56	SMV CC-56	italy:It26_CC_56
+683	Carro P.88	Carro d'assalto P.88	italy:It16_Carro_d_assalto_P88
+684	P.43 ter	P.43 ter	italy:It09_P43_ter
+685	Vipera	SMV CC-64 Vipera	italy:It30_CC_mod_64_Prem
+686	SMV CC-67	SMV CC-67	italy:It31_CC_67_B
+687	Progetto 54	Progetto CC55 mod. 54	italy:It17_Progetto_CC55_mod_54
+688	Bisonte C45	Bisonte C45	italy:It18_Progetto_C45_mod_71
+689	Stone Sentinel	Stone Sentinel	italy:It36_Progetto_C45_mod_71_M
+690	Progetto 46	Progetto M35 mod. 46	italy:It13_Progetto_M35_mod_46
+691	Марс	Марс	italy:It13_Progetto_M35_mod_46_LE
+692	P.44 Pantera	P.44 Pantera	italy:It14_P44_Pantera
+693	Prototipo 6	Prototipo 6	italy:It33_Prototipo_6
+694	CC-1 Mk. 2	Controcarro 1 Mk. 2	italy:It24_Controcarro_1_Mk2
+695	Progetto 66	Progetto C50 mod. 66	italy:It19_Progetto_C50_mod_66
+696	Toro	Toro	italy:It34_Toro
+697	Felice	Felice	italy:It35_Felice
+698	Gasta	Gasta	italy:It36_Gasta
+699	Standard B	Prototipo Standard B	italy:It12_Prototipo_Standard_B
+700	Prototipo 6	Prototipo 6	italy:It32_Prototipo_6
+701	Serpente	Serpente	italy:It37_Serpente
+702	Predatore	Predatore	italy:It40_Predatore
+703	Minotauro	Controcarro 3 Minotauro	italy:It23_CC_3
+704	CC 3 7x7	Controcarro 3 7x7	italy:It23_CC_3_7x7
+705	Minotauro (И)	Minotauro Испытательный	italy:It23_CC_3_ISP
+706	Minotauro BB	Minotauro BB	italy:It23_CC_3_bob
+707	Rinoceronte	Rinoceronte	italy:It15_Rinoceronte
+708	Orso	Orso	italy:It33_Orso
+709	Lion	Lion	italy:It21_Lion
+710	Progetto 65	Progetto M40 mod. 65	italy:It08_Progetto_M40_mod_65
+711	Progetto 65 BB	Progetto M40 mod. 65 BB	italy:It08_Progetto_M40_mod_65_bob
+712	Carro 45 t	Carro da Combattimento 45 t	italy:It20_Carro_Combattimento_45t
+713	Coccodrillo	Coccodrillo	italy:It39_Coccodrillo
+714	Carro 45 t	Carro da Combattimento 45 t	italy:It20_Carro_Combattimento_45t
+715	R. Otsu	Renault Otsu	japan:J01_NC27
+716	Te-Ke	Type 97 Te-Ke	japan:J02_Te_Ke
+717	Ha-Go	Type 95 Ha-Go	japan:J03_Ha_Go
+718	Chi-Ni	Chi-Ni	japan:J15_Chi_Ni
+719	I-Go/Chi-Ro	Type 89 I-Go/Chi-Ro	japan:J26_Type_89
+720	Type 91	Type 91 Heavy	japan:J21_Type_91
+721	Ke-Ni	Type 98 Ke-Ni	japan:J04_Ke_Ni
+722	Ke-Ni Otsu	Type 98 Ke-Ni Otsu	japan:J05_Ke_Ni_B
+723	Chi-Ha	Type 97 Chi-Ha	japan:J07_Chi_Ha
+724	Ho-Ni II	Type 1 Ho-Ni II	japan:J50_Type_1_Ho_Ni_II
+725	Type 95	Type 95 Heavy	japan:J22_Type_95
+726	Ke-Ho	Type 5 Ke-Ho	japan:J06_Ke_Ho
+727	Chi-He	Type 1 Chi-He	japan:J09_Chi_He
+728	Ho-Ni III	Type 3 Ho-Ni III	japan:J37_Type_3_Ho_Ni_III
+729	O-I Exp.	O-I Experimental	japan:J23_Mi_To
+730	Mitsu 108	Mitsu 108	japan:J45_Mitsu_108
+731	Chi-Nu	Type 3 Chi-Nu	japan:J08_Chi_Nu
+732	Chi-Nu Kai	Type 3 Chi-Nu Kai	japan:J12_Chi_Nu_Kai
+733	Ji-Ro	Type 95 Ji-Ro	japan:J38_Type_95_Ji_Ro
+734	Ji-Ro	Type 95 Ji-Ro	japan:J38_Type_95_Ji_Ro
+735	O-I	O-I	japan:J24_Mi_To_130_tons
+736	HT No. VI	Heavy Tank No. VI	japan:J19_Tiger_I_Jpn
+737	Ju-Nu	Type 3 Ju-Nu	japan:J44_Type_3_Ju_Nu
+738	Ju-Nu (T)	Type 3 Ju-Nu Test	japan:J44_Type_3_Ju_Nu_test
+739	Chi-To	Type 4 Chi-To	japan:J10_Chi_To
+740	Chi-To SP	Chi-To SP	japan:J32_Chi_To_SPG
+741	Chi-To SP	Chi-To SP	japan:J32_Chi_To_SPG
+742	O-Ni	O-Ni	japan:J28_O_I_100
+743	Ju-To	Type 4 Ju-To	japan:J43_Type_4_Ju-To
+744	Chi-Ri	Type 5 Chi-Ri	japan:J11_Chi_Ri_IGR
+745	Chi-Ri	Type 5 Chi-Ri	japan:J11_Chi_Ri
+746	Ka-Ri	Type 5 Ka-Ri	japan:J31_Type_5_KaRi
+747	Ho-Ri 2	Ho-Ri 2	japan:J33_Ho_Ri_2
+748	Ka-Ri	Type 5 Ka-Ri	japan:J31_Type_5_KaRi
+749	Ho-Ri 2	Ho-Ri 2	japan:J33_Ho_Ri_2
+750	O-Ho	O-Ho	japan:J27_O_I_120
+751	Карачун	Карачун	japan:J27_O_I_120_BP
+752	Nameless	Nameless	japan:J29_Nameless
+753	Type 63	Type 63	japan:J36_Type_63_HT
+754	Type 57	Type 57	japan:J39_Type_57
+755	Type 57 ЛФ	Type 57 ЛФ	japan:J39_Type_57_FL
+756	Type 57 (Т)	Type 57 Тest	japan:J39_Type_57_test
+757	Chi-Se	Chi-Se	japan:J42_Chi_Se
+758	Stitch	Stitch	japan:J42_Chi_Se_CFE_A
+759	Type 60 P.4	Type 60 Proto 4	japan:J49_Type_60_Proto_4
+760	STA-1	STA-1	japan:J13_STA_1_IGR
+761	STA-1	STA-1	japan:J13_STA_1
+762	STA-2	STA-2	japan:J18_STA_2_3
+763	Edelweiss	Edelweiss	japan:J30_Edelweiss
+764	Ho-Ri 1	Ho-Ri 1	japan:J34_Ho_Ri_1
+765	Ho-Ri 1	Ho-Ri 1	japan:J34_Ho_Ri_1
+766	Saryuda	Saryuda	japan:J48_Saryuda
+767	Type 4 H	Type 4 Heavy	japan:J25_Type_4
+768	Type 68	Type 68	japan:J41_Type_68
+769	Type 61	Type 61	japan:J14_Type_61
+770	Kame	Kame	japan:J49_Kame
+771	Ho-Ri 3	Ho-Ri 3	japan:J35_Ho_Ri_3
+772	Ho-Ri 3 7x7	Ho-Ri 3 7x7	japan:J35_Ho_Ri_3_7x7
+773	Ashigaru	Ashigaru	japan:J51_Ashigaru
+774	Ho-Ri 3	Ho-Ri 3	japan:J35_Ho_Ri_3
+775	Ho-Ri 3 7x7	Ho-Ri 3 7x7	japan:J35_Ho_Ri_3_7x7
+776	Type 5 H	Type 5 Heavy	japan:J20_Type_2605
+777	Type 5 H 7x7	Type 5 Heavy 7x7	japan:J20_Type_2605_7x7
+778	Type 5 H (И)	Type 5 H Испытательный	japan:J20_Type_2605_ISP
+779	Type 71	Type 71	japan:J40_Type_71
+780	Type 71 7x7	Type 71 7x7	japan:J40_Type_71_7x7
+781	Type 71 (T)	Type 71 Test	japan:J40_Type_71_test
+782	STB-1	STB-1	japan:J16_ST_B1
+783	STB-1 7v7	STB-1 7v7	japan:J16_ST_B1_7x7
+784	STB-1	STB-1	japan:J16_ST_B1_IGR
+785	STK-2	STK-2	japan:J52_STK_2
+786	4TP	4TP	poland:Pl14_4TP
+787	Ураган	Ураган	poland:Pl17_DS_PZlnz_H
+788	Huragan	Huragan	poland:Pl17_DS_PZlnz_SH
+789	TKS 20	TKS z n.k.m. 20 mm	poland:Pl01_TKS_20mm
+790	7TP	7TP	poland:Pl09_7TP
+791	10TP	10TP	poland:Pl06_10TP
+792	14TP	14TP	poland:Pl07_14TP
+793	Wz.40	Wz.40	poland:Pl33_SDP_Wz_40
+794	25TP	25TP KSUST II	poland:Pl12_25TP_KSUST_II
+795	DS PZInż	DS PZInż	poland:Pl17_DS_PZlnz
+796	Wz.44	Wz.44	poland:Pl32_SDP_Wz_44
+797	Wz.44 (T)	Wz.44 Test	poland:Pl32_SDP_Wz_44_T
+798	Pudel	Pudel	poland:Pl03_PzV_Poland
+799	40TP	40TP Habicha	poland:Pl10_40TP_Habicha
+800	Rudy Pl	T-34-85 Rudy	poland:Pl16_T34_85_Rudy
+801	B.U.G.I.	B.U.G.I.	poland:Pl18_BUGI
+802	Wz.57D	Wz.57D	poland:Pl31_SDP_Wz_57D
+803	45TP	45TP Habicha	poland:Pl11_45TP_Habicha
+804	CS-44	CS-44	poland:Pl20_CS_44
+805	Burza	Wz.66T Burza	poland:Pl27_SDP_Wz_66T
+806	Wz.58Т	Wz.58Т	poland:Pl30_SDP_Wz58T
+807	Wz.58Т ЛФ	Wz.58Т ЛФ	poland:Pl30_SDP_Wz58T_FL
+808	Wz.58Т (T)	Wz.58Т Test	poland:Pl30_SDP_Wz58T_T
+809	50TP R.	50TP Resilient	poland:Pl08_50TP_Prototyp_Resilient
+810	50TP pr.	50TP prototyp	poland:Pl08_50TP_prototyp
+811	53TP	53TP Markowskiego	poland:Pl13_53TP_Markowskiego
+812	56TP	56TP	poland:Pl24_56TP
+813	Sokol	CS-57 Sokol	poland:Pl35_CS_57_Sokol
+814	CS-52 LIS	CS-52 LIS	poland:Pl19_CS_52_LIS
+815	CS-53	CS-53	poland:Pl23_CS_53
+816	CS-52 C	CS-52 C	poland:Pl25_CS_52_C
+817	Wojtek	CS-53/56 Wojtek	poland:Pl34_Cs53_56_Woitek
+818	Niedźwiedź	Wz.60 Niedźwiedź	poland:Pl28_SDP_Wz_60
+819	Pancernik	CC-46 Pancernik	poland:Pl26_Czolg_P_Wz_46
+820	50TP	50TP Tyszkiewicza	poland:Pl05_50TP_Tyszkiewicza
+821	ULAN	ULAN	poland:Pl209_ULAN
+822	CS-59	CS-59	poland:Pl22_CS_59
+823	Żubr	Wz.70 Żubr	poland:Pl29_NC_Wz_70T
+824	Błyskawica 7x7	NC 70 Błyskawica 7x7	poland:Pl29_NC_Wz_70T_7x7
+825	Wz.70T (T)	Wz.70T Test	poland:Pl29_NC_Wz_70T_T
+826	Czołg (P)	Czołg Pancernik wz.46	poland:Pl26_Czolg_P_Wz_46
+827	Wiedźmak	Czołg (P) wz.46 Wiedźmak	poland:Pl26_Czolg_P_Wz_46_Verbesserter
+828	60TP	60TP Lewandowskiego	poland:Pl15_60TP_Lewandowskiego
+829	Ashbringer	Ashbringer	poland:Pl15_60TP_Lewandowskiego_CFE_A
+830	60TP (И)	60TP Lewandowskiego (И)	poland:Pl15_60TP_Lewandowskiego_ISP
+831	Bzyg	Wz. 64GC Bzyg	poland:Pl36_Wz_64GC_Bzyg
+832	CS-63	CS-63	poland:Pl21_CS_63
+833	CS-63 7x7	CS-63 7x7	poland:Pl21_CS_63_7x7
+834	CS-63 (И)	CS-63 (И)	poland:Pl21_CS_63_ISP
+835	Hurricane	Hurricane	poland:Pl21_CS_63_OSP3
+836	Wilk	CS-63 Wilk	poland:Pl34_CS_63_02
+837	Szakal	CS-67 Szakal	poland:Pl37_CS_67_Szakal
+838	Beowulf	Beowulf	sweden:S14_Ikv_103_SH
+839	Strv fm/21	Strv fm/21	sweden:S05_Strv_M21_29
+840	Pvlvv fm/42	Pvlvv fm/42	sweden:S09_L_120_TD
+841	Strv m/38	Strv m/38	sweden:S03_Strv_M38
+842	L-60	L-60	sweden:S15_L_60
+843	Ikv 72	Ikv 72	sweden:S20_Ikv_72
+844	Strv m/40L	Strv m/40L	sweden:S12_Strv_M40
+845	Lago M38	Lago M38	sweden:S34_Lago_M38
+846	Strv m/31	Strv m/31	sweden:S39_Strv_m31
+847	Sav m/43	Sav m/43	sweden:S19_Sav_M43
+848	Lago	Lago	sweden:S04_Lago_I
+849	Ikv 103	Ikv 103	sweden:S14_Ikv_103
+850	Strv m/42	Strv m/42	sweden:S02_Strv_M42
+851	Ikv 65 II	Ikv 65 Alt II	sweden:S08_Ikv_65_Alt_2
+852	LS-46 (T)	Sav LS-46 Test	sweden:S1040_Sav_LS_46_T
+853	Sav LS-46	Sav LS-46	sweden:S40_Sav_LS_46
+854	Strv m/42-57	Strv m/42-57 Alt A.2	sweden:S01_Strv_74_A2
+855	Strv 74	Strv 74	sweden:S07_Strv_74
+856	Ikv 90 B	Ikv 90 Typ B	sweden:S06_Ikv_90_Typ_B_Bofors
+857	Kanonvagn	Kanonvagn fm/49	sweden:S42_Kanonvagn_fm_49
+858	Leo	Leo	sweden:S13_Leo
+859	Strv S1 FL	Strv S1 FL	sweden:S22_Strv_S1_FL
+860	UDES 03	UDES 03	sweden:S21_UDES_03
+861	Strv S1	Strv S1	sweden:S22_Strv_S1
+862	AKV60 (T)	AKV60 Utkast 1 Test	sweden:S1039_15cm_AKV60_Utkast_1_T
+863	AKV60	AKV60 Utkast 1	sweden:S39_15cm_AKV60_Utkast_1
+864	Tornvagn	Bofors Tornvagn	sweden:S32_Bofors_Tornvagn
+865	Drakkar	Bofors Tornvagn Drakkar	sweden:S32_Bofors_Tornvagn_MT_BF
+866	Emil I	Emil I	sweden:S18_EMIL_1951_E1
+867	EMIL 1951	EMIL 1951	sweden:S25_EMIL_51
+868	Lansen C	Lansen C	sweden:S26_Lansen_C
+869	UDES 14 5	UDES 14 Alt 5	sweden:S29_UDES_14_5
+870	Strv 81	Strv 81	sweden:S23_Strv_81
+871	P:Victoria	Primo Victoria	sweden:S23_Strv_81_sabaton
+872	Stridsyxa	Stridsyxa	sweden:S35_Stridsyxa
+873	Strv 103-0 FL	Strv 103-0 FL	sweden:S10_Strv_103_0_Series_FL
+874	Strv 103-0	Strv 103-0	sweden:S10_Strv_103_0_Series
+875	Latt Strf 120	Latt Stridsfordon 120	sweden:S33_Latt_Stridsfordon_120
+876	AKV 151	AKV 151	sweden:S37_AKV_151
+877	Emil II	Emil II	sweden:S17_EMIL_1952_E2
+878	Strv K	Strv K	sweden:S31_Strv_K
+879	UDES 03 3	UDES 03 Alt 3	sweden:S30_UDES_03_Alt_3
+880	UDES 16	UDES 16	sweden:S27_UDES_16
+881	Pagod TK105	Bofors Pagod TK105	sweden:S41_Bofors_Pagod_TK105
+882	Strv 103B	Strv 103B	sweden:S11_Strv_103B
+883	Strv 103B (И)	Strv 103B (И)	sweden:S11_Strv_103B_ISP
+884	VK 155 (T)	VK 155 Projekt Test	sweden:S1036_VK_155_Projekt_T
+885	VK 155 Pr.	VK 155 Projekt	sweden:S36_VK_155_Projekt
+886	Kranvagn	Kranvagn	sweden:S16_Kranvagn
+887	Kranvagn BB	Kranvagn BB	sweden:S16_Kranvagn_bob
+888	UDES 15/16	UDES 15/16	sweden:S28_UDES_15_16
+889	U.15/16 7x7	UDES 15/16 7x7	sweden:S28_UDES_15_16_7x7
+890	Strv 107-12	Strv 107-12	sweden:S36_Strv_107_12
+891	Пиранья	Пиранья	uk:GB00_AEC_Armoured_Car_02
+892	Хопеалуоти	Хопеалуоти	uk:GB00_AEC_Armoured_Car_03
+893	Cruiser I	Cruiser Mk. I	uk:GB03_Cruiser_Mk_I
+894	Medium I	Vickers Medium Mk. I	uk:GB01_Medium_Mark_I
+895	Лицедей	Лицедей	uk:GB107_Cavalier_H
+896	Harbinger	Harbinger Mk. IV	uk:GB107_Cavalier_SH
+897	UC 2-pdr	Universal Carrier 2-pdr	uk:GB39_Universal_CarrierQF2
+898	Loyd GC	Loyd Gun Carriage	uk:GB25_Loyd_Gun_Carriage
+899	M2	M2	uk:GB14_M2
+900	Cruiser II	Cruiser Mk. II	uk:GB69_Cruiser_Mk_II
+901	Light VIC	Light Mk. VIC	uk:GB76_Mk_VIC
+902	Medium II	Vickers Medium Mk. II	uk:GB05_Vickers_Medium_Mk_II
+903	Sexton II	Sexton II	uk:GB27_Sexton
+904	Sexton I	Sexton I	uk:GB78_Sexton_I
+905	Valentine	Valentine	uk:GB04_Valentine
+906	A7E3	A7E3	uk:GB127_A7E3
+907	Stuart I-IV	Stuart I-IV	uk:GB15_Stuart_I
+908	Cruiser III	Cruiser Mk. III	uk:GB58_Cruiser_Mk_III
+909	Medium III	Vickers Medium Mk. III	uk:GB06_Vickers_Medium_Mk_III
+910	Valentine AT	Valentine AT	uk:GB42_Valentine_AT
+911	Alecto	Alecto	uk:GB57_Alecto
+912	Birch Gun	Birch Gun	uk:GB26_Birch_Gun
+913	A25 H.H. I	A25 Harry Hopkins I	uk:GB116_Harry_Hopkins_I
+914	Cruiser IV	Cruiser Mk. IV	uk:GB59_Cruiser_Mk_IV
+915	Matilda	Matilda	uk:GB07_Matilda
+916	Matilda LVT	Matilda LVT	uk:GB113_Matilda_LVT
+917	Grant	Grant	uk:GB17_Grant_I
+918	Sentinel	AC 1 Sentinel	uk:GB33_Sentinel_AC_I
+919	Archer	Archer	uk:GB44_Archer
+920	AT 2	AT 2	uk:GB73_AT2
+921	Bishop	Bishop	uk:GB28_Bishop
+922	Churchill I	Churchill I	uk:GB08_Churchill_I
+923	Churchill I	Churchill I	uk:GB08_Churchill_I_IGR
+924	Excelsior	Excelsior	uk:GB51_Excelsior
+925	G. Destroyer	Gabler’s Destroyer	uk:GB146_Gabler_s_Destroyer
+926	Covenanter	Covenanter	uk:GB60_Covenanter
+927	Cavalier	Cavalier	uk:GB107_Cavalier
+928	AEC	AEC Armoured Car	uk:GB124_AEC_Armoured_Car
+929	Cromwell A	Cromwell Applique	uk:GB137_Cromwell_Applique
+930	Valiant	Valiant	uk:GB37_Valliant
+931	Sherman III	Sherman III	uk:GB50_Sherman_III
+932	Matilda BP	Matilda Black Prince	uk:GB68_Matilda_Black_Prince
+933	AT 8	AT 8	uk:GB74_AT8
+934	Churchill GC	Churchill Gun Carrier	uk:GB40_Gun_Carrier_Churchill
+935	Achilles	Achilles	uk:GB45_Achilles_IIC
+936	Excalibur	Excalibur	uk:GB96_Excalibur
+937	FV304	FV304	uk:GB77_FV304_IGR
+938	FV304	FV304	uk:GB77_FV304
+939	Churchill VII	Churchill VII	uk:GB09_Churchill_VII
+940	A43 BP	A43 BP prototype	uk:GB105_Black_Prince_2019
+941	Crocodile	Churchill Crocodile	uk:GB136_Churchill_BPXIV
+942	Chur Gloriana	Churchill St. Gloriana	uk:GB150_Churchill_VII_A
+943	TOG II*	TOG II*	uk:GB63_TOG_II
+944	Crusader	Crusader	uk:GB1020_Crusader_NewOnBoarding
+945	A46	A46	uk:GB108_A46
+946	Crusader	Crusader	uk:GB20_Crusader
+947	Средний танк	Средний танк	uk:GB19_Sherman_Firefly_MapsTraining_Dummy_MT_2
+948	Cromwell	Cromwell	uk:GB21_Cromwell_IGR
+949	Firefly	Sherman Firefly	uk:GB1019_Sherman_Firefly_NewOnBoarding
+950	Staghound	Staghound Mk. III	uk:GB122_Staghound_Mk_III
+951	Firefly	Sherman Firefly	uk:GB19_Sherman_Firefly
+952	Cromwell	Cromwell	uk:GB21_Cromwell
+953	AC 4 Exp.	AC 4 Experimental	uk:GB35_Sentinel_AC_IV
+954	Cromwell B	Cromwell B	uk:GB85_Cromwell_Berlin
+955	Firefly VC	Sherman VC Firefly	uk:GB95_Ekins_Firefly_M4A4
+956	AT 15A	AT 15A	uk:GB71_AT_15A
+957	AT 7	AT 7	uk:GB75_AT7
+958	Challenger	Challenger	uk:GB41_Challenger
+959	Crusader SP	Crusader 5.5-in. SP	uk:GB29_Crusader_5inch
+960	Black Prince	Black Prince	uk:GB10_Black_Prince
+961	BP II	Black Prince II	uk:GB156_Black_Prince_II
+962	FV201 (A45)	FV201 (A45)	uk:GB52_A45
+963	Cyclone Mk.2	Cyclone Mk.2	uk:GB133_Cyclone_Mk_2
+964	Chopper	FV224 Chopper	uk:GB140_FV224_Chopper
+965	Setter	GSR 3301 Setter	uk:GB104_GSR_3301_Setter
+966	FSV Sch. A	FSV Scheme A	uk:GB126_FSV_Scheme_A
+967	Comet	Comet	uk:GB22_Comet
+968	Cent Gloriana	Centurion St. Gloriana	uk:GB149_Centurion_MkI_A
+969	AT 15	AT 15	uk:GB72_AT15_IGR
+970	Taurus CA	Taurus CA	uk:GB118_Taurus_CA
+971	AT 15	AT 15	uk:GB72_AT15
+972	Turtle I	Turtle Mk. I	uk:GB99_Turtle_Mk1
+973	Nomad	Charioteer Nomad	uk:GB133_Charioteer_MkVII
+974	Charioteer	Charioteer	uk:GB80_Charioteer
+975	Charioteer	Charioteer	uk:GB80_Charioteer_HW
+976	GSOR 1008	GSOR 1008	uk:GB109_GSOR_1008
+977	Jade Coil	Jade Coil	uk:GB109_GSOR_1008_CFE_J
+978	Taurus CAT	Taurus CAT	uk:GB132_Taurus_CAT
+979	FV207	FV207	uk:GB79_FV206
+980	Caernarvon	Caernarvon	uk:GB11_Caernarvon_IGR
+981	Charlemagne	Charlemagne	uk:GB111_Charlemagne
+982	Caliban	Caliban	uk:GB112_Caliban
+983	Prospero	Prospero	uk:GB112_Caliban_02
+984	Gonsalo	Gonsalo	uk:GB115_Gonsalo
+985	Celestial	Celestial 2-51	uk:GB141_Celestial_2_51
+986	Caernarvon	Caernarvon	uk:GB11_Caernarvon
+987	Crossbow	FV225 Crossbow	uk:GB130_FV225
+988	Crusher	Crusher	uk:GB131_Crusher
+989	FV240	FV240	uk:GB135_FV240
+990	FV240 (T)	FV240 Test	uk:GB135_FV240_T
+991	Contradictious	FV226 Contradictious	uk:GB139_FV226_Contradictions
+992	Contradictious	FV226 Contradictious	uk:GB139_FV226_Contradictious
+993	Captain	Captain	uk:GB143_Captain
+994	Nergal	Nergal	uk:GB145_Crusher_ASE_4
+995	Conceiver	FV227 Conceiver	uk:GB148_FV227_Conceiver
+996	Caernarvon AX	Caernarvon Action X	uk:GB93_Caernarvon_AX
+997	Senlac	FV1066 Senlac	uk:GB101_FV1066_Senlac
+998	LHMTV	LHMTV	uk:GB102_LHMTV
+999	LHMTV FL	LHMTV FL	uk:GB102_LHMTV_FL
+1000	Centurion I	Centurion Mk. I	uk:GB23_Centurion_IGR
+1001	FV4202 FL	FV4202 FL	uk:GB70_N_FV4202_105_FL
+1002	Centurion 5/1	Centurion Mk. 5/1 RAAC	uk:GB94_Centurion_Mk5-1_RAAC
+1003	Vickers Mk.3	Vickers Mark 3	uk:GB114_Vickers_MBT_Mk3
+1004	GSOR 1010	GSOR 1010 FB	uk:GB121_GSOR_1010_FB
+1005	Saladin	FV601 Saladin	uk:GB125_Saladin
+1006	Nemesis	Nemesis	uk:GB128_Nemesis
+1007	Centurion I	Centurion Mk. I	uk:GB23_Centurion
+1008	FV4202	FV4202	uk:GB70_N_FV4202_105
+1009	Chieftain/T95	Chieftain/T95	uk:GB87_Chieftain_T95_turret
+1010	Chimera	Chimera	uk:GB97_Chimera
+1011	Alligator	FV205b Alligator	uk:GB129_FV205b_Alligator
+1012	Tortoise	Tortoise	uk:GB32_Tortoise
+1013	Conway	FV4004 Conway	uk:GB81_FV4004
+1014	FV3805	FV3805	uk:GB30_FV3805
+1015	Conqueror FL	Conqueror FL	uk:GB12_Conqueror_FL
+1016	Chieftain P.	FV4201 Chieftain Proto	uk:GB110_FV4201_Chieftain_Prototype
+1017	Рудный барон	Chief. Proto Рудный барон	uk:GB110_FV4201_Chieftain_Prototype_B
+1018	Conqueror	Conqueror	uk:GB12_Conqueror
+1019	Celtic	FV245 Celtic	uk:GB136_FV245
+1020	Contender	FV229 Contender	uk:GB143_FV229_Contender
+1021	FV214t	FV214t	uk:GB157_FV214t
+1022	GSOR	GSOR3301 AVR FS	uk:GB103_GSOR3301_AVR_FS
+1023	Spider	CVT Spider	uk:GB137_CVT_Spider
+1024	GSOR 1006/7	GSOR 1006 Scheme 7	uk:GB123_GSOR_1006_v7
+1025	Cobra	Cobra	uk:GB106_Cobra
+1026	GSOR TANK	GSOR the TANK	uk:GB141_GSOR_the_TANK
+1027	Centurion 7/1	Centurion Mk. 7/1	uk:GB24_Centurion_Mk3
+1028	Badger	FV217 Badger	uk:GB92_FV217
+1029	Badger 7x7	FV217 Badger 7x7	uk:GB92_FV217_7x7
+1030	FV215b 183	FV215b (183)	uk:GB48_FV215b_183
+1031	FV4005	FV4005 Stage II	uk:GB83_FV4005
+1032	FV4005 (И)	FV4005 II Испытательный	uk:GB83_FV4005_ISP
+1033	ConquerorGC T	Conqueror Gun Carriage T	uk:GB1031_Conqueror_Gun_T
+1034	ConquerorGC	Conqueror Gun Carriage	uk:GB31_Conqueror_Gun
+1035	Collector	FV225 Collector	uk:GB130_FV225_Collector
+1036	FV215b	FV215b	uk:GB13_FV215b
+1037	FV215b	FV215b	uk:GB13_FV215b_IGR
+1038	Condor	FV242B Condor	uk:GB134_FV242B_Condor
+1039	Condor (T)	FV242B Condor Test	uk:GB134_FV242B_Condor_T
+1040	Gryphon	Gryphon	uk:GB134_Gryphon
+1041	FV215b	FV215b	uk:GB13_FV215b
+1042	Canopener	FV230 Canopener	uk:GB142_FV230_Canopener
+1043	Chieftain	Chieftain Mk. 6	uk:GB84_Chieftain_Mk6
+1044	T95/Chieftain	T95/Chieftain	uk:GB88_T95_Chieftain_turret
+1045	S. Conqueror	Super Conqueror	uk:GB91_Super_Conqueror
+1046	S. Conq. 7x7	Super Conqueror 7x7	uk:GB91_Super_Conqueror_7x7
+1047	S. Conqueror (И)	Super Conqueror (И)	uk:GB91_Super_Conqueror_ISP
+1048	T95/FV4201	T95/FV4201 Chieftain	uk:GB98_T95_FV4201_Chieftain
+1049	Manticore	Manticore	uk:GB100_Manticore
+1050	Nemesis	Nemesis	uk:GB128_Nemesis
+1051	Vickers 3	Vickers MBT Mk. 3	uk:GB114_Vickers_MBT_Mk3
+1052	Concept 5	Concept No. 5	uk:GB120_Concept_No_5
+1053	Concept 5 7x7	Concept No. 5 7x7	uk:GB120_Concept_No_5_7x7
+1054	Concept 5 (И)	Concept No. 5 (И)	uk:GB120_Concept_No_5_ISP
+1055	Concept 5 BB	Concept No. 5 BB	uk:GB120_Concept_No_5_bob
+1056	Vulcan	Vulcan	uk:GB139_Vulcan
+1057	FV4202	FV4202	uk:GB70_FV4202_105
+1058	Centurion AX	Centurion Action X	uk:GB86_Centurion_Action_X
+1059	Cent. AX 7x7	Centurion Action X 7x7	uk:GB86_Centurion_Action_X_7x7
+1060	Triumphant	Triumphant	uk:GB86_Centurion_Action_X_CFE_A
+1061	Centurion AX (И)	Centurion Action X (И)	uk:GB86_Centurion_Action_X_ISP
+1062	Breaker	AT-FV230 Breaker	uk:GB152_AT_FV230_Breaker
+1063	Champion	Champion	uk:GB140_Champion
+1064	Contriver	FV4025 Contriver	uk:GB147_FV4025_Contriver
+1065	T1	T1 Cunningham	usa:A01_T1_Cunningham
+1066	Raven	Raven	usa:A72_T25_2_SH
+1067	T18	T18	usa:A26_T18
+1068	T3 HMC	T3 HMC	usa:A46_T3
+1069	T1 HMC	T1 HMC	usa:A107_T1_HMC
+1070	T57	T57	usa:A15_T57
+1071	M2 Light	M2 Light Tank	usa:A02_M2_lt
+1072	T2 Light	T2 Light Tank	usa:A19_T2_lt
+1073	T1E6	T1E6	usa:A74_T1_E6
+1074	T7 Car	T7 Combat Car	usa:A93_T7_Combat_Car
+1075	T2 Medium	T2 Medium Tank	usa:A24_T2_med
+1076	M4A3E2	M4A3E2 Sherman Jumbo	usa:A36_Sherman_Jumbo_bootcamp
+1077	T56 GMC	T56 GMC	usa:A109_T56_GMC
+1078	T18 HMC	T18 HMC	usa:A108_T18_HMC
+1079	M7 Priest	M7 Priest	usa:A16_M7_Priest
+1080	M3 Stuart	M3 Stuart	usa:A03_M3_Stuart
+1081	MTLS-1G14	MTLS-1G14	usa:A33_MTLS-1G14
+1082	Locust	M22 Locust	usa:A43_M22_Locust
+1083	M3A3 Stuart	M3A3 Stuart	usa:A76_M3_A3
+1084	T3 Convert.	Convert. Medium Tank T3	usa:A148_Convertible_Medium_Tank_T3
+1085	T3E2 Conv.	Conv. Medium Tank T3E2	usa:A154_Convertible_Medium_Tank_T3E2
+1086	M2 Medium	M2 Medium Tank	usa:A25_M2_med
+1087	T40	T40	usa:A29_T40
+1088	M8A1	M8A1	usa:A57_M8A1
+1089	M37	M37	usa:A17_M37
+1090	T82 HMC	T82 HMC	usa:A27_T82
+1091	M5 Stuart	M5 Stuart	usa:A22_M5_Stuart
+1092	M3 Lee	M3 Lee	usa:A04_M3_Grant
+1093	T6 Medium	T6 Medium	usa:A129_T6_medium
+1094	Средний танк	Средний танк	usa:A129_T6_medium_MapsTraining_Dummy_MT_1
+1095	Wolverine	M10 Wolverine	usa:A30_M10_Wolverine
+1096	T67	T67	usa:A58_T67
+1097	T67	T67	usa:A58_T67_IGR
+1098	M41 HMC	M41 HMC	usa:A18_M41
+1099	T1 Heavy	T1 Heavy Tank	usa:A09_T1_hvy
+1100	T14	T14	usa:A21_T14
+1101	T14 (yч.)	T14 (yч.)	usa:A21_T14_MapsTraining_Player_HT_1
+1102	Chaffee	M24 Chaffee	usa:A1034_M24_Chaffee_StoryMode
+1103	Chaffee Camo	Chaffee Camouflaged	usa:A1034_M24_Chaffee_StoryModeStealth
+1104	M24 No.594	M24 No.594	usa:A160_M24_594
+1105	M7	M7	usa:A23_M7_med
+1106	Wayfarer	M7 Wayfarer	usa:A23_M7_med_02
+1107	Chaffee	M24 Chaffee	usa:A34_M24_Chaffee
+1108	Chaffee Camo	Chaffee Camouflaged	usa:A34_M24_Chaffee_CFE_V
+1109	M4A1	M4A1 Sherman	usa:A05_M4_Sherman
+1110	M4A1	M4A1 Sherman	usa:A05_M4_Sherman_IGR
+1111	M4 Sherman	M4A1 Sherman	usa:A1005_M4_Sherman_StoryMode
+1112	ARMT	ARMT	usa:A161_ARMT
+1113	Sherman Crab	Sherman Crab	usa:A173_Sherman_Crab
+1114	M4A2E4	M4A2E4 Sherman	usa:A44_M4A2E4
+1115	Ram II	Ram II	usa:A62_Ram-II
+1116	M4 Improved	M4 Improved	usa:A78_M4_Improved
+1117	Hellcat	M18 Hellcat	usa:A1041_M18_Hellcat_NewOnBoarding
+1118	T78	T78	usa:A123_T78
+1119	M36B1	GMC M36B1	usa:A174_M36B1_GMC
+1120	Hellcat	M18 Hellcat	usa:A41_M18_Hellcat
+1121	Jackson	M36 Jackson	usa:A31_M36_Slagger
+1122	M44	M44	usa:A87_M44
+1123	Pawlack Tank	Pawlack Tank	usa:A142_Pawlack_Tank
+1124	M6	M6	usa:A10_M6
+1125	Pawlack Tank	Pawlack Tank	usa:A142_Pawlack_Tank
+1126	Лёгкий танк	Лёгкий танк	usa:A71_T21_MapsTraining_Dummy_LT_2
+1127	Super Chaffee	M24E2 Super Chaffee	usa:A134_M24E2_SuperChaffee
+1128	T21	T21	usa:A71_T21
+1129	T37	T37	usa:A94_T37
+1130	M4A3E2	M4A3E2 Sherman Jumbo	usa:A36_Sherman_Jumbo_IGR
+1131	Thunderbolt	M4A3E8 Thunderbolt VII	usa:A1118_M4_Thunderbolt_NewOnBoarding
+1132	Thunderbolt	M4A3E8 Thunderbolt VII	usa:A118_M4_Thunderbolt
+1133	M4A3E2	M4A3E2 Sherman Jumbo	usa:A36_Sherman_Jumbo
+1134	Firefly Saunders	Sherman Firefly Saunders	usa:A192_M4A4_Firefly_CFE_A
+1135	M4A3E8	M4A3E8 Sherman	usa:A06_M4A3E8_Sherman
+1136	E8 Sherman	M4A3E8 Sherman	usa:A1006_M4A3E8_Sherman_NewOnBoarding
+1137	E8 Sherman	M4A3E8 Sherman	usa:A1006_M4A3E8_Sherman_StoryMode
+1138	E8 Sherman	M4A3E8 Sherman	usa:A1006_M4A3E8_Sherman_StoryModeHard
+1139	E8 Sherman	M4A3E8 Sherman	usa:A1006_M4A3E8_Sherman_StoryMode_3_4
+1140	Fury	M4A3E8 Fury	usa:A104_M4A3E8A
+1141	M4A3(76)W	M4A3(76)W Sherman	usa:A172_M4A3E8_Sherman_BPXIV
+1142	T28 HTC	T28 Concept	usa:A102_T28_concept
+1143	Scorpion	M56 Scorpion	usa:A101_M56
+1144	Super Hellcat	Super Hellcat	usa:A130_Super_Hellcat
+1145	T25/2	T25/2	usa:A72_T25_2
+1146	T25 AT	T25 AT	usa:A64_T25_AT
+1147	T25 AT FL	T25 AT FL	usa:A64_T25_AT_FL
+1148	M12	M12	usa:A32_M12
+1149	Т29	Т29	usa:A11_T29_IGR
+1150	T29	T29	usa:A11_T29
+1151	King Tiger (C)	King Tiger (захваченный)	usa:A126_PzVI_Tiger_II_capt
+1152	M-II-Y	M-II-Y	usa:A147_M_II_Y
+1153	M4A3FL	M4A3FL	usa:A170_M4A3FL
+1154	M-II-Y	M-II-Y	usa:A147_M_II_Y
+1155	T71	T71	usa:A103_T71E1_IGR
+1156	T71 DA	T71 DA	usa:A103_T71E1
+1157	T71 CMCD P	T71 CMCD P	usa:A112_T71E2
+1158	T71 CMCD	T71 CMCD	usa:A112_T71E2R
+1159	ARMT	ARMT	usa:A161_ARMT
+1160	Eagle 7	T26E3 Eagle 7	usa:A121_M26_Cologne
+1161	T20	T20	usa:A07_T20
+1162	T23E3	T23E3	usa:A86_T23E3
+1163	TS-5	TS-5	usa:A122_TS-5
+1164	XM57	XM57	usa:A168_XM_57
+1165	T28	T28	usa:A39_T28
+1166	XM66F	XM66F	usa:A153_XM66F
+1167	T28 Prot.	T28 Prototype	usa:A68_T28_Prototype
+1168	T28 Prot. FL	T28 Prototype FL	usa:A68_T28_Prototype_FL
+1169	M40/M43	M40/M43	usa:A37_M40M43
+1170	T26E5 FL	T26E5 FL	usa:A117_T26E5_FL
+1171	T32 FL	T32 FL	usa:A12_T32_FL
+1172	T34 FL	T34 FL	usa:A13_T34_hvy_FL
+1173	T34	T34	usa:A13_T34_hvy_IGR
+1174	Chrysler K	Chrysler K	usa:A115_Chrysler_K
+1175	Chrysler GF	Chrysler K GF	usa:A115_Chrysler_K_GF
+1176	M6A2E1	M6A2E1	usa:A45_M6A2E1
+1177	T26E5	T26E5	usa:A117_T26E5
+1178	T26E5 P	T26E5 Patriot	usa:A117_T26E5_Patriot
+1179	M-III-Y	M-III-Y	usa:A139_M_III_Y
+1180	M-VII-Y	M-VII-Y	usa:A157_M_VII_Y
+1181	T77	T77	usa:A132_T77
+1182	T34	T34	usa:A13_T34_hvy
+1183	T34 B	T34 B	usa:A13_T34_hvy_BF
+1184	TF-3	TF-3	usa:A169_TF_3
+1185	TF-3 (T)	TF-3 Test	usa:A169_TF_3_T
+1186	Renegade	M54 Renegade	usa:A124_T54E2
+1187	T32	T32	usa:A12_T32
+1188	T32	T32	usa:A12_T32_HW
+1189	T32M	T32M	usa:A12_T32_M
+1190	M-III-Y	M-III-Y	usa:A139_M_III_Y
+1191	M-IV-Y	M-IV-Y	usa:A141_M_IV_Y
+1192	Noir	M-IV-Y Noir	usa:A141_M_IV_Y_MT_BF
+1193	TS-54	TS-54	usa:A145_TS_54
+1194			usa:A158_T832
+1195	M41 Bulldog	M41 Walker Bulldog	usa:A97_M41_Bulldog
+1196	Bulldog FL	M41 Walker Bulldog FL	usa:A97_M41_Bulldog_FL
+1197	T92	T92	usa:A99_T92_LT
+1198	T23	T23	usa:A08_T23
+1199	Pershing	M26 Pershing	usa:A35_Pershing_IGR
+1200	T26E4 FL	T26E4 SuperPershing FL	usa:A80_T26_E4_SuperPershing_FL
+1201	T69	T69	usa:A90_T69_IGR
+1202	Iron Arnie	M47 Iron Arnie	usa:A152_M_Project
+1203	M47 Improv.	M47 Patton Improved	usa:A152_M_Project_2
+1204	T26E4	T26E4 SuperPershing	usa:A80_T26_E4_SuperPershing
+1205	ASTRON Rex	ASTRON Rex 105 mm	usa:A140_ASTRON_REX_105mm
+1206	Alembic	Alembic	usa:A140_ASTRON_REX_105mm_SPD
+1207	AMBT	AMBT	usa:A149_AMBT
+1208	AAT60	AAT60	usa:A155_AAT60
+1209	Ares 75	Ares 75	usa:A187_Ares_75
+1210	T23	T23	usa:A08_T23
+1211	T25 Pilot 1	T25 Pilot Number 1	usa:A111_T25_Pilot
+1212	TL-1 LPC	TL-1 LPC	usa:A127_TL_1_LPC
+1213	T42	T42	usa:A136_T42
+1214	Chrysler MTC	Chrysler MTC 2TC	usa:A159_Chrysler_MTC_2
+1215	IMT	IMT	usa:A171_IMT
+1216	Pershing	M26 Pershing	usa:A35_Pershing
+1217	Pershing FL	M26 Pershing FL	usa:A35_Pershing_FL
+1218	M46 KR	M46 Patton KR	usa:A63_M46_Patton_KR
+1219	T95E2	T95E2	usa:A81_T95_E2
+1220	T69	T69	usa:A90_T69
+1221	T30 FL	T30 FL	usa:A14_T30_FL
+1222	TS-60	TS-60	usa:A151_TS_60
+1223	T95	T95	usa:A40_T95
+1224	TL-7	TL-7	usa:A146_TL_7_120
+1225	T30	T30	usa:A14_T30
+1226	M53/M55	M53/M55	usa:A88_M53_55
+1227	TS-6	TS-6	usa:A167_TS_6
+1228	Concept 1B	Concept 1B	usa:A128_concept_1b
+1229	M-VI-Y	M-VI-Y	usa:A144_M_VI_Y
+1230	H3	H3	usa:A166_H_3
+1231	TF-4	TF-4	usa:A171_TF_4
+1232	TF-2 CLARK	TF-2 CLARK	usa:A173_TF_2_CLARK
+1233	T54E1	T54E1	usa:A89_T54E1
+1234	AE Phase I	AE Phase I	usa:A125_AEP_1
+1235	AE Phase I (T)	AE Phase I Test	usa:A125_AEP_1_T
+1236	M-VI-Y	M-VI-Y	usa:A144_M_VI_Y
+1237	M-VI-Y (120)	M-VI-Y (120)	usa:A144_M_VI_Y_CFE_R
+1238	Peacekeeper	OCP Peacekeeper	usa:A144_M_VI_Y_CFE_RC
+1239	T54 Heavy	T54 Heavy Tank	usa:A156_T54_2022
+1240	M-VII-Y	M-VII-Y	usa:A170_M_VII_Y
+1241	M103M	M103M	usa:A176_M103_110
+1242	Rambo	Rambo	usa:A176_M103_110_CFE_R
+1243	SPHT	SPHT	usa:A178_SPHT
+1244	M103	M103	usa:A66_M103
+1245	T49	T49	usa:A100_T49
+1246	ATAC II	ATAC II	usa:A162_ATAC_II
+1247	LTC II	LTC II	usa:A175_LTC_II
+1248	M46 FL	M46 Patton FL	usa:A63_M46_Patton_FL
+1249	Ares MTB	Ares MTB	usa:A188_Ares_MTB
+1250	Ares 85	Ares 85	usa:A190_Ares_85
+1251	Patton Tank	Patton the Tank	usa:A169_PattonIII_120
+1252	LK-7605	OTAC LK-7605	usa:A176_OTAC_LK_7605
+1253	M46 Patton	M46 Patton	usa:A63_M46_Patton
+1254	TS-6	TS-6	usa:A164_TS_6
+1255	XM57	XM57	usa:A165_XM57
+1256	T110E4	T110E4	usa:A83_T110E4
+1257	T110E4 7x7	T110E4 7x7	usa:A83_T110E4_7x7
+1258	T110E4 (И)	T110E4 (И)	usa:A83_T110E4_ISP
+1259	T110E3	T110E3	usa:A85_T110E3
+1260	T110E3 (И)	T110E3 (И)	usa:A85_T110E3_ISP
+1261	AHT-7	AHT-7	usa:A194_AHT_7
+1262	T92 HMC T	T92 HMC T	usa:A1038_T92_T
+1263	T92 HMC	T92 HMC	usa:A38_T92
+1264	M-V-Y	M-V-Y	usa:A143_M_V_Y
+1265	M-V-Y 7x7	M-V-Y 7x7	usa:A143_M_V_Y_7x7
+1266	MBT-B	MBT-B	usa:A150_MBT_B
+1267	H-3	H-3	usa:A163_H_3
+1268	Grayhound	Grayhound	usa:A163_H_3_2
+1269	Astron-FL	Astron-FL	usa:A172_ASTRON_FL
+1270	Astron-FL (T)	Astron-FL Test	usa:A172_ASTRON_FL_T
+1271	Stinger	Stinger	usa:A174_T57_58_Rush_Ep1
+1272	T57 Heavy	T57 Heavy Tank	usa:A67_T57_58
+1273	T57 Heavy (И)	T57 Heavy Tank (И)	usa:A67_T57_58_ISP
+1274	M-V-Y	M-V-Y	usa:A143_M_V_Y
+1275	Thunderclap	M5YE2 Thunderclap	usa:A143_M_V_Y_FEP23
+1276	T110E5	T110E5	usa:A69_T110E5
+1277	T110E5 7х7	T110E5 7х7	usa:A69_T110E5_7x7
+1278	T110E5 CL	T110E5 CL	usa:A69_T110E5_cl
+1279	Sheridan	XM551 Sheridan	usa:A116_XM551
+1280	Hailstorm	XM551E4 Hailstorm	usa:A116_XM551_FEP23
+1281	M48/T54E2	M48A2/T54E2/T123E6	usa:A106_M48A2_120
+1282	MBT-59	MBT-59	usa:A179_MBT_59
+1283	Ares 90	Ares 90	usa:A189_Ares_90
+1284	MT-58-105	OTAC MT-58-105	usa:A1001_OTAC_MT_58_T
+1285	M48 Patton	M48A5 Patton	usa:A120_M48A5
+1286	M48A5 7x7	M48A5 Patton 7x7	usa:A120_M48A5_7x7
+1287	M48 Patton	M48A5 Patton	usa:A120_M48A5_IGR
+1288	Thunderbolt	Thunderbolt	usa:A120_M48A5_hound_TLXXL
+1289	MT-58	OTAC MT-58	usa:A175_OTAC_MT_58
+1290	Firebird	Firebird	usa:A175_OTAC_MT_58_02
+1291	M60	M60	usa:A92_M60
+1292	T95E6	T95E6	usa:A95_T95_E6
+1293	MBT-B	MBT-B	usa:A150_MBT_B
+1294	MBT-B (T)	MBT-B Test	usa:A150_MBT_B_T
+1295	T57 Heavy T	T57 Heavy Tank T	usa:A67_T57_58_T
+1296	Black Rock	Black Rock	usa:A179_Black_Rock
+1297	T803	T803	usa:A182_T803
+1298	Ares 90 C	Ares 90 C	usa:A191_Ares_90_C
+1299	Hacker	XM69 Hacker	usa:A183_XM69_Hacker
+1300	Бессмертный	Бессмертный	ussr:R46_KV-13_H
+1301	Варяг	Варяг	ussr:R46_KV-13_SH
+1302	Наблюдатель	Наблюдатель	ussr:Observer
+1303	МС-1	МС-1	ussr:R11_MS-1
+1304	АТ-1	АТ-1	ussr:R10_AT-1
+1305	СУ-18	СУ-18	ussr:R16_SU-18
+1306	ХТ-130	ХТ-130	ussr:R207_HT_130
+1307	ХТ-130	ХТ-130	ussr:R207_HT_130_hb25
+1308	БТ-2	БТ-2	ussr:R08_BT-2
+1309	Т-26	Т-26	ussr:R09_T-26
+1310	Т-26	Т-26	ussr:R09_T-26_hb25
+1311	Т-45	Т-45	ussr:R125_T_45
+1312	Т-60	Т-60	ussr:R42_T-60
+1313	Тетрарх	Тетрарх	ussr:R84_Tetrarch_LL
+1314	СУ-76И	СУ-76И	ussr:R50_SU76I
+1315	БТ-7 арт.	БТ-7 артиллерийский	ussr:R105_BT_7A_hb25
+1316	СУ-26	СУ-26	ussr:R66_SU-26
+1317	БТ-7 арт.	БТ-7 артиллерийский	ussr:R105_BT_7A
+1318	Т-116	Т-116	ussr:R161_T_116
+1319	БТ-5	БТ-5	ussr:R174_BT-5
+1320	БТ-5	БТ-5	ussr:R174_BT-5_hb25
+1321	Т-46	Т-46	ussr:R22_T-46
+1322	БТ-СВ	БТ-СВ	ussr:R34_BT-SV
+1323	Т-70	Т-70	ussr:R43_T-70
+1324	Т-70	Т-70	ussr:R43_T-70_hb25
+1325	Т-127	Т-127	ussr:R56_T-127
+1326	М3 лёгкий	М3 лёгкий	ussr:R67_M3_LL
+1327	ЛТП	ЛТП	ussr:R86_LTP
+1328	Т-29	Т-29	ussr:R143_T_29
+1329	СУ-76М	СУ-76М	ussr:R24_SU-76
+1330	СУ-76М	СУ-76М	ussr:R24_SU-76_hb25
+1331	СУ-85Б	СУ-85Б	ussr:R25_GAZ-74b
+1332	СУ-5	СУ-5	ussr:R14_SU-5
+1333	САУ	САУ	ussr:R14_SU-5_MapsTraining_Dummy_SPG_1
+1334	БТ-7	БТ-7	ussr:R03_BT-7
+1335	БТ-7	БТ-7	ussr:R03_BT-7_hb25
+1336	Валентайн II	Валентайн II	ussr:R31_Valentine_LL
+1337	Валентайн II	Валентайн II	ussr:R31_Valentine_LL_IGR
+1338	Т-80	Т-80	ussr:R44_T80
+1339	Лёгкий танк	Лёгкий танк	ussr:R44_T80_MapsTraining_Dummy_LT_1
+1340	Т-28	Т-28	ussr:R06_T-28
+1341	Т-28	Т-28	ussr:R06_T-28_hb25
+1342	Т-28Э Ф-30	Т-28Э с Ф-30	ussr:R118_T28_F30
+1343	Т-34 1941 г.	Т-34 с Л-11	ussr:R185_T_34_L_11_1941
+1344	Т-34 1941 г.	Т-34 с Л-11	ussr:R185_T_34_L_11_1941_hb25
+1345	ИТ-3	ИТ-3	ussr:R201_IT_3
+1346	А-32	А-32	ussr:R68_A-32
+1347	СУ-85	СУ-85	ussr:R02_SU-85
+1348	СУ-85	СУ-85	ussr:R02_SU-85_hb25
+1349	СУ-2-122	СУ-2-122	ussr:R202_SU_2_122
+1350	SU-100I	SU-100I	ussr:R225_SU_100i
+1351	СУ-85И	СУ-85И	ussr:R78_SU_85I
+1352	СУ-122А	СУ-122А	ussr:R100_SU122A
+1353	КВ	КВ	ussr:R05_KV
+1354	КВ-1Э	КВ-1 экранированный	ussr:R186_KV_1_Screened
+1355	КВ-1Э	КВ-1 экранированный	ussr:R186_KV_1_Screened_hb25
+1356	КВ-1С с МЗ	КВ-1С с МЗ	ussr:R197_KV_1S_MZ
+1357	Черчилль III	Черчилль III	ussr:R33_Churchill_LL
+1358	КВ-220-2	КВ-220-2	ussr:R38_KV-220
+1359	КВ-220-2 Т	КВ-220-2 Бета-Тест	ussr:R38_KV-220_beta
+1360	КВ-1	КВ-1	ussr:R80_KV1
+1361	КВ-1	КВ-1	ussr:R80_KV1_hb25
+1362	А-20	А-20	ussr:R12_A-20
+1363	Т-50	Т-50	ussr:R41_T-50
+1364	Т-50-2	Т-50-2	ussr:R70_T_50_2
+1365	Т-34	Т-34	ussr:R04_T-34
+1366	Т-34 (yч.)	Т-34 (yч.)	ussr:R04_T-34_MapsTraining_Player_MT_1
+1367	Т-34	Т-34	ussr:R04_T-34_hb25
+1368	T-34	T-34	ussr:R1004_T-34_StoryMode
+1369	Т-34Э	Т-34 экранированный	ussr:R154_T_34E_1943
+1370	М4-85	M4-85	ussr:R193_M4A2_T_34
+1371	Т-115	Т-115	ussr:R209_T_115
+1372	T-115	T-115	ussr:R218_T_115
+1373	Матильда IV	Матильда IV	ussr:R32_Matilda_II_LL
+1374	СУ-100	СУ-100	ussr:R17_SU-100
+1375	СУ-100	СУ-100	ussr:R17_SU-100_hb25
+1376	СУ-100Y	СУ-100Y	ussr:R49_SU100Y
+1377	СУ-8	СУ-8	ussr:R26_SU-8
+1378	СУ-122	СУ-122	ussr:R163_SU_122
+1379	КВ-85	КВ-85	ussr:R106_KV85_IGR
+1380	Тяжёлый танк	Тяжёлый танк	ussr:R72_T150_MapsTraining_Dummy_HT_2
+1381	КВ-2	КВ-2	ussr:R77_KV2_IGR
+1382	Об. 244	Объект 244	ussr:R114_Object_244
+1383	Т-150	Т-150	ussr:R72_T150
+1384	КВ-2 (Р)	КВ-2 (Р)	ussr:R152_KV2_W
+1385	КВ-2	КВ-2	ussr:R77_KV2
+1386	КВ-2	КВ-2	ussr:R77_KV2_hb25
+1387	КВ-85	КВ-85	ussr:R106_KV85
+1388	КВ-85	КВ-85	ussr:R106_KV85_hb25
+1389	КВ-1С	КВ-1С	ussr:R13_KV-1s
+1390	КВ-1С	КВ-1С	ussr:R13_KV-1s_hb25
+1391	МТ-25	МТ-25	ussr:R101_MT25
+1392	Т-50-2	Т-50-2	ussr:R160_T_50_2
+1393	Т-34-85	Т-34-85	ussr:R07_T-34-85
+1394	Т-34-85	Т-34-85	ussr:R07_T-34-85_hb25
+1395	Т-34-85	Т-34-85	ussr:R1008_T34_85M_NewOnBoarding
+1396	Т-34-85М	Т-34-85М	ussr:R108_T34_85M
+1397	Т-34-85М	Т-34-85М	ussr:R108_T34_85M_hb25
+1398	Rudy USSR	Т-34-85 Rudy	ussr:R117_T34_85_Rudy
+1399	М4-А2 Лозы	М4-А2 Шерман Лозы	ussr:R140_M4_Loza
+1400	Пантера	Т-V Пантера	ussr:R218_Panther_N_518
+1401	А-43	А-43	ussr:R57_A43
+1402	СУ-152	СУ-152	ussr:R18_SU-152_IGR
+1403	СУ-100М1	СУ-100М1	ussr:R74_SU100M1
+1404	У-18	У-18	ussr:R164_U_18_T
+1405	СУ-152	СУ-152	ussr:R18_SU-152
+1406	СУ-152	СУ-152	ussr:R18_SU-152_hb25
+1407	ИСУ-122С	ИСУ-122С	ussr:R116_ISU122C_Berlin
+1408	ИСУ-122С	ИСУ-122С	ussr:R116_ISU122C_Berlin_hb25
+1409	СУ-122-44	СУ-122-44	ussr:R89_SU122_44
+1410	СУ-122-44	СУ-122-44	ussr:R89_SU122_44_hb25
+1411	С-51	С-51	ussr:R15_S-51
+1412	СУ-14-1	СУ-14-1	ussr:R91_SU14_1
+1413	СУ-14-1	СУ-14-1	ussr:R91_SU14_1_hb25
+1414	СУ-Д15	СУ-Д15	ussr:R166_SU_D15
+1415	КВ-4Ф	КВ-4 Федоренко	ussr:R235_KV_4_Fedorenko
+1416	КВ-3	КВ-3	ussr:R39_KV-3
+1417	ИС	ИС	ussr:R01_IS
+1418	ИС	ИС	ussr:R01_IS_hb25
+1419	ИС-3Т	ИС-3Т	ussr:R1013_IS_3_T
+1420	КВ-122	КВ-122	ussr:R133_KV_122
+1421	КВ-122	КВ-122	ussr:R133_KV_122_hb2
+1422	ИС-2М	ИС-2М	ussr:R156_IS_2M
+1423	ИС-2Э	ИС-2 экранированный	ussr:R175_IS_2_screen
+1424	ИС-2Э	ИС-2 экранированный	ussr:R175_IS_2_screen_hb25
+1425	Парадный	ИС-3 Парадный	ussr:R224_IS_3_1945
+1426	ИС-2	ИС-2	ussr:R71_IS_2B
+1427	ИС-2	ИС-2	ussr:R71_IS_2B_hb25
+1428	ЛТГ	ЛТГ	ussr:R131_Tank_Gavalov
+1429	Т-43 (yч.)	Т-43 (yч.)	ussr:R23_T-43_MapsTraining_Player_MT_2
+1430	Т-44-85	Т-44-85	ussr:R98_T44_85
+1431	Т-44-85	Т-44-85	ussr:R98_T44_85_hb25
+1432	КВ-13	КВ-13	ussr:R46_KV-13
+1433	А-44	А-44	ussr:R59_A44
+1434	Т-34М-54	Т-34М-54	ussr:R195_T34M_54
+1435	ТИТТ	ТИТТ Розанова	ussr:R205_Tank_Rozanova
+1436	Т-43	Т-43	ussr:R23_T-43
+1437	Т-43 ЛФ	Т-43 ЛФ	ussr:R23_T-43_FL
+1438	Т-34-100	Т-34-100	ussr:R241_T_34_100
+1439	Т-44-122	Т-44-122	ussr:R99_T44_122
+1440	Т-44-122А	Т-44-122А	ussr:R99_T44_122_CN
+1441	ИСУ-152	ИСУ-152	ussr:R47_ISU-152_IGR
+1442	КВ-4 КТТС	КВ-4 КТТС	ussr:R121_KV4_KTT
+1443	Зверобой	ИСУ-152 Зверобой	ussr:R47_ISU-152_Zveroboj
+1444	СУ-101	СУ-101	ussr:R58_SU-101
+1445	ИСУ-130	ИСУ-130	ussr:R111_ISU130
+1446	Т-103	Т-103	ussr:R135_T_103
+1447	СУ-130ПМ	СУ-130ПМ	ussr:R159_SU_130PM
+1448	Леший	Леший	ussr:R159_SU_130PM_DR
+1449	Kust	Object Kust	ussr:R217_Object_Kust
+1450	ИСУ-152К	ИСУ-152К	ussr:R177_ISU_152K_BL10
+1451	Черномор	ИСУ-152 «Черномор»	ussr:R177_ISU_152K_BL10_02
+1452	ИСУ-122-2	ИСУ-122-2	ussr:R204_ISU_122_2
+1453	ИСУ-152	ИСУ-152	ussr:R47_ISU-152
+1454	ИСУ-152 ЛФ	ИСУ-152 ЛФ	ussr:R47_ISU-152_FL
+1455	ИСУ-152	ИСУ-152	ussr:R47_ISU-152_hb25
+1456	SU-101	SU-101	ussr:R58_SU-101
+1457	СУ-14-2	СУ-14-2	ussr:R27_SU-14
+1458	ИСУ-2Ш (Т)	ИСУ-2Ш Тест	ussr:R210_ISU_2SH
+1459	ИСУ-2Ш	ИСУ-2Ш	ussr:R210_ISU_2SH_II
+1460	Об. 156 О	Объект 156 О	ussr:R208_Object_156O
+1461	IS-3A (T)	IS-3A (T)	ussr:R115_IS-3_auto_test
+1462	703 II (100)	Object 703–II (100)	ussr:R165_Object_703_II_2
+1463	ИС-3	ИС-3	ussr:R19_IS-3_IGR
+1464	КВ-5	КВ-5	ussr:R54_KV-5_IGR
+1465	ИС-6 ЛФ	ИС-6 ЛФ	ussr:R61_Object252_FL
+1466	КВ-4М	КВ-4 Михайлова	ussr:R130_KV4_Mikhailov
+1467	КВ-4 М (Т)	КВ-4 Михайлова Тест	ussr:R130_KV4_Mikhailov_T
+1468	Об. 701	Объект 701	ussr:R147_Object_701
+1469	К-2	К-2	ussr:R192_K_2
+1470	КВ-4Т	КВ-4 Турчанинова	ussr:R200_KV_4_Turchaninov
+1471	Об. 265Т	Объект 265Т	ussr:R212_Object_265T
+1472	КВ-5	КВ-5	ussr:R54_KV-5
+1473	КВ-4	КВ-4	ussr:R73_KV4
+1474	ИС-5	ИС-5 (Объект 730)	ussr:R113_Object_730
+1475	ИС-3 с МЗ	ИС-3 с МЗ	ussr:R115_IS-3_auto
+1476	Сапсан	ИС-3А Сапсан	ussr:R115_IS-3_auto_S
+1477	ИС-3 МЗ (Т)	ИС-3 с МЗ (Т)	ussr:R115_IS-3_auto_test
+1478	Кировец-1	Кировец-1	ussr:R123_Kirovets_1
+1479	КВ-4 Кресл.	КВ-4 Креславского	ussr:R128_KV4_Kreslavskiy
+1480	Защитник	Объект 252У Защитник	ussr:R134_Object_252K
+1481	Об. 252У	Объект 252У	ussr:R134_Object_252U
+1482	ИС-М	ИС-М	ussr:R139_IS_M
+1483	Obj. 701	Object 701	ussr:R147_Object_701
+1484	703 II (122)	Объект 703 Вариант II	ussr:R165_Object_703_II
+1485	703 II (100)	Об. 703 Вариант II (100)	ussr:R165_Object_703_II_100
+1486	Феникс	Об. 703-II Феникс	ussr:R165_Object_703_II_2
+1487	ИС-2-II	ИС-2-II	ussr:R170_IS_2_II
+1488	Об. 259A	Объект 259A	ussr:R188_Object_259A
+1489	Ударный	Ударный	ussr:R188_Object_259A_CN
+1490	ИС-3	ИС-3	ussr:R19_IS-3
+1491	ИС-3 ЛФ	ИС-3 ЛФ	ussr:R19_IS-3_FL
+1492	ИС-3	ИС-3	ussr:R19_IS-3_hb25
+1493	КВ-4 Цейца	КВ-4 Цейца	ussr:R236_KV_4_Zeitz
+1494	ИС-6	ИС-6	ussr:R61_Object252
+1495	Бесстрашный	ИС-6 Бесстрашный	ussr:R61_Object252_02
+1496	ИС-6 Ч	ИС-6 Ч	ussr:R61_Object252_BF
+1497	ЛТТБ	ЛТТБ	ussr:R107_LTB
+1498	ЛТ-432	ЛТ-432	ussr:R158_LT_432
+1499	ЛТС-85	ЛТС-85	ussr:R198_LTS_85
+1500	Т-44 обл.	Т-44 облегчённый	ussr:R98_T44_85M
+1501	Т-54 обр. 1 ЛФ	Т-54 первый образец ЛФ	ussr:R112_T54_45_FL
+1502	Т-44	Т-44	ussr:R20_T-44_IGR
+1503	ST-66	ST-66	ussr:R182_ST_66
+1504	Obj. 168G	Object 168 German	ussr:R203_Object_168N
+1505	TITT	TITT Rozanov	ussr:R205_Tank_Rozanova
+1506	Obsidian	Obsidian	ussr:R205_Tank_Rozanova_Obsidian
+1507	СТГ	СТГ	ussr:R146_STG
+1508	Гвардеец	СТГ Гвардеец	ussr:R146_STG_Tday
+1509	Объект 168Н	Объект 168Н	ussr:R203_Object_168N
+1510	Об. 416	Объект 416	ussr:R60_Object416
+1511	M47 Romach (T)	M47 Romach Test	ussr:R1009_M47_Romach_T
+1512	Vickers MBT (T)	Vickers MBT EXP Test	ussr:R1012_Vickers_MBT_EXP_T
+1513	Т-54 обл. Т	Т-54 облегчённый Т	ussr:R109_T54S_T
+1514	Т-54 обр. 1	Т-54 первый образец	ussr:R112_T54_45
+1515	Бурный	Бурный	ussr:R112_T54_45_02
+1516	Т-44-100	Т-44-100	ussr:R122_T44_100
+1517	Т-44-100 (Б)	Т-44-100 (Б)	ussr:R122_T44_100B
+1518	Т-44-100	Т-44-100	ussr:R122_T44_100_hb25
+1519	Т-44-100 И	Т-44-100 Игровой	ussr:R127_T44_100_I
+1520	Т-44-100 (К)	Т-44-100 (К)	ussr:R127_T44_100_K
+1521	Т-44-100 (М)	Т-44-100 (М)	ussr:R127_T44_100_M
+1522	Т-44-100 (Р)	Т-44-100 (Р)	ussr:R127_T44_100_P
+1523	Т-44-100 (У)	Т-44-100 (У)	ussr:R127_T44_100_U
+1524	Об. 274а	Объект 274а	ussr:R180_Object_274_A
+1525	Чёрный ворон	Об. 274а Чёрный ворон	ussr:R180_Object_274_A_MT_BF
+1526	Т-44	Т-44	ussr:R20_T-44
+1527	Т-44 ЛФ	Т-44 ЛФ	ussr:R20_T-44_FL
+1528	T-44	T-44	ussr:R20_T-44_HW
+1529	Шторм	Т-44 Шторм	ussr:R248_T44_Storm
+1530	Рысак	Т-55 Рысак	ussr:R251_T_55_SP_01
+1531	SU-122-54	SU-122-54	ussr:R75_SU122_54
+1532	Об. 263	Объект 263	ussr:R93_Object263
+1533	Об. 263 ЛФ	Объект 263 ЛФ	ussr:R93_Object263_FL
+1534	СУ-122 (1956)	СУ-122 (1956)	ussr:R206_SU_122_54_2022
+1535	Об. 757А	Объект 757А	ussr:R226_Object_757A
+1536	SU-122V	SU-122V	ussr:R199_SU_122V
+1537	К-91-ПТ	К-91-ПТ	ussr:R183_K_91_PT
+1538	Об. 704	Объект 704	ussr:R53_Object_704
+1539	СУ-122-54	СУ-122-54	ussr:R75_SU122_54
+1540	212А	212А	ussr:R51_Object_212
+1541	Об. 715Г	Объект 715Г	ussr:R167_Object_715_G
+1542	Об. 705	Объект 705	ussr:R153_Object_705
+1543	КВ-90	КВ-90	ussr:R215_KV_90
+1544	Мышь	Трофейная «Мышь»	ussr:R230_Maus
+1545	СТ-I	СТ-I	ussr:R63_ST_I
+1546	Об. 777 II	Объект 777 Вариант II	ussr:R119_Object_777
+1547	Об. 257	Объект 257	ussr:R151_Object_257_2
+1548	ИС-3-II	ИС-3-II	ussr:R171_IS_3_II
+1549	Об. 752	Объект 752	ussr:R172_Object_752
+1550	Obj. 265T	Object 265T	ussr:R219_Object_265T
+1551	Buryan	Buryan	ussr:R231_Buryan
+1552	Т-10	Т-10	ussr:R81_IS8
+1553	Obj. 752	Object 752	ussr:R172_Object_752
+1554	Peerless	Peerless	ussr:R172_Object_752_CFE_T
+1555	Т-54 обл.	Т-54 облегчённый	ussr:R109_T54S
+1556	Т-54 ЛФ	Т-54 ЛФ	ussr:R40_T-54_FL
+1557	Об. 283	Объект 283	ussr:R191_Object_283
+1558	Об. 430	Объект 430	ussr:R96_Object_430
+1559	Об. 430 II	Объект 430 Вариант II	ussr:R104_Object_430_II
+1560	К-91-2	К-91 Вариант II	ussr:R173_K_91_2
+1561	К-91-122	К-91-122	ussr:R173_K_91_2_122
+1562	Об. 590	Объект 590	ussr:R187_Object_590
+1563	Т-54Б	Т-54Б вып. 1958 г.	ussr:R223_T_54B_1958
+1564	Об. 407 МЗ	Объект 407 МЗ	ussr:R227_Object_407_MZ
+1565	Дуплет	Дуплет	ussr:R228_Duplet
+1566	KB-52	KB-52	ussr:R235_KB_52
+1567	Молот	СТ Молот	ussr:R239_ST_Molot
+1568	Серп	Серп	ussr:R239_ST_Molot_02
+1569	Т-54	Т-54	ussr:R40_T-54
+1570	Об. 268/4	Объект 268 Вариант 4	ussr:R149_Object_268_4
+1571	Морион	Об. 268/4 Морион	ussr:R149_Object_268_4_02
+1572	Obj. 268/4 7v7	Obj.268 Version 4 7v7	ussr:R149_Object_268_4_7x7
+1573	Об. 268/4 (И)	Об. 268/4 Испытательный	ussr:R149_Object_268_4_ISP
+1574	Об. 268/4 ББ	Объект 268 Вариант 4 ББ	ussr:R149_Object_268_4_bob
+1575	Об. 263Б	Объект 263Б	ussr:R93_Object263B
+1576	Об. 268/5	Объект 268 Вариант 5	ussr:R126_Object_730_5
+1577	Таран	Объект 120 «Таран»	ussr:R222_Object_120_Taran
+1578	СУ-122В	СУ-122В	ussr:R199_SU_122V
+1579	Оруженосец	WT E 100 Оруженосец	ussr:R219_Waffentrager_E100_Gold
+1580	Obj. 268/5	Object 268 Version V	ussr:R126_Object_730_5
+1581	Об. 268	Объект 268	ussr:R88_Object268
+1582	Obj. 268 7x7	Object 268 7x7	ussr:R88_Object268_7x7
+1583	Об. 268 (И)	Об. 268 Испытательный	ussr:R88_Object268_ISP
+1584	Дирижабль	Дирижабль	ussr:R00_Baloon
+1585	Об. 261 Т	Объект 261 Т	ussr:R1052_Object_261_T
+1586	Об. 261	Объект 261	ussr:R52_Object_261
+1587	Об. 261/4 (Т)	Объект 261 Вариант 4 Тест	ussr:R211_Object_261_4
+1588	Об. 261/4	Объект 261 Вариант 4	ussr:R211_Object_261_4_II
+1589	Объект 261 5	Объект 261 Вариант 5	ussr:R211_Object_261_5
+1590	Об. 705А	Объект 705А	ussr:R145_Object_705_A
+1591	Obj. 705A 7x7	Object 705A 7x7	ussr:R145_Object_705_A_7x7
+1592	СТ-II	СТ-II	ussr:R169_ST_II
+1593	Obj. 452K	Object 452K	ussr:R196_Object_452K
+1594	ТЭТ-100	ТЭТ-100	ussr:R213_TET_100
+1595	ТЭТ-100 (Т)	ТЭТ-100 Тест	ussr:R213_TET_100_T
+1596	ИС-4	ИС-4	ussr:R90_IS_4M
+1597	ИС-4 7х7	ИС-4 7х7	ussr:R90_IS_4M_7x7
+1598	ИС-4	ИС-4	ussr:R90_IS_4M_hb25
+1599	Об. 260	Объект 260	ussr:R110_Object_260
+1600	Об. 777 П	Объект 777 Подвижный	ussr:R119_Object_777C
+1601	Об. 257 ПА	Объект 257 (ПА)	ussr:R129_Object_257
+1602	Об. 277	Объект 277	ussr:R155_Object_277
+1603	Obj. 277 7x7	Object 277 7x7	ussr:R155_Object_277_7x7
+1604	Об. 277 (И)	Объект 277 (И)	ussr:R155_Object_277_ISP
+1605	Об. 279 (р)	Объект 279 ранний	ussr:R157_Object_279R
+1606	Об. 279 (р) (T)	Объект 279 ранний Tест	ussr:R157_Object_279R_T
+1607	ИС-3-II 02	ИС-3-II 02	ussr:R171_IS_3_II_02
+1608	Об. 780	Объект 780	ussr:R178_Object_780
+1609	Об. 718Б	Объект 718Б	ussr:R229_Object_718B
+1610	Об. 278	Объект 278	ussr:R231_Object_278
+1611	ИС-7	ИС-7	ussr:R45_IS-7
+1612	Драгун	ИС-7 «Драгун»	ussr:R45_IS-7_02
+1613	ИС-7	ИС-7	ussr:R45_IS-7_IGR
+1614	(А) ИС-7	(А) ИС-7	ussr:R45_IS-7_fallout
+1615	Т-100 ЛТ	Т-100 ЛТ	ussr:R132_VNII_100LT
+1616	Т-100 ЛТ 7x7	Т-100 ЛТ 7x7	ussr:R132_VNII_100LT_7x7
+1617	Пр. Васильева	Проект Васильева	ussr:R225_Vasiliev_project
+1618	T-54D (T)	T-54D Test	ussr:R1011_T54D_T
+1619	Т-22 ср.	Т-22 ср.	ussr:R120_T22SR_A22
+1620	Об. 430У	Объект 430У	ussr:R148_Object_430_U
+1621	Об. 430У (И)	Об. 430У Испытательный	ussr:R148_Object_430_U_ISP
+1622	Об. 430У ББ	Объект 430У ББ	ussr:R148_Object_430_U_bob
+1623	ST-62 Ver. 2	ST-62 Version 2	ussr:R194_ST_62_var_2
+1624	Об. 907	Объект 907	ussr:R95_Object_907
+1625	Об. 907A	Объект 907A	ussr:R95_Object_907A
+1626	Об. 430Б	Объект 430Б	ussr:R96_Object_430B
+1627	К-91	К-91	ussr:R144_K_91
+1628	K-91 7x7	K-91 7x7	ussr:R144_K_91_7x7
+1629	Квант	Объект 168-122 Квант	ussr:R246_Object_168_122
+1630	Merkava LP (T)	Merkava LP Test	ussr:R1010_Merkava_LP_T
+1631	СТ-62 вар. 2	СТ-62 вариант 2	ussr:R194_ST_62_var_2
+1632	Т-62А	Т-62А	ussr:R87_T62A
+1633	(А) Т-62А	(А) Т-62А	ussr:R87_T62A_fallout
+1634	Об. 140	Объект 140	ussr:R97_Object_140
+1635	Prut	Object 143 Prut	ussr:R97_Object_140_FEP23
+1636	Об. 140 (И)	Объект 140 (И)	ussr:R97_Object_140_ISP
+1637	Об. 140 КЛ	Объект 140 КЛ	ussr:R97_Object_140_cl
+1638	Алаид-Б	Алаид-Б	ussr:R232_IS-7G
+1639	Алаид	Алаид	ussr:R232_IS-7W
+1640	Резистор	Резистор	ussr:R97_Object_140_hound_TLXXL
+1641	ИС-4 Т	ИС-4 Т	ussr:R90_IS_4M_T
+1642	Об. 279	Объект 279	ussr:R124_Object_279
+1643	Об. 279 (Т)	Объект 279 Тест	ussr:R124_Object_279_T
+1644	Объект 452К	Объект 452К	ussr:R196_Object_452K
+1645	KR-1	KR-1	ussr:R228_KR_1
+1646	Obj. 432U	Object 432U	ussr:R230_Object_432U

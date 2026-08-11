@@ -1,0 +1,1386 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="dark">
+<meta name="description" content="Визуализатор попаданий — {{MAP_NAME}}">
+<title>{{MAP_NAME}} — визуализатор попаданий</title>
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="icon" type="image/png" href="../favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+
+{{TOKENS}}
+* { box-sizing: border-box; }
+html, body {
+margin: 0; padding: 0; width: 100%; height: 100%;
+background: var(--color-bg); color: var(--text);
+font-family: var(--font-ui); overflow: hidden;
+-webkit-font-smoothing: antialiased;
+-moz-osx-font-smoothing: grayscale;
+}
+@media (prefers-reduced-motion: reduce) {
+*, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+}
+}
+#scene { position: absolute; inset: 0; }
+#hud {
+position: absolute; top: 0; left: 0; right: 0;
+padding: 20px 24px 0 24px;
+pointer-events: none;
+z-index: 10;
+}
+#hud h1 {
+font-size: 11px; font-weight: 700; letter-spacing: 0.16em;
+text-transform: uppercase; color: var(--text-dim); margin: 0 0 6px 0;
+}
+#hud .subtitle {
+display: flex;
+flex-direction: column;
+gap: 4px;
+margin: 0 0 12px 0;
+}
+#hud .subtitle-row {
+display: flex;
+align-items: baseline;
+flex-wrap: wrap;
+gap: 8px;
+}
+#hud .map-name {
+font-size: 17px;
+font-weight: 700;
+color: var(--text);
+letter-spacing: 0.01em;
+}
+#hud .battle-date {
+font-family: var(--font-mono); font-size: 11px; color: var(--text-dim);
+}
+#hud .clan-matchup {
+font-family: var(--font-mono); font-size: 12px; font-weight: 600;
+}
+#hud .clan-tag { font-weight: 600; }
+#hud .clan-ally { color: var(--team1); }
+#hud .clan-enemy { color: var(--team2); }
+#hud .clan-vs { color: var(--text-dim); font-weight: 400; }
+#backLink {
+display: inline-block;
+pointer-events: all;
+font-family: var(--font-mono); font-size: 11px; color: var(--text-secondary);
+text-decoration: none;
+background: var(--card-bg);
+border: 1px solid var(--glass-border);
+border-radius: var(--radius-sm);
+padding: 5px 10px;
+margin-bottom: 12px;
+backdrop-filter: blur(var(--glass-blur-sm)) saturate(var(--glass-saturate));
+-webkit-backdrop-filter: blur(var(--glass-blur-sm)) saturate(var(--glass-saturate));
+box-shadow: var(--shadow-border);
+transition: border-color var(--duration-med) var(--ease-out), color var(--duration-med) var(--ease-out), background-color var(--duration-med) var(--ease-out), box-shadow var(--duration-med) var(--ease-out), translate var(--duration-fast) var(--ease-out);
+}
+#backLink:hover { border-color: var(--glass-border-strong); color: var(--text); background: var(--glass-bg-strong); box-shadow: var(--shadow-border-hover); translate: 0 -1px; }
+#backLink:active { translate: 0 0; scale: 0.97; }
+#filter-container {
+display: flex;
+align-items: flex-end;
+gap: 12px;
+flex-wrap: wrap;
+pointer-events: all;
+}
+#filter-container .filter-group {
+position: relative;
+}
+#filter-container .filter-group:first-child {
+min-width: 200px;
+}
+.filter-btn {
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+gap: 2px;
+background: var(--card-bg);
+border: 1px solid var(--glass-border);
+color: var(--text);
+font-family: var(--font-ui);
+padding: 8px 14px;
+border-radius: var(--radius-sm);
+outline: none;
+cursor: pointer;
+min-width: 200px;
+backdrop-filter: blur(var(--glass-blur-sm)) saturate(var(--glass-saturate));
+-webkit-backdrop-filter: blur(var(--glass-blur-sm)) saturate(var(--glass-saturate));
+box-shadow: var(--shadow-border);
+transition: border-color var(--duration-med) var(--ease-out), box-shadow var(--duration-med) var(--ease-out), background-color var(--duration-med) var(--ease-out);
+}
+.filter-btn:hover { border-color: var(--glass-border-strong); background: var(--glass-bg-strong); box-shadow: var(--shadow-border-hover); }
+.filter-btn.open { border-color: var(--color-accent); box-shadow: 0 0 0 1px rgb(var(--color-accent-rgb) / 30%), inset 0 1px 0 rgb(255 255 255 / 14%); }
+.filter-btn-label { display: none; }
+.filter-btn-value {
+font-family: var(--font-mono);
+font-size: 13px;
+color: var(--text);
+}
+
+#modeBtn { display: none; }
+
+#modeDropdown {
+position: relative;
+visibility: visible;
+opacity: 1;
+transform: none;
+transition: none;
+pointer-events: auto;
+display: flex;
+width: 100%;
+min-width: 0;
+max-height: none;
+overflow: visible;
+gap: 2px;
+padding: 3px;
+background: var(--card-bg);
+border: 1px solid var(--glass-border);
+border-radius: var(--radius-full);
+backdrop-filter: blur(var(--glass-blur-sm)) saturate(var(--glass-saturate));
+-webkit-backdrop-filter: blur(var(--glass-blur-sm)) saturate(var(--glass-saturate));
+box-shadow: inset 0 1px 0 rgb(255 255 255 / 10%);
+}
+#modeDropdown::before {
+content: '';
+position: absolute;
+top: 3px; bottom: 3px; left: 3px;
+width: calc(50% - 4px);
+border-radius: var(--radius-full);
+background: var(--color-accent-dim);
+box-shadow: inset 0 1px 0 rgb(255 255 255 / 14%);
+transition: transform var(--duration-med) var(--ease-spring);
+z-index: 0;
+pointer-events: none;
+}
+#modeDropdown:has(.filter-dropdown-item:nth-child(2).active)::before {
+transform: translateX(calc(100% + 2px));
+}
+#modeDropdown .filter-dropdown-item {
+position: relative;
+z-index: 1;
+flex: 1;
+padding: 9px 10px;
+border-radius: var(--radius-full);
+font-family: var(--font-ui);
+font-weight: 600;
+color: var(--text-secondary);
+background: transparent;
+}
+#modeDropdown .filter-dropdown-item:hover { color: var(--text); }
+#modeDropdown .filter-dropdown-item.active { background: transparent; color: #c8f2d4; }
+
+#playerBtn {
+align-items: center;
+justify-content: center;
+padding: 10px 20px;
+border-radius: var(--radius-full);
+}
+#playerBtn .filter-btn-value { text-align: center; }
+
+.filter-dropdown {
+position: absolute;
+top: calc(100% + 6px);
+left: 0;
+min-width: 220px;
+max-height: 320px;
+overflow-y: auto;
+background:
+    linear-gradient(180deg, rgb(255 255 255 / 8%), transparent 50%),
+    rgba(28, 28, 30, 0.96);
+border: 1px solid var(--glass-border-strong);
+border-radius: var(--radius-md);
+box-shadow: var(--glass-shadow);
+backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+-webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+z-index: 20;
+padding: 6px;
+visibility: hidden;
+opacity: 0;
+transform: translateY(-6px) scale(0.98);
+transform-origin: top center;
+transition: opacity var(--duration-base) var(--ease-out), transform var(--duration-base) var(--ease-out), visibility 0s linear var(--duration-base);
+}
+.filter-dropdown.open {
+visibility: visible;
+opacity: 1;
+transform: translateY(0) scale(1);
+transition: opacity var(--duration-base) var(--ease-out), transform var(--duration-base) var(--ease-out), visibility 0s linear;
+}
+.filter-dropdown::-webkit-scrollbar { width: 8px; }
+.filter-dropdown::-webkit-scrollbar-track { background: transparent; margin: 16px 0; }
+.filter-dropdown::-webkit-scrollbar-thumb {
+background: linear-gradient(180deg, rgb(255 255 255 / 45%), rgb(255 255 255 / 22%));
+border-radius: var(--radius-sm);
+}
+.filter-dropdown-item {
+padding: 9px 12px;
+border-radius: var(--radius-sm);
+cursor: pointer;
+font-family: var(--font-mono);
+font-size: 12px;
+color: var(--text);
+text-align: center;
+transition: background 0.12s ease, color 0.12s ease;
+}
+.filter-dropdown-item:hover { background: var(--glass-bg-strong); }
+.filter-dropdown-item.active { background: var(--color-accent-dim); color: #c8f2d4; }
+.filter-dropdown-item.team-ally { color: var(--team1); }
+.filter-dropdown-item.team-ally:hover { background: rgb(var(--team1-rgb) / 12%); color: var(--team1); }
+.filter-dropdown-item.team-ally.active { background: rgb(var(--team1-rgb) / 20%); color: var(--team1); }
+.filter-dropdown-item.team-enemy { color: var(--team2); }
+.filter-dropdown-item.team-enemy:hover { background: rgb(var(--team2-rgb) / 12%); color: var(--team2); }
+.filter-dropdown-item.team-enemy.active { background: rgb(var(--team2-rgb) / 20%); color: var(--team2); }
+
+#emptyState {
+position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+text-align: center; z-index: 5;
+font-family: var(--font-mono); color: var(--text-secondary);
+pointer-events: none;
+}
+#emptyState .big { font-size: 15px; color: var(--text); margin-bottom: 6px; font-weight: 600; }
+#emptyState .small { font-size: 12px; opacity: 0.7; }
+
+#panel {
+position: absolute; bottom: 24px; left: 24px;
+width: 300px;
+background: var(--card-bg);
+border: 1px solid var(--glass-border);
+border-radius: var(--radius-xl);
+padding: 20px 22px;
+pointer-events: all;
+z-index: 10;
+backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+-webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+box-shadow: var(--glass-shadow);
+display: none;
+}
+#panel .row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+#panel .row:last-child { margin-bottom: 0; }
+#panel > .row:first-child {
+padding-bottom: 12px;
+margin-bottom: 14px;
+border-bottom: 1px solid var(--glass-border);
+}
+#panel .label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; flex-shrink: 0; }
+#panel .value { font-family: var(--font-mono); font-size: 13px; color: var(--text); font-variant-numeric: tabular-nums; }
+#panel > .row:nth-of-type(4) {
+padding-top: 12px;
+margin-top: 2px;
+border-top: 1px solid var(--glass-border);
+}
+#panel .value.dmg { color: var(--danger); font-weight: 700; font-size: 19px; text-shadow: 0 0 6px rgb(var(--danger-rgb) / 30%); }
+#panel > .row:nth-of-type(5) .value,
+#panel > .row:nth-of-type(6) .value { color: var(--text-secondary); font-size: 12px; }
+
+#panel .row.entity-row {
+display: grid;
+grid-template-columns: 1fr auto;
+grid-template-rows: auto auto;
+row-gap: 4px;
+column-gap: 10px;
+align-items: baseline;
+margin-bottom: 12px;
+}
+#panel .row.entity-row .label { grid-column: 1 / -1; grid-row: 1; }
+#panel .entity-name {
+grid-column: 1;
+grid-row: 2;
+min-width: 0;
+font-family: var(--font-mono); font-size: 14px; font-weight: 600; color: var(--text);
+white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+#panel .entity-name.team-ally { color: var(--team1); }
+#panel .entity-name.team-enemy { color: var(--team2); }
+#panel .entity-tank {
+grid-column: 2;
+grid-row: 2;
+justify-self: end;
+font-family: var(--font-mono); font-size: 10.5px; color: var(--text-secondary);
+white-space: nowrap;
+padding: 2px 7px;
+background: rgb(255 255 255 / 5%);
+border-radius: var(--radius-sm);
+}
+#panel hr { border: none; border-top: 1px solid var(--glass-border); margin: 14px 0; }
+
+#shotlist-container {
+position: absolute; bottom: 24px; right: 24px;
+width: 320px;
+z-index: 10;
+pointer-events: all;
+display: flex;
+flex-direction: column;
+background: var(--card-bg);
+border: 1px solid var(--glass-border);
+border-radius: var(--radius-xl);
+backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+-webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+box-shadow: var(--glass-shadow);
+overflow: hidden;
+}
+#shotlist-header {
+display: flex;
+align-items: center;
+justify-content: space-between;
+flex-shrink: 0;
+padding: 13px 14px;
+border-bottom: 1px solid var(--glass-border);
+}
+#shotlist-title {
+font-family: var(--font-mono); font-size: 11px; color: var(--text-dim);
+text-transform: uppercase; letter-spacing: 0.08em;
+}
+#nav {
+display: flex;
+gap: 2px;
+padding: 2px;
+background: rgb(255 255 255 / 5%);
+border: 1px solid var(--glass-border);
+border-radius: var(--radius-full);
+}
+.nav-btn {
+width: 24px; height: 24px;
+padding: 0;
+background-color: transparent;
+background-repeat: no-repeat;
+background-position: center;
+background-size: 12px 12px;
+border: none;
+border-radius: var(--radius-full);
+color: transparent;
+font-size: 0;
+line-height: 0;
+cursor: pointer;
+transition: background-color 0.12s ease, scale var(--duration-fast) var(--ease-out);
+}
+.nav-btn:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+.nav-btn:disabled { opacity: 0.35; cursor: default; }
+#prevBtn { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a6a6a6' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='15 5 8 12 15 19'/%3E%3C/svg%3E"); }
+#nextBtn { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a6a6a6' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='9 5 16 12 9 19'/%3E%3C/svg%3E"); }
+#prevBtn:hover { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f5f5f5' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='15 5 8 12 15 19'/%3E%3C/svg%3E"); }
+#nextBtn:hover { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f5f5f5' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='9 5 16 12 9 19'/%3E%3C/svg%3E"); }
+.nav-btn:hover { background-color: rgb(255 255 255 / 12%); }
+.nav-btn:active { scale: 0.88; }
+
+#shotlist {
+background: transparent;
+border: none;
+border-radius: 0;
+padding: 8px;
+max-height: 55vh;
+overflow-y: auto;
+display: none;
+scrollbar-width: thin;
+scrollbar-color: rgb(255 255 255 / 35%) transparent;
+}
+#shotlist::-webkit-scrollbar { width: 8px; }
+#shotlist::-webkit-scrollbar-track { background: transparent; }
+#shotlist::-webkit-scrollbar-thumb {
+background: linear-gradient(180deg, rgb(255 255 255 / 45%), rgb(255 255 255 / 22%));
+border-radius: var(--radius-sm);
+transition: background-color var(--duration-fast) var(--ease-out);
+}
+#shotlist::-webkit-scrollbar-thumb:hover {
+background: linear-gradient(180deg, rgb(255 255 255 / 60%), rgb(255 255 255 / 32%));
+}
+.shot-item {
+padding: 9px 12px;
+border-radius: var(--radius-sm);
+cursor: pointer;
+font-family: var(--font-mono);
+font-size: 12px;
+color: var(--text-secondary);
+display: grid;
+grid-template-columns: 1fr auto;
+align-items: baseline;
+column-gap: 12px;
+transition: background 0.12s ease, color 0.12s ease;
+}
+.shot-item:not(:last-child) { margin-bottom: 1px; }
+.shot-item .shot-line {
+display: flex;
+align-items: baseline;
+gap: 7px;
+min-width: 0;
+overflow: hidden;
+}
+.shot-item:hover { background: var(--glass-bg-strong); color: var(--text); }
+.shot-item.active { background: var(--color-accent-dim); color: #c8f2d4; }
+.shot-item .dmg-tag { color: var(--danger); font-weight: 700; text-align: right; min-width: 30px; font-variant-numeric: tabular-nums; }
+.shot-item.active .dmg-tag { color: #ef9c9c; }
+.shot-item .shot-idx { flex-shrink: 0; color: var(--text-dim); }
+.shot-item .shot-time { flex-shrink: 0; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.shot-item .shot-divider { flex-shrink: 0; width: 1px; align-self: stretch; background: var(--glass-border-strong); }
+.shot-item .shot-arrow { flex-shrink: 0; color: var(--text-dim); }
+.shot-item .victim-tag { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
+.shot-item .victim-tag.team-ally { color: var(--team1); }
+.shot-item .victim-tag.team-enemy { color: var(--team2); }
+
+#hint {
+pointer-events: none;
+font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); opacity: 0.85;
+margin: 4px 0 14px 0;
+}
+#loading {
+position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+color: var(--color-accent); font-size: 15px; z-index: 30; text-align: center;
+font-family: var(--font-mono);
+}
+#loading.error { color: var(--danger); max-width: 480px; line-height: 1.5; }
+
+@media (max-width: 900px) {
+#hud { padding: 14px 16px 0 16px; }
+#hud .map-name { font-size: 15px; }
+.filter-btn,
+#filter-container .filter-group:first-child { min-width: 168px; }
+#panel { left: 16px; bottom: 16px; width: min(300px, 42vw); padding: 16px 18px; }
+#shotlist-container { right: 16px; bottom: 16px; width: min(320px, 46vw); }
+#shotlist { max-height: 40vh; }
+}
+
+@media (max-width: 680px) {
+#hud { padding: 10px 12px 0 12px; }
+#hud h1 { font-size: 10px; }
+#hud .map-name { font-size: 14px; }
+#hud .battle-date, #hud .clan-matchup { font-size: 10.5px; }
+#hint { display: none; }
+
+#filter-container { gap: 8px; }
+#filter-container .filter-group { flex: 1 1 132px; }
+.filter-btn,
+#filter-container .filter-group:first-child { min-width: 0; }
+#playerBtn { min-width: 0; padding: 9px 12px; }
+
+#panel {
+    left: 10px; bottom: 10px;
+    width: calc(50% - 15px);
+    padding: 13px 14px;
+    border-radius: var(--radius-lg);
+}
+#panel .row { margin-bottom: 8px; }
+#panel .label { font-size: 9px; }
+#panel .value { font-size: 11.5px; }
+#panel .value.dmg { font-size: 16px; }
+#panel .entity-name { font-size: 12px; }
+#panel .entity-tank { display: none; }
+
+#shotlist-container {
+    right: 10px; bottom: 10px;
+    width: calc(50% - 15px);
+    border-radius: var(--radius-lg);
+}
+#shotlist { max-height: 30vh; padding: 6px; }
+.shot-item { font-size: 11px; padding: 7px 9px; column-gap: 8px; }
+.shot-item .shot-idx { display: none; }
+}
+
+@media (max-height: 520px) {
+#hint { display: none; }
+#shotlist { max-height: 24vh; }
+}
+
+</style>
+</head>
+<body>
+<div id="scene"></div>
+<div id="loading">Загрузка данных…</div>
+<div id="hud">
+<h1>Визуализатор попаданий</h1>
+<div class="subtitle">
+    <div class="subtitle-row">
+        <span class="map-name">{{MAP_NAME}}</span>
+        <span class="clan-matchup" id="clanMatchup"></span>
+    </div>
+    <div class="subtitle-row">
+        <span class="battle-date">{{BATTLE_DATE}} {{BATTLE_TIME}}</span>
+    </div>
+</div>
+<a id="backLink" href="{{BACK_TO_MAP_URL}}">← к карте боя</a>
+<div id="hint">ЛКМ — вращение · колесо — зум · ПКМ — панорама · ← → — выстрелы</div>
+<div id="filter-container">
+    <div class="filter-group">
+        <button class="filter-btn" id="modeBtn" type="button">
+            <span class="filter-btn-label">Режим</span>
+            <span class="filter-btn-value" id="modeBtnValue">Атакующий</span>
+        </button>
+        <div class="filter-dropdown" id="modeDropdown"></div>
+    </div>
+    <div class="filter-group">
+        <button class="filter-btn" id="playerBtn" type="button">
+            <span class="filter-btn-label" id="playerBtnLabel">Атакующий</span>
+            <span class="filter-btn-value" id="playerBtnValue">—</span>
+        </button>
+        <div class="filter-dropdown" id="playerDropdown"></div>
+    </div>
+</div>
+</div>
+<div id="emptyState">
+    <div class="big">Выберите игрока</div>
+    <div class="small">режим и игрока сверху — чтобы увидеть выстрелы</div>
+</div>
+<div id="panel">
+<div class="row"><span class="label">Время</span><span class="value" id="v-clock">—</span></div>
+<div class="row entity-row">
+    <span class="label">Атакующий</span>
+    <span class="entity-name" id="v-attacker-name">—</span>
+    <span class="entity-tank" id="v-attacker-tank"></span>
+</div>
+<div class="row entity-row">
+    <span class="label">Жертва</span>
+    <span class="entity-name" id="v-victim-name">—</span>
+    <span class="entity-tank" id="v-victim-tank"></span>
+</div>
+<div class="row"><span class="label">урон</span><span class="value dmg" id="v-dmg">—</span></div>
+<hr>
+<div class="row"><span class="label">Расстояние</span><span class="value" id="v-dist">—</span></div>
+<div class="row"><span class="label">Выстрел</span><span class="value" id="v-idx">—</span></div>
+</div>
+<div id="shotlist-container">
+    <div id="shotlist-header">
+        <span id="shotlist-title">Выстрелы</span>
+        <div id="nav">
+            <button class="nav-btn" id="prevBtn" type="button" aria-label="Предыдущий выстрел">‹</button>
+            <button class="nav-btn" id="nextBtn" type="button" aria-label="Следующий выстрел">›</button>
+        </div>
+    </div>
+    <div id="shotlist" role="listbox" aria-label="Список выстрелов"></div>
+</div>
+
+<script type="importmap">
+{
+"imports": {
+"three": "https://cdn.jsdelivr.net/npm/three@0.163.0/build/three.module.js",
+"three/addons/": "https://cdn.jsdelivr.net/npm/three@0.163.0/examples/jsm/"
+}
+}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
+
+const MODELS_DIR = 'objects/';
+const FALLBACK_MODEL_URL = MODELS_DIR + '121.obj';
+
+function nameWithoutClan(name) {
+    return String(name || '').replace(/\s*\[[^\]]*\]\s*$/, '');
+}
+
+const TRACER_LENGTH = 9;
+const TRACER_START_OFFSET = 3.5;
+
+let SHOTS = [];
+const tankModelCache = new Map();
+let fallbackModelEntry = null;
+
+const ui = {
+loading: document.getElementById('loading'),
+clock: document.getElementById('v-clock'),
+attackerName: document.getElementById('v-attacker-name'),
+attackerTank: document.getElementById('v-attacker-tank'),
+victimName: document.getElementById('v-victim-name'),
+victimTank: document.getElementById('v-victim-tank'),
+dmg: document.getElementById('v-dmg'),
+dist: document.getElementById('v-dist'),
+idx: document.getElementById('v-idx'),
+panel: document.getElementById('panel'),
+shotlist: document.getElementById('shotlist'),
+emptyState: document.getElementById('emptyState'),
+};
+
+function normalizeKeys(obj) {
+if (Array.isArray(obj)) {
+    return obj.map(normalizeKeys);
+}
+if (obj !== null && typeof obj === 'object') {
+    const normalized = {};
+    for (const [key, value] of Object.entries(obj)) {
+        normalized[key.trim()] = normalizeKeys(value);
+    }
+    return normalized;
+}
+if (typeof obj === 'string') {
+    return obj.trim();
+}
+return obj;
+}
+
+const container = document.getElementById('scene');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x2c2c2e);
+scene.fog = new THREE.Fog(0x2c2c2e, 40, 220);
+
+const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.05, 500);
+camera.position.set(10, 8, 14);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+container.appendChild(renderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.minDistance = 2;
+controls.maxDistance = 120;
+controls.target.set(0, 1, 0);
+
+scene.add(new THREE.HemisphereLight(0xf5f5f0, 0x3a3a3c, 0.5));
+scene.add(new THREE.AmbientLight(0xffffff, 0.18));
+
+const key = new THREE.DirectionalLight(0xffffff, 0.55);
+key.position.set(12, 18, 10);
+key.castShadow = true;
+key.shadow.mapSize.set(2048, 2048);
+key.shadow.camera.left = -20;
+key.shadow.camera.right = 20;
+key.shadow.camera.top = 20;
+key.shadow.camera.bottom = -20;
+scene.add(key);
+
+const fillLeft = new THREE.DirectionalLight(0xffffff, 0.3);
+fillLeft.position.set(-14, 14, 9);
+scene.add(fillLeft);
+
+const fillBack = new THREE.DirectionalLight(0xffffff, 0.26);
+fillBack.position.set(-6, 10, -14);
+scene.add(fillBack);
+
+const rim = new THREE.DirectionalLight(0xdfe8ff, 0.22);
+rim.position.set(10, 8, -12);
+scene.add(rim);
+
+const fillBelow = new THREE.DirectionalLight(0xffffff, 0.16);
+fillBelow.position.set(3, -8, 6);
+scene.add(fillBelow);
+
+const sideLeftLow = new THREE.DirectionalLight(0xffffff, 0.16);
+sideLeftLow.position.set(-13, 1.5, 3);
+scene.add(sideLeftLow);
+
+const sideRightLow = new THREE.DirectionalLight(0xffffff, 0.16);
+sideRightLow.position.set(13, 1.5, -3);
+scene.add(sideRightLow);
+
+const grid = new THREE.GridHelper(80, 40, 0x4a4a4c, 0x323234);
+scene.add(grid);
+
+const floor = new THREE.Mesh(
+new THREE.CircleGeometry(60, 64),
+new THREE.MeshStandardMaterial({ color: 0x222224, roughness: 1 })
+);
+floor.rotation.x = -Math.PI / 2;
+floor.position.y = -0.01;
+floor.receiveShadow = true;
+scene.add(floor);
+
+const BATTLE_DATA = {{DATA_PAYLOAD}};
+
+const MY_TEAM = parseInt(BATTLE_DATA.my_team, 10) || 1;
+const ALLY_CLAN_TAG = String(BATTLE_DATA.ally_clan || '').trim();
+const ENEMY_CLAN_TAG = String(BATTLE_DATA.enemy_clan || '').trim();
+
+function isAllyTeam(team) {
+return parseInt(team, 10) === MY_TEAM;
+}
+
+const teamIndex = { attacker: new Map(), victim: new Map() };
+
+function buildTeamIndex() {
+teamIndex.attacker.clear();
+teamIndex.victim.clear();
+for (const shot of SHOTS) {
+    if (shot.attacker_name && !teamIndex.attacker.has(shot.attacker_name)) {
+        teamIndex.attacker.set(shot.attacker_name, shot.attacker_team);
+    }
+    if (shot.victim_name && !teamIndex.victim.has(shot.victim_name)) {
+        teamIndex.victim.set(shot.victim_name, shot.victim_team);
+    }
+}
+}
+
+function teamOfPlayerInMode(name, mode) {
+const map = teamIndex[mode] || teamIndex.attacker;
+return map.has(name) ? map.get(name) : null;
+}
+
+function renderClanMatchup() {
+const el = document.getElementById('clanMatchup');
+if (!el) return;
+if (!ALLY_CLAN_TAG && !ENEMY_CLAN_TAG) { el.remove(); return; }
+el.innerHTML = '';
+if (ALLY_CLAN_TAG) {
+    const a = document.createElement('span');
+    a.className = 'clan-tag clan-ally';
+    a.textContent = ALLY_CLAN_TAG;
+    el.appendChild(a);
+}
+if (ALLY_CLAN_TAG && ENEMY_CLAN_TAG) {
+    const vs = document.createElement('span');
+    vs.className = 'clan-vs';
+    vs.textContent = ' vs ';
+    el.appendChild(vs);
+}
+if (ENEMY_CLAN_TAG) {
+    const e = document.createElement('span');
+    e.className = 'clan-tag clan-enemy';
+    e.textContent = ENEMY_CLAN_TAG;
+    el.appendChild(e);
+}
+}
+
+function loadShotsData() {
+const data = normalizeKeys(BATTLE_DATA.shots || []);
+console.log(`[hit_viewer] Загружено ${data.length} попаданий`);
+return data;
+}
+
+function createFallbackTank() {
+const group = new THREE.Group();
+const steelMat = new THREE.MeshStandardMaterial({
+    color: 0x8b9096, metalness: 0.35, roughness: 0.65
+});
+
+const hull = new THREE.Mesh(new THREE.BoxGeometry(3.2, 1.2, 5.5), steelMat);
+hull.position.y = 0.6;
+hull.castShadow = true;
+group.add(hull);
+
+const turret = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.9, 2.8), steelMat);
+turret.position.y = 1.65;
+turret.castShadow = true;
+group.add(turret);
+
+const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 4.5, 8), steelMat);
+barrel.rotation.x = Math.PI / 2;
+barrel.position.set(0, 1.65, 3.5);
+barrel.castShadow = true;
+group.add(barrel);
+
+return group;
+}
+
+function tankModelUrlFromRaw(tankRaw) {
+if (!tankRaw) return null;
+const idx = tankRaw.indexOf(':');
+const techName = idx >= 0 ? tankRaw.slice(idx + 1) : tankRaw;
+if (!techName) return null;
+return `${MODELS_DIR}${techName}.obj`;
+}
+
+async function fetchAndParseObj(url) {
+const res = await fetch(url);
+if (!res.ok) throw new Error(`HTTP ${res.status}`);
+const text = await res.text();
+if (!text || !text.trim()) throw new Error('Файл пустой');
+
+const loader = new OBJLoader();
+const obj = loader.parse(text);
+
+let meshCount = 0;
+obj.traverse(c => { if (c.isMesh) meshCount++; });
+if (meshCount === 0) throw new Error('Нет мешей');
+
+const steelMat = new THREE.MeshStandardMaterial({
+    color: 0x8b9096, metalness: 0.35, roughness: 0.65, side: THREE.DoubleSide
+});
+obj.traverse(c => {
+    if (c.isMesh) {
+        c.material = steelMat;
+        c.castShadow = true;
+        c.receiveShadow = true;
+    }
+});
+return obj;
+}
+
+function getFallbackModelEntry() {
+
+if (fallbackModelEntry) return fallbackModelEntry;
+
+fallbackModelEntry = (async () => {
+    let model;
+    try {
+        model = await fetchAndParseObj(FALLBACK_MODEL_URL);
+        console.log(`[hit_viewer] Запасная модель ${FALLBACK_MODEL_URL} загружена`);
+    } catch (err) {
+        console.warn(`[hit_viewer] Запасная модель ${FALLBACK_MODEL_URL} недоступна: ${err.message}. Используем встроенный меш.`);
+        model = createFallbackTank();
+    }
+    return { model, footOffsetY: computeFootOffset(model) };
+})();
+
+return fallbackModelEntry;
+}
+
+function getTankModelEntry(tankRaw) {
+const cacheKey = tankRaw || '__fallback__';
+
+if (tankModelCache.has(cacheKey)) return tankModelCache.get(cacheKey);
+
+const pending = (async () => {
+    const url = tankModelUrlFromRaw(tankRaw);
+    if (!url) return getFallbackModelEntry();
+
+    try {
+        const model = await fetchAndParseObj(url);
+        console.log(`[hit_viewer] Модель ${url} загружена для ${tankRaw}`);
+        return { model, footOffsetY: computeFootOffset(model) };
+    } catch (err) {
+        console.warn(`[hit_viewer] Не удалось загрузить ${url} для ${tankRaw}: ${err.message}. Используем запасную модель.`);
+        return getFallbackModelEntry();
+    }
+})();
+
+tankModelCache.set(cacheKey, pending);
+return pending;
+}
+
+function computeFootOffset(model) {
+const box = new THREE.Box3().setFromObject(model);
+if (!isFinite(box.min.y)) return 0;
+return -box.min.y;
+}
+
+let currentShotObjects = null;
+
+function disposeShotGroup(group) {
+scene.remove(group);
+group.traverse(child => {
+    if (child.material) {
+        if (Array.isArray(child.material)) child.material.forEach(m => m.dispose());
+        else child.material.dispose();
+    }
+
+    if (child.geometry && !child.userData.sharedGeometry) child.geometry.dispose();
+});
+}
+
+function clearCurrentShot() {
+if (!currentShotObjects) return;
+disposeShotGroup(currentShotObjects.group);
+currentShotObjects = null;
+}
+
+function fmtVec(v) {
+if (!v) return '—';
+return `x ${(v.x||0).toFixed(2)}  y ${(v.y||0).toFixed(2)}  z ${(v.z||0).toFixed(2)}`;
+}
+
+function vecOf(o) {
+return new THREE.Vector3(o?.x || 0, o?.y || 0, o?.z || 0);
+}
+
+const IGNORED_MESH_NAME_PATTERNS = [
+/track/i,
+/wheel/i,
+/roller/i,
+/_gun_\d+$/i,
+/screen/i,
+/spaced/i,
+];
+
+function isIgnoredHitboxMesh(mesh) {
+let node = mesh;
+while (node) {
+    if (node.name && IGNORED_MESH_NAME_PATTERNS.some(re => re.test(node.name))) {
+        return true;
+    }
+    node = node.parent;
+}
+return false;
+}
+
+async function buildShotScene(shot, token) {
+clearCurrentShot();
+
+const group = new THREE.Group();
+
+const { model: victimModel, footOffsetY } = await getTankModelEntry(shot.victim_tank_raw);
+
+if (token !== loadToken) return null;
+
+const tank = victimModel.clone(true);
+tank.traverse(c => {
+
+    c.userData.sharedGeometry = true;
+    if (c.isMesh) c.material = c.material.clone();
+});
+tank.position.set(0, footOffsetY, 0);
+tank.rotation.set(0, 0, 0);
+group.add(tank);
+tank.updateMatrixWorld(true);
+
+const shooterWorld = vecOf(shot.shooter_pos);
+const victimWorld = vecOf(shot.victim_pos);
+const impactWorld = vecOf(shot.impact_point);
+
+let dirWorld = new THREE.Vector3().subVectors(shooterWorld, victimWorld);
+if (dirWorld.lengthSq() < 1e-6) {
+    dirWorld = new THREE.Vector3().subVectors(shooterWorld, impactWorld);
+}
+if (dirWorld.lengthSq() < 1e-6) {
+    dirWorld = new THREE.Vector3(0, 0, 1);
+}
+dirWorld.normalize();
+
+const yaw = (shot.victim_ypr && shot.victim_ypr.yaw) || 0;
+const dir = dirWorld.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), -yaw);
+dir.z *= -1;
+dir.normalize();
+
+const tankCenterHeight = footOffsetY + 1.0;
+const originPoint = new THREE.Vector3(0, tankCenterHeight, 0);
+const shooterAnchor = dir.clone().multiplyScalar(TRACER_START_OFFSET + TRACER_LENGTH).add(originPoint);
+const rayDir = originPoint.clone().sub(shooterAnchor).normalize();
+
+const collidableMeshes = [];
+tank.traverse(c => {
+    if (c.isMesh && !isIgnoredHitboxMesh(c)) collidableMeshes.push(c);
+});
+
+const raycaster = new THREE.Raycaster(shooterAnchor, rayDir, 0, TRACER_START_OFFSET + TRACER_LENGTH + 1);
+const hits = raycaster.intersectObjects(collidableMeshes, false);
+
+let impactPos;
+let tracerEnd;
+if (hits.length > 0) {
+    impactPos = hits[0].point.clone();
+    tracerEnd = impactPos;
+} else {
+    impactPos = dir.clone().multiplyScalar(TRACER_START_OFFSET * 0.55).add(originPoint);
+    tracerEnd = impactPos;
+}
+
+const IMPACT_RADIUS = 0.14 * 0.8;
+const impactGeom = new THREE.SphereGeometry(IMPACT_RADIUS, 20, 20);
+const impactMat = new THREE.MeshStandardMaterial({
+    color: 0xe45a5a, emissive: 0x7a2f2f, emissiveIntensity: 0.7,
+    metalness: 0.2, roughness: 0.4
+});
+const impact = new THREE.Mesh(impactGeom, impactMat);
+impact.position.copy(impactPos);
+group.add(impact);
+
+const haloGeom = new THREE.SphereGeometry(IMPACT_RADIUS * 2, 16, 16);
+const haloMat = new THREE.MeshBasicMaterial({
+    color: 0xe45a5a, transparent: true, opacity: 0.25
+});
+const halo = new THREE.Mesh(haloGeom, haloMat);
+halo.position.copy(impactPos);
+halo.userData.pulse = true;
+group.add(halo);
+
+const lineMat = new THREE.LineBasicMaterial({ color: 0xe45a5a, transparent: true, opacity: 0.6 });
+const lineGeom = new THREE.BufferGeometry().setFromPoints([shooterAnchor, tracerEnd]);
+const line = new THREE.Line(lineGeom, lineMat);
+group.add(line);
+
+const tracerDist = shooterAnchor.distanceTo(tracerEnd);
+if (tracerDist > 0.01) {
+    const tracerGeom = new THREE.CylinderGeometry(0.025, 0.07, tracerDist, 8, 1, true);
+    const tracerMat = new THREE.MeshBasicMaterial({
+        color: 0xe98a75, transparent: true, opacity: 0.22, side: THREE.DoubleSide
+    });
+    const tracer = new THREE.Mesh(tracerGeom, tracerMat);
+    const mid = shooterAnchor.clone().lerp(tracerEnd, 0.5);
+    tracer.position.copy(mid);
+    tracer.lookAt(tracerEnd);
+    tracer.rotateX(Math.PI / 2);
+    group.add(tracer);
+}
+
+const shooterMarker = new THREE.Mesh(
+    new THREE.SphereGeometry(0.22, 12, 12),
+    new THREE.MeshBasicMaterial({ color: 0xffaa33, transparent: true, opacity: 0.85 })
+);
+shooterMarker.position.copy(shooterAnchor);
+group.add(shooterMarker);
+
+scene.add(group);
+currentShotObjects = { group, tank, impact, halo, line, shooterMarker };
+
+const camLookTarget = new THREE.Vector3(0, tankCenterHeight * 0.7, 0);
+const camDir = dir.clone().multiplyScalar(-1).add(new THREE.Vector3(0.35, 0.55, 0.35)).normalize();
+cameraTargetLook.copy(camLookTarget);
+cameraTargetPos.copy(camDir.multiplyScalar(11)).add(camLookTarget);
+cameraAnimating = true;
+
+const worldDist = shooterWorld.distanceTo(victimWorld);
+
+return { worldDist };
+}
+
+function fmtClock(seconds) {
+const s = Math.max(0, Math.round(seconds || 0));
+const mm = Math.floor(s / 60);
+const ss = s % 60;
+return `${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
+}
+
+function entityNameOf(shot, role) {
+return shot[`${role}_name`] || shot[`${role}_id`] || '—';
+}
+
+function entityTankOf(shot, role) {
+return shot[`${role}_tank`] || '';
+}
+
+let playerShots = [];
+let currentIndex = -1;
+let loadToken = 0;
+let filterMode = 'attacker';
+let selectedPlayer = '';
+
+let hashUpdateTimer = null;
+
+function updateHash() {
+clearTimeout(hashUpdateTimer);
+hashUpdateTimer = setTimeout(() => {
+    if (!selectedPlayer) {
+        history.replaceState(null, '', location.pathname + location.search);
+        return;
+    }
+    const params = new URLSearchParams({ mode: filterMode, p: selectedPlayer });
+    if (currentIndex >= 0) params.set('shot', String(currentIndex + 1));
+    history.replaceState(null, '', '#' + params.toString());
+}, 300);
+}
+
+function applyStateFromHash() {
+if (!SHOTS.length) return false;
+const raw = location.hash.replace(/^#/, '');
+if (!raw) return false;
+const params = new URLSearchParams(raw);
+
+const mode = params.get('mode');
+if (mode === 'attacker' || mode === 'victim') filterMode = mode;
+
+const player = params.get('p');
+if (!player || !playerNamesForMode(filterMode).includes(player)) return false;
+
+selectedPlayer = player;
+
+renderModeDropdown();
+document.getElementById('modeBtnValue').textContent = MODE_LABELS[filterMode];
+document.getElementById('playerBtnLabel').textContent = MODE_LABELS[filterMode];
+document.getElementById('playerBtnValue').textContent = nameWithoutClan(player) || '—';
+applyPlayerFilter();
+
+const shot = parseInt(params.get('shot'), 10);
+if (Number.isFinite(shot) && shot >= 1 && shot <= playerShots.length) selectShot(shot - 1);
+return true;
+}
+
+window.addEventListener('hashchange', () => {
+if (applyStateFromHash()) ui.emptyState.style.display = 'none';
+});
+
+const MODE_LABELS = { attacker: 'Атакующий', victim: 'Жертва' };
+
+function buildDropdown(dropdownEl, names, currentValue, onPick, { withReset = true, resetLabel = '— все —', renderLabel } = {}) {
+dropdownEl.innerHTML = '';
+dropdownEl.onclick = (e) => e.stopPropagation();
+
+if (withReset) {
+    const resetItem = document.createElement('div');
+    resetItem.className = 'filter-dropdown-item reset';
+    resetItem.textContent = resetLabel;
+    resetItem.addEventListener('click', () => onPick(''));
+    dropdownEl.appendChild(resetItem);
+}
+
+names.forEach(name => {
+    const item = document.createElement('div');
+    item.className = 'filter-dropdown-item';
+    if (name === currentValue) item.classList.add('active');
+    if (renderLabel) {
+        const info = renderLabel(name) || {};
+        item.textContent = info.text ?? name;
+        if (info.className) item.classList.add(info.className);
+    } else {
+        item.textContent = name;
+    }
+    item.addEventListener('click', () => onPick(name));
+    dropdownEl.appendChild(item);
+});
+}
+
+function closeAllDropdowns() {
+document.querySelectorAll('.filter-dropdown.open').forEach(el => el.classList.remove('open'));
+document.querySelectorAll('.filter-btn.open').forEach(el => el.classList.remove('open'));
+}
+
+function setupFilterPicker({ btn, dropdown, getNames, getValue, onPick, dropdownOpts, alwaysOpen }) {
+const render = () => buildDropdown(dropdown, getNames(), getValue(), (val) => {
+    onPick(val);
+    if (alwaysOpen) render();
+    else closeAllDropdowns();
+}, dropdownOpts);
+
+if (alwaysOpen) {
+    render();
+    return render;
+}
+
+btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isOpen = dropdown.classList.contains('open');
+    closeAllDropdowns();
+    if (isOpen) return;
+    render();
+    dropdown.classList.add('open');
+    btn.classList.add('open');
+});
+}
+
+function playerNamesForMode(mode) {
+const field = mode === 'attacker' ? 'attacker_name' : 'victim_name';
+const names = [...new Set(SHOTS.map(s => s[field]).filter(Boolean))];
+return names.sort((a, b) => {
+    const aAlly = isAllyTeam(teamOfPlayerInMode(a, mode)) ? 0 : 1;
+    const bAlly = isAllyTeam(teamOfPlayerInMode(b, mode)) ? 0 : 1;
+    if (aAlly !== bAlly) return aAlly - bAlly;
+    return a.localeCompare(b);
+});
+}
+
+let renderModeDropdown = () => {};
+
+function populatePlayerFilters() {
+renderModeDropdown = setupFilterPicker({
+    btn: document.getElementById('modeBtn'),
+    dropdown: document.getElementById('modeDropdown'),
+    getNames: () => Object.values(MODE_LABELS),
+    getValue: () => MODE_LABELS[filterMode],
+    onPick: (label) => {
+        const newMode = Object.keys(MODE_LABELS).find(k => MODE_LABELS[k] === label);
+        if (!newMode || newMode === filterMode) return;
+        filterMode = newMode;
+        document.getElementById('modeBtnValue').textContent = MODE_LABELS[filterMode];
+        document.getElementById('playerBtnLabel').textContent = MODE_LABELS[filterMode];
+        const namesInNewMode = playerNamesForMode(filterMode);
+        if (!namesInNewMode.includes(selectedPlayer)) {
+            selectedPlayer = '';
+            document.getElementById('playerBtnValue').textContent = '—';
+        }
+        applyPlayerFilter();
+    },
+    dropdownOpts: { withReset: false },
+    alwaysOpen: true,
+});
+
+setupFilterPicker({
+    btn: document.getElementById('playerBtn'),
+    dropdown: document.getElementById('playerDropdown'),
+    getNames: () => playerNamesForMode(filterMode),
+    getValue: () => selectedPlayer,
+    onPick: (name) => {
+        selectedPlayer = name;
+        document.getElementById('playerBtnValue').textContent = nameWithoutClan(name) || '—';
+        applyPlayerFilter();
+    },
+    dropdownOpts: {
+        withReset: false,
+        renderLabel: (name) => ({
+            text: nameWithoutClan(name),
+            className: isAllyTeam(teamOfPlayerInMode(name, filterMode)) ? 'team-ally' : 'team-enemy',
+        }),
+    },
+});
+
+document.addEventListener('click', closeAllDropdowns);
+}
+
+function setNavDisabled(disabled) {
+document.getElementById('prevBtn').disabled = disabled;
+document.getElementById('nextBtn').disabled = disabled;
+}
+
+function applyPlayerFilter() {
+clearCurrentShot();
+currentIndex = -1;
+
+if (!selectedPlayer) {
+    playerShots = [];
+    ui.panel.style.display = 'none';
+    ui.shotlist.style.display = 'none';
+    ui.emptyState.style.display = 'block';
+    ui.shotlist.replaceChildren();
+    setNavDisabled(true);
+    return;
+}
+
+const field = filterMode === 'attacker' ? 'attacker_name' : 'victim_name';
+playerShots = SHOTS.filter(s => s[field] === selectedPlayer);
+ui.emptyState.style.display = 'none';
+
+if (playerShots.length === 0) {
+    ui.panel.style.display = 'none';
+    ui.shotlist.style.display = 'none';
+    setNavDisabled(true);
+    return;
+}
+
+ui.panel.style.display = 'block';
+ui.shotlist.style.display = 'block';
+setNavDisabled(false);
+buildShotList();
+selectShot(0);
+}
+
+let cameraTargetPos = new THREE.Vector3();
+let cameraTargetLook = new THREE.Vector3();
+let cameraAnimating = false;
+
+async function selectShot(i) {
+if (playerShots.length === 0) return;
+currentIndex = ((i % playerShots.length) + playerShots.length) % playerShots.length;
+const shot = playerShots[currentIndex];
+
+const myToken = ++loadToken;
+const built = await buildShotScene(shot, myToken);
+
+if (!built || myToken !== loadToken) return;
+const { worldDist } = built;
+
+ui.clock.textContent = fmtClock(shot.hit_clock);
+ui.attackerName.textContent = entityNameOf(shot, 'attacker');
+ui.attackerName.classList.toggle('team-ally', isAllyTeam(shot.attacker_team));
+ui.attackerName.classList.toggle('team-enemy', !isAllyTeam(shot.attacker_team));
+ui.attackerTank.textContent = entityTankOf(shot, 'attacker');
+ui.victimName.textContent = entityNameOf(shot, 'victim');
+ui.victimName.classList.toggle('team-ally', isAllyTeam(shot.victim_team));
+ui.victimName.classList.toggle('team-enemy', !isAllyTeam(shot.victim_team));
+ui.victimTank.textContent = entityTankOf(shot, 'victim');
+ui.dmg.textContent = (shot.damage || 0) + ' HP';
+ui.dist.textContent = worldDist.toFixed(1) + ' м';
+ui.idx.textContent = `${currentIndex + 1} / ${playerShots.length}`;
+updateHash();
+
+document.querySelectorAll('.shot-item').forEach((el, idx) => {
+    const isCurrent = idx === currentIndex;
+    el.classList.toggle('active', isCurrent);
+    el.setAttribute('aria-selected', isCurrent ? 'true' : 'false');
+
+    el.tabIndex = isCurrent ? 0 : -1;
+});
+}
+
+function span(className, text) {
+const el = document.createElement('span');
+el.className = className;
+if (text !== undefined) el.textContent = text;
+return el;
+}
+
+function buildShotList() {
+const listEl = document.getElementById('shotlist');
+listEl.replaceChildren();
+const otherRole = filterMode === 'attacker' ? 'victim' : 'attacker';
+playerShots.forEach((shot, idx) => {
+    const item = document.createElement('div');
+    item.className = 'shot-item';
+    item.setAttribute('role', 'option');
+    item.setAttribute('aria-selected', 'false');
+    item.tabIndex = -1;
+
+    const otherName = nameWithoutClan(shot[`${otherRole}_name`] || shot[`${otherRole}_id`] || '?');
+    const teamClass = isAllyTeam(shot[`${otherRole}_team`]) ? 'team-ally' : 'team-enemy';
+
+    const line = span('shot-line');
+    line.append(
+        span('shot-idx', `№${idx + 1}`),
+        span('shot-time', fmtClock(shot.hit_clock)),
+        span('shot-divider'),
+        span('shot-arrow', '→'),
+        span(`victim-tag ${teamClass}`, otherName),
+    );
+
+    item.append(line, span('dmg-tag', String(shot.damage || 0)));
+    item.addEventListener('click', () => selectShot(idx));
+    item.addEventListener('keydown', (e) => {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        e.preventDefault();
+        selectShot(idx);
+    });
+    listEl.appendChild(item);
+});
+}
+
+document.getElementById('prevBtn').addEventListener('click', () => { if (playerShots.length) selectShot(currentIndex - 1); });
+document.getElementById('nextBtn').addEventListener('click', () => { if (playerShots.length) selectShot(currentIndex + 1); });
+window.addEventListener('keydown', (e) => {
+if (!playerShots.length) return;
+if (e.key === 'ArrowRight') selectShot(currentIndex + 1);
+if (e.key === 'ArrowLeft') selectShot(currentIndex - 1);
+});
+window.addEventListener('resize', () => {
+camera.aspect = window.innerWidth / window.innerHeight;
+camera.updateProjectionMatrix();
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+const clock = new THREE.Clock();
+function animate() {
+const t = clock.getElapsedTime();
+
+if (currentShotObjects && currentShotObjects.halo.userData.pulse) {
+    const scale = 1 + 0.3 * Math.sin(t * 4);
+    currentShotObjects.halo.scale.set(scale, scale, scale);
+}
+
+if (cameraAnimating) {
+    camera.position.lerp(cameraTargetPos, 0.08);
+    controls.target.lerp(cameraTargetLook, 0.08);
+    if (camera.position.distanceTo(cameraTargetPos) < 0.05) cameraAnimating = false;
+}
+
+controls.update();
+renderer.render(scene, camera);
+}
+
+async function init() {
+try {
+    SHOTS = await loadShotsData();
+    buildTeamIndex();
+
+    renderClanMatchup();
+    setNavDisabled(true);
+
+    if (SHOTS.length === 0) {
+        document.getElementById('filter-container').style.display = 'none';
+        ui.emptyState.querySelector('.big').textContent = 'Нет данных о попаданиях';
+        ui.emptyState.querySelector('.small').textContent = 'в этом бою не зафиксировано ни одного пробития';
+    } else {
+        populatePlayerFilters();
+
+        applyStateFromHash();
+    }
+    if (!selectedPlayer) ui.emptyState.style.display = 'block';
+
+    ui.loading.style.display = 'none';
+    console.log('[hit_viewer] Инициализация завершена успешно');
+} catch (err) {
+    console.error('[hit_viewer] Критическая ошибка:', err);
+    ui.loading.textContent = 'Ошибка: ' + err.message + '\n\nОткройте консоль (F12) для подробностей.';
+    ui.loading.classList.add('error');
+}
+renderer.setAnimationLoop(animate);
+}
+
+init();
+</script>
+</body>
+</html>
