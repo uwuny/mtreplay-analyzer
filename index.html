@@ -223,6 +223,15 @@ button.spotlight svg { width: 15px; height: 15px; flex-shrink: 0; }
 #grid tbody tr:last-child td:first-child { border-bottom-left-radius:  calc(var(--radius-xl) - 1px); }
 #grid tbody tr:last-child td:last-child  { border-bottom-right-radius: calc(var(--radius-xl) - 1px); }
 
+#grid tbody tr.off-format td {
+    background: rgb(var(--danger-rgb) / 9%);
+    box-shadow: inset 0 0 22px -8px rgb(var(--danger-rgb) / 60%);
+    border-radius: 0;
+}
+#grid tbody tr.off-format:last-child td:first-child,
+#grid tbody tr.off-format:last-child td:last-child { border-radius: 0; }
+#grid tbody tr.off-format:hover td { background: rgb(var(--danger-rgb) / 15%); }
+
 .clan-link {
     font-family: var(--font-mono); font-weight: 600;
     color: var(--text); text-decoration: none;
@@ -886,7 +895,7 @@ function renderBody() {
       const tip = c.tip ? ` data-tip="${escAttr(c.tip(r))}"` : '';
       return `<td class="${c.fit ? 'fit' : ''}"${tip}>${c.html(r)}</td>`;
     }).join('');
-    return `<tr data-id="${encodeURIComponent(r.id)}">${cells}</tr>`;
+    return `<tr class="${r.off_format ? 'off-format' : ''}" data-id="${encodeURIComponent(r.id)}">${cells}</tr>`;
   }).join('');
 
   fitTextColumns();
@@ -957,20 +966,6 @@ bodyEl.addEventListener('click', (e) => {
   if (tr) location.hash = `#battle=${tr.dataset.id}&view=map`;
 });
 
-const MAX_TEAM_SIZE = 7;
-
-function formatProblem(report) {
-  const players = report.players || [];
-  const teams = new Map();
-  for (const p of players) teams.set(p.team, (teams.get(p.team) || 0) + 1);
-
-  if (teams.size !== 2) return `команд ${teams.size}, а нужно две`;
-  const biggest = Math.max(...teams.values());
-  if (biggest > MAX_TEAM_SIZE) return `в команде ${biggest} игроков, в «Вылазках» максимум ${MAX_TEAM_SIZE}`;
-  if (players.length > MAX_TEAM_SIZE * 2) return `игроков ${players.length}, а в «Вылазках» максимум ${MAX_TEAM_SIZE * 2}`;
-  return null;
-}
-
 async function processFiles(files) {
   const known = await existingIds();
   const todo = files.filter((f) => f.name.endsWith('.mtreplay'));
@@ -985,7 +980,7 @@ async function processFiles(files) {
   const tanksDb = await getTanksDb();
   const started = performance.now();
   let failures = 0;
-  const wrongFormat = [];
+  let offFormat = 0;
 
   for (let i = 0; i < fresh.length; i++) {
     statusEl.innerHTML = `<progress max="${fresh.length}" value="${i}"></progress>`
@@ -995,16 +990,10 @@ async function processFiles(files) {
 
     try {
       const report = await buildReport(await fresh[i].arrayBuffer(), fresh[i].name, { tanksDb, loadMapBuffer });
-      const problem = formatProblem(report);
-      if (problem) {
-
-        console.warn(`${fresh[i].name} — ${problem}`);
-        wrongFormat.push(fresh[i].name);
-        continue;
-      }
       const summary = makeSummary(report);
       await putBattle(fresh[i].name, summary, report);
       rows.push({ ...summary, id: fresh[i].name });
+      if (summary.off_format) offFormat++;
     } catch (err) {
       failures++;
       console.error(fresh[i].name, err);
@@ -1013,10 +1002,10 @@ async function processFiles(files) {
 
   const seconds = ((performance.now() - started) / 1000).toFixed(1);
   renderBody();
-  const taken = fresh.length - failures - wrongFormat.length;
+  const taken = fresh.length - failures;
 
-  const rejected = wrongFormat.length
-    ? ` <span class="rejected">Некорректный формата боя: ${wrongFormat.length}</span>`
+  const rejected = offFormat
+    ? ` <span class="rejected">Некорректный формата боя: ${offFormat}</span>`
     : '';
   statusEl.innerHTML = `Готово: ${taken} из ${fresh.length} боёв за ${seconds} с`
     + rejected
