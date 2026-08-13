@@ -6,6 +6,8 @@ const REPORT_FORMAT_VERSIONS = [5];
 const SUMMARIES = 'summaries';
 const REPORTS = 'reports';
 
+const MAX_TEAM_SIZE = 7;
+
 let dbPromise = null;
 
 function openDb() {
@@ -113,6 +115,12 @@ export function makeSummary(report) {
     else enemiesDestroyed++;
   }
 
+  const teamSizes = new Map();
+  for (const p of report.players) teamSizes.set(p.team, (teamSizes.get(p.team) || 0) + 1);
+  const offFormat = teamSizes.size !== 2
+    || Math.max(...teamSizes.values()) > MAX_TEAM_SIZE
+    || report.players.length > MAX_TEAM_SIZE * 2;
+
   const roster = report.players
     .filter((p) => p.team === meta.creator_team)
     .map((p) => {
@@ -164,6 +172,7 @@ export function makeSummary(report) {
     survived: !stats.is_destroyed,
     life_time_sec: stats.life_time_sec ?? 0,
     total_players: meta.total_players ?? 0,
+    off_format: offFormat,
     shots_count: report.shots.length,
     xp: stats.xp ?? 0,
     roster,
