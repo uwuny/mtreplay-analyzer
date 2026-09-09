@@ -178,13 +178,15 @@ background: transparent;
 #modeDropdown .filter-dropdown-item:hover { color: var(--text); }
 #modeDropdown .filter-dropdown-item.active { background: transparent; color: #c8f2d4; }
 
-#playerBtn {
+#playerBtn, #outcomeBtn {
 align-items: center;
 justify-content: center;
 padding: 10px 20px;
 border-radius: var(--radius-full);
 }
-#playerBtn .filter-btn-value { text-align: center; }
+#playerBtn .filter-btn-value, #outcomeBtn .filter-btn-value { text-align: center; }
+#outcomeBtn { min-width: 170px; }
+#outcomeDropdown { min-width: 170px; }
 
 .filter-dropdown {
 position: absolute;
@@ -272,14 +274,78 @@ border-bottom: 1px solid var(--glass-border);
 }
 #panel .label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; flex-shrink: 0; }
 #panel .value { font-family: var(--font-mono); font-size: 13px; color: var(--text); font-variant-numeric: tabular-nums; }
-#panel > .row:nth-of-type(4) {
+#panel .row.row-damage {
 padding-top: 12px;
 margin-top: 2px;
 border-top: 1px solid var(--glass-border);
 }
 #panel .value.dmg { color: var(--danger); font-weight: 700; font-size: 19px; text-shadow: 0 0 6px rgb(var(--danger-rgb) / 30%); }
-#panel > .row:nth-of-type(5) .value,
-#panel > .row:nth-of-type(6) .value { color: var(--text-secondary); font-size: 12px; }
+#panel .value.dmg.blocked { color: var(--text-secondary); text-shadow: none; font-size: 15px; }
+#panel .row.row-meta .value { color: var(--text-secondary); font-size: 12px; }
+
+.outcome-tag {
+font-family: var(--font-mono);
+font-size: 10px;
+font-weight: 600;
+letter-spacing: 0.04em;
+text-transform: uppercase;
+padding: 3px 8px;
+border-radius: var(--radius-full);
+white-space: nowrap;
+}
+.outcome-penetration { color: #f0b0b0; background: rgb(var(--danger-rgb) / 18%); }
+.outcome-ricochet    { color: #a9d8ea; background: rgb(124 199 222 / 16%); }
+.outcome-no_penetration { color: #e6cf9a; background: rgb(230 207 154 / 14%); }
+.outcome-no_damage   { color: #c8f2d4; background: var(--color-accent-dim); }
+
+#panel .row.row-outcome { align-items: center; }
+#panel .plate-name { font-family: var(--font-mono); font-size: 11px; color: var(--text-secondary); }
+
+#panel .path {
+margin: 10px 0 0 0;
+display: flex;
+flex-direction: column;
+gap: 5px;
+}
+#panel .path:empty { display: none; }
+#panel .path-step {
+display: grid;
+grid-template-columns: auto 1fr auto;
+align-items: baseline;
+gap: 8px;
+font-family: var(--font-mono);
+font-size: 11px;
+color: var(--text-secondary);
+}
+#panel .path-step .step-idx { color: var(--text-dim); }
+#panel .path-step .step-plate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#panel .path-step .step-mm { color: var(--text); font-variant-numeric: tabular-nums; }
+
+#panel .crits {
+margin-top: 10px;
+display: flex;
+flex-wrap: wrap;
+gap: 4px;
+}
+#panel .crits:empty { display: none; }
+#panel .crit-tag {
+font-family: var(--font-mono); font-size: 10.5px;
+padding: 3px 7px; border-radius: var(--radius-sm);
+background: rgb(255 255 255 / 5%); color: var(--text-secondary);
+}
+#panel .crit-tag.destroyed { color: #f0b0b0; background: rgb(var(--danger-rgb) / 14%); }
+
+.shot-item .outcome-dot {
+flex-shrink: 0;
+width: 6px; height: 6px;
+border-radius: var(--radius-full);
+align-self: center;
+}
+.shot-item .outcome-dot.outcome-penetration { background: var(--danger); }
+.shot-item .outcome-dot.outcome-ricochet { background: #7cc7de; }
+.shot-item .outcome-dot.outcome-no_penetration { background: #e6cf9a; }
+.shot-item .outcome-dot.outcome-no_damage { background: var(--color-accent); }
+.shot-item .dmg-tag.blocked { color: var(--text-dim); font-weight: 400; }
 
 #panel .row.entity-row {
 display: grid;
@@ -458,7 +524,7 @@ font-family: var(--font-mono);
 #filter-container .filter-group { flex: 1 1 132px; }
 .filter-btn,
 #filter-container .filter-group:first-child { min-width: 0; }
-#playerBtn { min-width: 0; padding: 9px 12px; }
+#playerBtn, #outcomeBtn { min-width: 0; padding: 9px 12px; }
 
 #panel {
     left: 10px; bottom: 10px;
@@ -505,7 +571,7 @@ font-family: var(--font-mono);
     </div>
 </div>
 <a id="backLink" href="{{BACK_TO_MAP_URL}}">← к карте боя</a>
-<div id="hint">ЛКМ — вращение · колесо — зум · ПКМ — панорама · ← → — выстрелы</div>
+<div id="hint">ЛКМ — вращение · колесо — зум · ПКМ — панорама · ← → — попадания</div>
 <div id="filter-container">
     <div class="filter-group">
         <button class="filter-btn" id="modeBtn" type="button">
@@ -520,6 +586,13 @@ font-family: var(--font-mono);
             <span class="filter-btn-value" id="playerBtnValue">—</span>
         </button>
         <div class="filter-dropdown" id="playerDropdown"></div>
+    </div>
+    <div class="filter-group">
+        <button class="filter-btn" id="outcomeBtn" type="button">
+            <span class="filter-btn-label">Исход</span>
+            <span class="filter-btn-value" id="outcomeBtnValue">Все попадания</span>
+        </button>
+        <div class="filter-dropdown" id="outcomeDropdown"></div>
     </div>
 </div>
 </div>
@@ -539,14 +612,23 @@ font-family: var(--font-mono);
     <span class="entity-name" id="v-victim-name">—</span>
     <span class="entity-tank" id="v-victim-tank"></span>
 </div>
-<div class="row"><span class="label">урон</span><span class="value dmg" id="v-dmg">—</span></div>
+<div class="row row-damage row-outcome">
+    <span class="value dmg" id="v-dmg">—</span>
+    <span class="outcome-tag" id="v-outcome"></span>
+</div>
 <hr>
-<div class="row"><span class="label">Расстояние</span><span class="value" id="v-dist">—</span></div>
-<div class="row"><span class="label">Выстрел</span><span class="value" id="v-idx">—</span></div>
+<div class="row"><span class="label">Снаряд</span><span class="value" id="v-shell">—</span></div>
+<div class="row"><span class="label">Броня</span><span class="value" id="v-armor">—</span></div>
+<div class="row"><span class="label">Угол / привед.</span><span class="value" id="v-angle">—</span></div>
+<div class="path" id="v-path"></div>
+<div class="crits" id="v-crits"></div>
+<hr>
+<div class="row row-meta"><span class="label">Расстояние</span><span class="value" id="v-dist">—</span></div>
+<div class="row row-meta"><span class="label">Выстрел</span><span class="value" id="v-idx">—</span></div>
 </div>
 <div id="shotlist-container">
     <div id="shotlist-header">
-        <span id="shotlist-title">Выстрелы</span>
+        <span id="shotlist-title">Попадания</span>
         <div id="nav">
             <button class="nav-btn" id="prevBtn" type="button" aria-label="Предыдущий выстрел">‹</button>
             <button class="nav-btn" id="nextBtn" type="button" aria-label="Следующий выстрел">›</button>
@@ -590,6 +672,12 @@ attackerTank: document.getElementById('v-attacker-tank'),
 victimName: document.getElementById('v-victim-name'),
 victimTank: document.getElementById('v-victim-tank'),
 dmg: document.getElementById('v-dmg'),
+outcome: document.getElementById('v-outcome'),
+shell: document.getElementById('v-shell'),
+armor: document.getElementById('v-armor'),
+angle: document.getElementById('v-angle'),
+path: document.getElementById('v-path'),
+crits: document.getElementById('v-crits'),
 dist: document.getElementById('v-dist'),
 idx: document.getElementById('v-idx'),
 panel: document.getElementById('panel'),
@@ -686,6 +774,7 @@ scene.add(floor);
 
 const BATTLE_DATA = {{DATA_PAYLOAD}};
 
+const ARMOR_DB = BATTLE_DATA.armor || {};
 const MY_TEAM = parseInt(BATTLE_DATA.my_team, 10) || 1;
 const ALLY_CLAN_TAG = String(BATTLE_DATA.ally_clan || '').trim();
 const ENEMY_CLAN_TAG = String(BATTLE_DATA.enemy_clan || '').trim();
@@ -881,24 +970,269 @@ function vecOf(o) {
 return new THREE.Vector3(o?.x || 0, o?.y || 0, o?.z || 0);
 }
 
-const IGNORED_MESH_NAME_PATTERNS = [
-/track/i,
-/wheel/i,
-/roller/i,
-/_gun_\d+$/i,
-/screen/i,
-/spaced/i,
-];
+const COMPONENT_KINDS = ['Chassis', 'Hull', 'Turret', 'Gun'];
 
-function isIgnoredHitboxMesh(mesh) {
-let node = mesh;
-while (node) {
-    if (node.name && IGNORED_MESH_NAME_PATTERNS.some(re => re.test(node.name))) {
-        return true;
-    }
-    node = node.parent;
+const MATERIAL_LABELS = {
+leftTrack: 'левая гусеница',
+rightTrack: 'правая гусеница',
+surveyingDevice: 'приборы наблюдения',
+gun: 'ствол',
+gunBreech: 'казённик',
+wheel: 'каток',
+engine: 'двигатель',
+transmission: 'трансмиссия',
+ammoBay: 'боеукладка',
+fuelTank: 'топливный бак',
+radio: 'рация',
+turretRotator: 'поворот башни',
+};
+
+const OUTCOMES = {
+penetration:    { label: 'пробитие',   color: 0xe45a5a },
+ricochet:       { label: 'рикошет',    color: 0x7cc7de },
+no_penetration: { label: 'не пробил',  color: 0xe6cf9a },
+no_damage:      { label: 'без урона',  color: 0x45d66f },
+};
+
+const SHELL_KINDS = {
+ARMOR_PIERCING:    'ББ',
+ARMOR_PIERCING_CR: 'БП',
+HOLLOW_CHARGE:     'КС',
+HIGH_EXPLOSIVE:    'ОФ',
+ARMOR_PIERCING_HE: 'ББ-ОФ',
+};
+
+const WORLD_UP = new THREE.Vector3(0, 1, 0);
+const CAMERA_FIT = 1.55;
+const CAMERA_SHIFT_LEFT = 0.34;
+const CAMERA_SHIFT_UP = 0.38;
+const CAMERA_MIN_HEIGHT = 0.6;
+
+function outcomeOf(shot) {
+return OUTCOMES[shot.outcome] || OUTCOMES.penetration;
 }
-return false;
+
+function materialLabel(name) {
+if (MATERIAL_LABELS[name]) return MATERIAL_LABELS[name];
+const plate = /^armor_(\d+)$/.exec(name || '');
+return plate ? 'плита ' + plate[1] : (name || '—');
+}
+
+/** Меши коллизионной модели названы как `Узел_havok_s_Материал_N`. */
+function parsePartName(name) {
+const parsed = /^(.+?)_havok_s_(.+)_(\d+)$/.exec(String(name || ''));
+return parsed ? { component: parsed[1], material: parsed[2] } : null;
+}
+
+/**
+ * Узлы коллизионной модели с их габаритными ящиками: именно по этим ящикам
+ * реплей квантует точки попадания — 0…255 на каждую ось.
+ */
+function buildPartIndex(tank) {
+const parts = new Map();
+tank.traverse(mesh => {
+    if (!mesh.isMesh) return;
+    const parsed = parsePartName(mesh.name) || parsePartName(mesh.parent && mesh.parent.name);
+    if (!parsed) return;
+
+    mesh.userData.materialName = parsed.material;
+    if (!parts.has(parsed.component)) {
+        parts.set(parsed.component, { meshes: [], box: new THREE.Box3() });
+    }
+    const part = parts.get(parsed.component);
+    part.meshes.push(mesh);
+    if (!mesh.geometry.boundingBox) mesh.geometry.computeBoundingBox();
+    part.box.union(mesh.geometry.boundingBox);
+});
+return parts;
+}
+
+function componentNameFor(parts, componentIndex) {
+const kind = COMPONENT_KINDS[componentIndex];
+if (!kind) return null;
+if (parts.has(kind)) return kind;
+for (const name of parts.keys()) if (name.startsWith(kind)) return name;
+return null;
+}
+
+function decodePoint(box, bytes) {
+const size = box.getSize(new THREE.Vector3());
+return new THREE.Vector3(
+    box.min.x + (bytes[0] / 255) * size.x,
+    box.min.y + (bytes[1] / 255) * size.y,
+    box.min.z + (bytes[2] / 255) * size.z,
+);
+}
+
+function plateOf(tankRaw, componentName, materialName) {
+const tables = ARMOR_DB[tankRaw];
+if (!tables) return null;
+
+let table = tables[componentName];
+if (!table) {
+    const kind = COMPONENT_KINDS.find(k => componentName.startsWith(k));
+    const key = kind ? Object.keys(tables).find(name => name.startsWith(kind)) : null;
+    table = key ? tables[key] : null;
+}
+return (table && table[materialName]) || null;
+}
+
+function describePlate(contact, direction, componentName, tankRaw) {
+const materialName = contact.object.userData.materialName;
+const armor = plateOf(tankRaw, componentName, materialName);
+const normal = contact.face
+    ? contact.face.normal.clone()
+        .applyNormalMatrix(new THREE.Matrix3().getNormalMatrix(contact.object.matrixWorld)).normalize()
+    : null;
+const cosine = normal ? Math.min(1, Math.abs(direction.dot(normal))) : null;
+
+return {
+    point: contact.point.clone(),
+    mesh: contact.object,
+    material: materialName,
+    label: materialLabel(materialName),
+    // Модули (гусеница, приборы, казённик) собственной брони не имеют.
+    isDevice: !/^armor_\d+$/.test(materialName || ''),
+    mm: armor ? armor.mm : null,
+    // vehicleDamageFactor 0 — экран: снаряд его проходит, но урона он не наносит.
+    isScreen: Boolean(armor && armor.df === 0),
+    angle: cosine === null ? null : THREE.MathUtils.radToDeg(Math.acos(cosine)),
+    effective: (armor && armor.mm && cosine && cosine > 0.02) ? armor.mm / cosine : null,
+};
+}
+
+/**
+ * Отрезок попадания: где снаряд коснулся узла и во что упёрся. Первая
+ * пересечённая поверхность — точка попадания, последняя перед точкой
+ * остановки — та броня, которая исход и решила: наружу часто выходят
+ * тонкие крылья и экраны, а держит плита за ними.
+ */
+function analyseSegment(segment, parts, tank, tankRaw) {
+const componentName = componentNameFor(parts, segment.component);
+const part = componentName ? parts.get(componentName) : null;
+if (!part || part.box.isEmpty()) return null;
+
+const enter = tank.localToWorld(decodePoint(part.box, segment.start));
+const exit = tank.localToWorld(decodePoint(part.box, segment.end));
+
+const direction = exit.clone().sub(enter);
+const travel = direction.length();
+if (travel < 1e-4) return { componentName, enter, exit, direction: null, contact: null, plate: null };
+direction.normalize();
+
+const result = { componentName, enter, exit, direction, contact: null, plate: null };
+
+// Луч пускается заведомо снаружи машины, чтобы первым пересечением была
+// внешняя поверхность, а не случайная грань внутри узла.
+const APPROACH = travel + 3;
+const raycaster = new THREE.Raycaster(
+    exit.clone().addScaledVector(direction, -APPROACH), direction, 0, APPROACH + 0.6);
+const contacts = raycaster.intersectObjects(part.meshes, false);
+if (!contacts.length) return result;
+
+let stopped = null;
+for (const contact of contacts) {
+    if (contact.distance <= APPROACH + 0.02) stopped = contact;
+}
+
+result.contact = contacts[0].point.clone();
+result.plate = describePlate(stopped || contacts[0], direction, componentName, tankRaw);
+if (stopped && stopped !== contacts[0]) {
+    result.entryPlate = describePlate(contacts[0], direction, componentName, tankRaw);
+}
+return result;
+}
+
+function addImpactMarker(group, position, color) {
+const RADIUS = 0.112;
+const impact = new THREE.Mesh(
+    new THREE.SphereGeometry(RADIUS, 20, 20),
+    new THREE.MeshStandardMaterial({
+        color, emissive: color, emissiveIntensity: 0.55, metalness: 0.2, roughness: 0.4,
+    }),
+);
+impact.position.copy(position);
+group.add(impact);
+
+const halo = new THREE.Mesh(
+    new THREE.SphereGeometry(RADIUS * 2, 16, 16),
+    new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.25 }),
+);
+halo.position.copy(position);
+halo.userData.pulse = true;
+group.add(halo);
+}
+
+function addTracer(group, impactPoint, direction, color) {
+const from = impactPoint.clone().addScaledVector(direction, -(TRACER_START_OFFSET + TRACER_LENGTH));
+
+group.add(new THREE.Line(
+    new THREE.BufferGeometry().setFromPoints([from, impactPoint]),
+    new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.6 }),
+));
+
+const length = from.distanceTo(impactPoint);
+const tracer = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.025, 0.07, length, 8, 1, true),
+    new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.2, side: THREE.DoubleSide }),
+);
+tracer.position.copy(from.clone().lerp(impactPoint, 0.5));
+tracer.lookAt(impactPoint);
+tracer.rotateX(Math.PI / 2);
+group.add(tracer);
+
+const shooterMarker = new THREE.Mesh(
+    new THREE.SphereGeometry(0.22, 12, 12),
+    new THREE.MeshBasicMaterial({ color: 0xffaa33, transparent: true, opacity: 0.85 }),
+);
+shooterMarker.position.copy(from);
+group.add(shooterMarker);
+}
+
+/** Путь снаряда внутри техники — поверх брони, иначе его не видно. */
+function addInnerPath(group, points, color) {
+if (points.length < 2) return;
+
+const line = new THREE.Line(
+    new THREE.BufferGeometry().setFromPoints(points),
+    new THREE.LineDashedMaterial({
+        color, transparent: true, opacity: 0.85, depthTest: false,
+        dashSize: 0.12, gapSize: 0.08,
+    }),
+);
+line.computeLineDistances();
+line.renderOrder = 2;
+group.add(line);
+}
+
+function highlightPlate(mesh, color) {
+if (!mesh || !mesh.material) return;
+mesh.material.emissive = new THREE.Color(color);
+mesh.material.emissiveIntensity = 0.18;
+}
+
+/** Камера смотрит в точку попадания со стороны стрелка — чуть левее и выше. */
+function aimCameraAtImpact(tank, impactPoint, direction) {
+const back = direction ? direction.clone().negate() : new THREE.Vector3(0, 0.4, 1).normalize();
+const left = new THREE.Vector3().crossVectors(back, WORLD_UP);
+if (left.lengthSq() < 1e-4) left.set(1, 0, 0);
+left.normalize();
+
+// Отход считается от габаритов самой машины, чтобы она целиком влезала в кадр.
+const bounds = new THREE.Box3().setFromObject(tank).getBoundingSphere(new THREE.Sphere());
+const distance = CAMERA_FIT * bounds.radius / Math.sin(THREE.MathUtils.degToRad(camera.fov) / 2);
+
+const eye = impactPoint.clone()
+    .addScaledVector(back, distance)
+    .addScaledVector(left, distance * CAMERA_SHIFT_LEFT)
+    .addScaledVector(WORLD_UP, distance * CAMERA_SHIFT_UP);
+eye.y = Math.max(eye.y, CAMERA_MIN_HEIGHT);
+
+// Точка прицеливания ставится сразу — так попадание всегда в центре кадра,
+// а камера уже плавно доезжает до своей позиции.
+controls.target.copy(impactPoint);
+cameraTargetPos.copy(eye);
+cameraAnimating = true;
 }
 
 async function buildShotScene(shot, token) {
@@ -921,104 +1255,39 @@ tank.rotation.set(0, 0, 0);
 group.add(tank);
 tank.updateMatrixWorld(true);
 
-const shooterWorld = vecOf(shot.shooter_pos);
-const victimWorld = vecOf(shot.victim_pos);
-const impactWorld = vecOf(shot.impact_point);
+const parts = buildPartIndex(tank);
+const outcome = outcomeOf(shot);
 
-let dirWorld = new THREE.Vector3().subVectors(shooterWorld, victimWorld);
-if (dirWorld.lengthSq() < 1e-6) {
-    dirWorld = new THREE.Vector3().subVectors(shooterWorld, impactWorld);
-}
-if (dirWorld.lengthSq() < 1e-6) {
-    dirWorld = new THREE.Vector3(0, 0, 1);
-}
-dirWorld.normalize();
-
-const yaw = (shot.victim_ypr && shot.victim_ypr.yaw) || 0;
-const dir = dirWorld.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), -yaw);
-dir.z *= -1;
-dir.normalize();
-
-const tankCenterHeight = footOffsetY + 1.0;
-const originPoint = new THREE.Vector3(0, tankCenterHeight, 0);
-const shooterAnchor = dir.clone().multiplyScalar(TRACER_START_OFFSET + TRACER_LENGTH).add(originPoint);
-const rayDir = originPoint.clone().sub(shooterAnchor).normalize();
-
-const collidableMeshes = [];
-tank.traverse(c => {
-    if (c.isMesh && !isIgnoredHitboxMesh(c)) collidableMeshes.push(c);
-});
-
-const raycaster = new THREE.Raycaster(shooterAnchor, rayDir, 0, TRACER_START_OFFSET + TRACER_LENGTH + 1);
-const hits = raycaster.intersectObjects(collidableMeshes, false);
-
-let impactPos;
-let tracerEnd;
-if (hits.length > 0) {
-    impactPos = hits[0].point.clone();
-    tracerEnd = impactPos;
-} else {
-    impactPos = dir.clone().multiplyScalar(TRACER_START_OFFSET * 0.55).add(originPoint);
-    tracerEnd = impactPos;
+const analysed = [];
+for (const segment of shot.segments || []) {
+    const info = analyseSegment(segment, parts, tank, shot.victim_tank_raw);
+    if (info) analysed.push(info);
 }
 
-const IMPACT_RADIUS = 0.14 * 0.8;
-const impactGeom = new THREE.SphereGeometry(IMPACT_RADIUS, 20, 20);
-const impactMat = new THREE.MeshStandardMaterial({
-    color: 0xe45a5a, emissive: 0x7a2f2f, emissiveIntensity: 0.7,
-    metalness: 0.2, roughness: 0.4
-});
-const impact = new THREE.Mesh(impactGeom, impactMat);
-impact.position.copy(impactPos);
-group.add(impact);
+const primary = analysed[0] || null;
+const impactPoint = primary
+    ? (primary.contact ? primary.contact.clone() : primary.enter.clone())
+    : new THREE.Vector3(0, footOffsetY + 1.0, 0);
+const shellDirection = (analysed.find(info => info.direction) || {}).direction || null;
 
-const haloGeom = new THREE.SphereGeometry(IMPACT_RADIUS * 2, 16, 16);
-const haloMat = new THREE.MeshBasicMaterial({
-    color: 0xe45a5a, transparent: true, opacity: 0.25
-});
-const halo = new THREE.Mesh(haloGeom, haloMat);
-halo.position.copy(impactPos);
-halo.userData.pulse = true;
-group.add(halo);
+addImpactMarker(group, impactPoint, outcome.color);
+if (shellDirection) addTracer(group, impactPoint, shellDirection.clone(), outcome.color);
 
-const lineMat = new THREE.LineBasicMaterial({ color: 0xe45a5a, transparent: true, opacity: 0.6 });
-const lineGeom = new THREE.BufferGeometry().setFromPoints([shooterAnchor, tracerEnd]);
-const line = new THREE.Line(lineGeom, lineMat);
-group.add(line);
-
-const tracerDist = shooterAnchor.distanceTo(tracerEnd);
-if (tracerDist > 0.01) {
-    const tracerGeom = new THREE.CylinderGeometry(0.025, 0.07, tracerDist, 8, 1, true);
-    const tracerMat = new THREE.MeshBasicMaterial({
-        color: 0xe98a75, transparent: true, opacity: 0.22, side: THREE.DoubleSide
-    });
-    const tracer = new THREE.Mesh(tracerGeom, tracerMat);
-    const mid = shooterAnchor.clone().lerp(tracerEnd, 0.5);
-    tracer.position.copy(mid);
-    tracer.lookAt(tracerEnd);
-    tracer.rotateX(Math.PI / 2);
-    group.add(tracer);
+const innerPath = [];
+for (const info of analysed) {
+    innerPath.push(info.contact || info.enter, info.exit);
+    if (info.plate) highlightPlate(info.plate.mesh, outcome.color);
+    if (info.entryPlate) highlightPlate(info.entryPlate.mesh, outcome.color);
 }
-
-const shooterMarker = new THREE.Mesh(
-    new THREE.SphereGeometry(0.22, 12, 12),
-    new THREE.MeshBasicMaterial({ color: 0xffaa33, transparent: true, opacity: 0.85 })
-);
-shooterMarker.position.copy(shooterAnchor);
-group.add(shooterMarker);
+addInnerPath(group, innerPath, outcome.color);
 
 scene.add(group);
-currentShotObjects = { group, tank, impact, halo, line, shooterMarker };
+currentShotObjects = { group, tank, halo: group.children.find(c => c.userData.pulse) || null };
 
-const camLookTarget = new THREE.Vector3(0, tankCenterHeight * 0.7, 0);
-const camDir = dir.clone().multiplyScalar(-1).add(new THREE.Vector3(0.35, 0.55, 0.35)).normalize();
-cameraTargetLook.copy(camLookTarget);
-cameraTargetPos.copy(camDir.multiplyScalar(11)).add(camLookTarget);
-cameraAnimating = true;
+aimCameraAtImpact(tank, impactPoint, shellDirection);
 
-const worldDist = shooterWorld.distanceTo(victimWorld);
-
-return { worldDist };
+const worldDist = vecOf(shot.shooter_pos).distanceTo(vecOf(shot.victim_pos));
+return { worldDist, analysed };
 }
 
 function fmtClock(seconds) {
@@ -1042,6 +1311,13 @@ let loadToken = 0;
 let filterMode = 'attacker';
 let selectedPlayer = '';
 
+const OUTCOME_FILTERS = {
+all:         { label: 'Все попадания', test: () => true },
+penetration: { label: 'Только пробития', test: (shot) => shot.outcome === 'penetration' },
+blocked:     { label: 'Непробития', test: (shot) => shot.outcome !== 'penetration' },
+};
+let outcomeFilter = 'all';
+
 let hashUpdateTimer = null;
 
 function updateHash() {
@@ -1052,6 +1328,7 @@ hashUpdateTimer = setTimeout(() => {
         return;
     }
     const params = new URLSearchParams({ mode: filterMode, p: selectedPlayer });
+    if (outcomeFilter !== 'all') params.set('hit', outcomeFilter);
     if (currentIndex >= 0) params.set('shot', String(currentIndex + 1));
     history.replaceState(null, '', '#' + params.toString());
 }, 300);
@@ -1066,6 +1343,9 @@ const params = new URLSearchParams(raw);
 const mode = params.get('mode');
 if (mode === 'attacker' || mode === 'victim') filterMode = mode;
 
+const hit = params.get('hit');
+if (hit && OUTCOME_FILTERS[hit]) outcomeFilter = hit;
+
 const player = params.get('p');
 if (!player || !playerNamesForMode(filterMode).includes(player)) return false;
 
@@ -1075,6 +1355,7 @@ renderModeDropdown();
 document.getElementById('modeBtnValue').textContent = MODE_LABELS[filterMode];
 document.getElementById('playerBtnLabel').textContent = MODE_LABELS[filterMode];
 document.getElementById('playerBtnValue').textContent = nameWithoutClan(player) || '—';
+document.getElementById('outcomeBtnValue').textContent = OUTCOME_FILTERS[outcomeFilter].label;
 applyPlayerFilter();
 
 const shot = parseInt(params.get('shot'), 10);
@@ -1199,6 +1480,23 @@ setupFilterPicker({
     },
 });
 
+setupFilterPicker({
+    btn: document.getElementById('outcomeBtn'),
+    dropdown: document.getElementById('outcomeDropdown'),
+    getNames: () => Object.keys(OUTCOME_FILTERS),
+    getValue: () => outcomeFilter,
+    onPick: (key) => {
+        if (!OUTCOME_FILTERS[key] || key === outcomeFilter) return;
+        outcomeFilter = key;
+        document.getElementById('outcomeBtnValue').textContent = OUTCOME_FILTERS[key].label;
+        applyPlayerFilter();
+    },
+    dropdownOpts: {
+        withReset: false,
+        renderLabel: (key) => ({ text: OUTCOME_FILTERS[key].label }),
+    },
+});
+
 document.addEventListener('click', closeAllDropdowns);
 }
 
@@ -1222,13 +1520,17 @@ if (!selectedPlayer) {
 }
 
 const field = filterMode === 'attacker' ? 'attacker_name' : 'victim_name';
-playerShots = SHOTS.filter(s => s[field] === selectedPlayer);
+const keep = OUTCOME_FILTERS[outcomeFilter].test;
+playerShots = SHOTS.filter(s => s[field] === selectedPlayer && keep(s));
 ui.emptyState.style.display = 'none';
 
 if (playerShots.length === 0) {
     ui.panel.style.display = 'none';
     ui.shotlist.style.display = 'none';
     setNavDisabled(true);
+    ui.emptyState.querySelector('.big').textContent = 'Нет подходящих попаданий';
+    ui.emptyState.querySelector('.small').textContent = 'снимите фильтр по исходу';
+    ui.emptyState.style.display = 'block';
     return;
 }
 
@@ -1240,7 +1542,6 @@ selectShot(0);
 }
 
 let cameraTargetPos = new THREE.Vector3();
-let cameraTargetLook = new THREE.Vector3();
 let cameraAnimating = false;
 
 async function selectShot(i) {
@@ -1263,7 +1564,7 @@ ui.victimName.textContent = entityNameOf(shot, 'victim');
 ui.victimName.classList.toggle('team-ally', isAllyTeam(shot.victim_team));
 ui.victimName.classList.toggle('team-enemy', !isAllyTeam(shot.victim_team));
 ui.victimTank.textContent = entityTankOf(shot, 'victim');
-ui.dmg.textContent = (shot.damage || 0) + ' HP';
+fillShotDetails(shot, built.analysed);
 ui.dist.textContent = worldDist.toFixed(1) + ' м';
 ui.idx.textContent = `${currentIndex + 1} / ${playerShots.length}`;
 updateHash();
@@ -1275,6 +1576,71 @@ document.querySelectorAll('.shot-item').forEach((el, idx) => {
 
     el.tabIndex = isCurrent ? 0 : -1;
 });
+}
+
+const mm = (value) => `${Math.round(value)} мм`;
+
+function shellSummary(shell) {
+if (!shell) return '—';
+const kind = SHELL_KINDS[shell.kind] || shell.kind || '?';
+const parts = [kind];
+if (shell.caliber) parts.push(`${shell.caliber} мм`);
+if (shell.piercing) parts.push(`пр. ${Math.round(shell.piercing)}`);
+return parts.join(' · ');
+}
+
+function plateSummary(plate) {
+if (!plate) return '—';
+if (plate.mm === null) return plate.isDevice ? `${plate.label} · модуль` : plate.label;
+const suffix = plate.isScreen ? ' · экран' : '';
+return `${plate.label} · ${mm(plate.mm)}${suffix}`;
+}
+
+function fillShotDetails(shot, analysed) {
+const outcome = outcomeOf(shot);
+const pierced = shot.outcome === 'penetration';
+
+ui.dmg.textContent = pierced ? `${shot.damage || 0} HP` : (shot.damage ? `${shot.damage} HP` : 'без урона');
+ui.dmg.classList.toggle('blocked', !pierced);
+ui.outcome.textContent = outcome.label + (shot.is_destroyed ? ' · уничтожен' : '');
+ui.outcome.className = 'outcome-tag outcome-' + shot.outcome;
+
+ui.shell.textContent = shellSummary(shot.shell);
+
+const decisive = (analysed || []).filter(info => info.plate).pop() || null;
+const plate = decisive ? decisive.plate : null;
+ui.armor.textContent = plateSummary(plate);
+
+if (plate && plate.angle !== null) {
+    ui.angle.textContent = plate.effective
+        ? `${Math.round(plate.angle)}° · ${mm(plate.effective)}`
+        : `${Math.round(plate.angle)}°`;
+} else {
+    ui.angle.textContent = '—';
+}
+
+ui.path.replaceChildren();
+const steps = [];
+for (const info of analysed || []) {
+    if (info.entryPlate) steps.push(info.entryPlate);
+    if (info.plate) steps.push(info.plate);
+}
+if (steps.length > 1) {
+    steps.forEach((step, index) => {
+        const row = document.createElement('div');
+        row.className = 'path-step';
+        row.append(
+            span('step-idx', `${index + 1}`),
+            span('step-plate', step.label),
+            span('step-mm', step.mm === null ? (step.isDevice ? 'модуль' : '—') : mm(step.mm)),
+        );
+        ui.path.appendChild(row);
+    });
+}
+
+ui.crits.replaceChildren();
+for (const name of shot.crits_destroyed || []) ui.crits.appendChild(span('crit-tag destroyed', name));
+for (const name of shot.crits_damaged || []) ui.crits.appendChild(span('crit-tag', name));
 }
 
 function span(className, text) {
@@ -1303,11 +1669,14 @@ playerShots.forEach((shot, idx) => {
         span('shot-idx', `№${idx + 1}`),
         span('shot-time', fmtClock(shot.hit_clock)),
         span('shot-divider'),
-        span('shot-arrow', '→'),
+        span(`outcome-dot outcome-${shot.outcome}`),
         span(`victim-tag ${teamClass}`, otherName),
     );
 
-    item.append(line, span('dmg-tag', String(shot.damage || 0)));
+    const pierced = shot.outcome === 'penetration';
+    const damageTag = span(`dmg-tag${pierced ? '' : ' blocked'}`,
+        pierced ? String(shot.damage || 0) : outcomeOf(shot).label);
+    item.append(line, damageTag);
     item.addEventListener('click', () => selectShot(idx));
     item.addEventListener('keydown', (e) => {
         if (e.key !== 'Enter' && e.key !== ' ') return;
@@ -1336,15 +1705,17 @@ const clock = new THREE.Clock();
 function animate() {
 const t = clock.getElapsedTime();
 
-if (currentShotObjects && currentShotObjects.halo.userData.pulse) {
+if (currentShotObjects && currentShotObjects.halo) {
     const scale = 1 + 0.3 * Math.sin(t * 4);
     currentShotObjects.halo.scale.set(scale, scale, scale);
 }
 
 if (cameraAnimating) {
-    camera.position.lerp(cameraTargetPos, 0.08);
-    controls.target.lerp(cameraTargetLook, 0.08);
-    if (camera.position.distanceTo(cameraTargetPos) < 0.05) cameraAnimating = false;
+    camera.position.lerp(cameraTargetPos, 0.1);
+    if (camera.position.distanceTo(cameraTargetPos) < 0.03) {
+        camera.position.copy(cameraTargetPos);
+        cameraAnimating = false;
+    }
 }
 
 controls.update();
@@ -1362,7 +1733,7 @@ try {
     if (SHOTS.length === 0) {
         document.getElementById('filter-container').style.display = 'none';
         ui.emptyState.querySelector('.big').textContent = 'Нет данных о попаданиях';
-        ui.emptyState.querySelector('.small').textContent = 'в этом бою не зафиксировано ни одного пробития';
+        ui.emptyState.querySelector('.small').textContent = 'в этом бою не зафиксировано ни одного попадания';
     } else {
         populatePlayerFilters();
 

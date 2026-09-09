@@ -2,6 +2,7 @@ import { loadMapXml } from './bigworld.js?v=1';
 import { REPORT_DECODERS } from './decoders.js?v=1';
 import { parseReplay } from './mtreplay.js?v=1';
 import { round2 } from './pyround.js?v=1';
+import { buildVehicleDb } from './vehicles.js?v=1';
 
 const FINISH_REASON_NAMES = {
   1: 'уничтожение техники / истечение времени',
@@ -227,7 +228,97 @@ function nearestByClock(records, targetClock) {
   return best[1];
 }
 
-function buildShots(packets, entityInfo, tanksDb) {
+// Коды из Vehicle.showDamageFromShot. Имён в клиентских данных нет, поэтому
+// разбивка выведена сверкой 500+ попаданий с фактическим уроном и с флагами
+// Avatar.showShotResults: 4/5/6 — материал пройден, 1/3 — рикошет, 0/2 — не пробит.
+const PIERCING_EFFECT_CODES = new Set([4, 5, 6]);
+const RICOCHET_EFFECT_CODES = new Set([1, 3]);
+
+// Биты Avatar.showShotResults, подтверждённые на собственных выстрелах.
+const HIT_FLAG_PIERCED = 1 << 4;
+const HIT_FLAG_RICOCHET = 1 << 5;
+
+const MATCH_WINDOW_SEC = 0.6;
+const CRIT_WINDOW_SEC = 4.0;
+
+const EXTRA_LABELS = {
+  engineHealth: 'двигатель',
+  ammoBayHealth: 'боеукладка',
+  fuelTankHealth: 'топливный бак',
+  radioHealth: 'рация',
+  gunHealth: 'орудие',
+  turretRotatorHealth: 'поворот башни',
+  surveyingDeviceHealth: 'приборы наблюдения',
+  commanderHealth: 'командир',
+  driverHealth: 'механик-водитель',
+  radioman1Health: 'радист',
+  radioman2Health: 'радист',
+  gunner1Health: 'наводчик',
+  gunner2Health: 'наводчик',
+  loader1Health: 'заряжающий',
+  loader2Health: 'заряжающий',
+};
+
+function extraLabel(name) {
+  if (!name) return null;
+  if (EXTRA_LABELS[name]) return EXTRA_LABELS[name];
+  const track = /^(left|right)Track\d*Health$/.exec(name);
+  if (track) return track[1] === 'left' ? 'левая гусеница' : 'правая гусеница';
+  return name.replace(/Health$/, '');
+}
+
+/**
+ * Клиент присылает не отдельный крит, а текущий список повреждённых и
+ * уничтоженных модулей цели. Новым критом считается то, чего в прошлом
+ * списке этой машины не было — так переживаются и ремонт, и повтор.
+ */
+function buildCritTimeline(packets, extras) {
+  const previous = new Map();
+  const events = [];
+
+  for (const p of packets) {
+    const devices = p.decoded?.damaged_devices;
+    if (!devices) continue;
+
+    const before = previous.get(devices.vehicle_id) || { damaged: [], destroyed: [] };
+    const fresh = (current, old) => current
+      .filter((index) => !old.includes(index))
+      .map((index) => extraLabel(extras[index]))
+      .filter(Boolean);
+
+    const damaged = fresh(devices.damaged, before.damaged);
+    const destroyed = fresh(devices.destroyed, before.destroyed);
+    previous.set(devices.vehicle_id, devices);
+
+    if (damaged.length || destroyed.length) {
+      events.push({ clock: p.decoded.clock, vehicle_id: devices.vehicle_id, damaged, destroyed });
+    }
+  }
+  return events;
+}
+
+function classifyHit(hit, flags) {
+  if (hit.damage_factor > 0) return 'penetration';
+
+  if (flags !== null) {
+    if (flags & HIT_FLAG_RICOCHET) return 'ricochet';
+    if (flags & HIT_FLAG_PIERCED) return 'no_damage';
+  }
+
+  const last = hit.segments[hit.segments.length - 1];
+  if (!last) return 'no_penetration';
+  if (PIERCING_EFFECT_CODES.has(last.effect_code)) return 'no_damage';
+  if (RICOCHET_EFFECT_CODES.has(last.effect_code)) return 'ricochet';
+  return 'no_penetration';
+}
+
+/**
+ * Каждое попадание снарядом: куда пришлось, чем стреляли и почему получилось
+ * именно так. Основа — Vehicle.showDamageFromShot, он приходит и на непробития;
+ * к нему подтягиваются снятые HP, критованные модули и — для выстрелов автора
+ * реплея — точные флаги исхода.
+ */
+function buildShots(packets, entityInfo, tanksDb, vehicleDb, extras) {
   const positions = new Map();
   for (const p of packets) {
     if (p.type === 0x0a && p.decoded?.position) {
@@ -236,10 +327,6 @@ function buildShots(packets, entityInfo, tanksDb) {
       positions.get(pid).push([p.decoded.clock, p.decoded]);
     }
   }
-
-  const aimRecords = packets
-    .filter((p) => p.type === 0x1a)
-    .map((p) => [p.decoded.clock, p.decoded]);
 
   const label = (eid) => {
     const info = entityInfo.get(eid);
@@ -251,41 +338,95 @@ function buildShots(packets, entityInfo, tanksDb) {
     return [info.vehicle_type_full, readableTankName(info.vehicle_type_full, tanksDb)];
   };
 
-  const shots = [];
+  const healthEvents = [];
+  const shotResults = [];
+  const hits = [];
   for (const p of packets) {
-    if (p.type !== 0x08) continue;
-    const dmg = p.decoded?.damage_event;
-    if (!dmg || dmg.damage <= 0) continue;
-
+    if (p.type !== 0x08 || !p.decoded) continue;
     const clock = p.decoded.clock;
-    const shooterState = nearestByClock(positions.get(dmg.attacker_id), clock);
-    const victimState = nearestByClock(positions.get(dmg.victim_id), clock);
-    const aim = nearestByClock(aimRecords, clock);
+    if (p.decoded.hit) hits.push({ clock, hit: p.decoded.hit });
+    if (p.decoded.damage_event) healthEvents.push({ clock, event: p.decoded.damage_event, used: false });
+    if (p.decoded.shot_results) {
+      for (const entry of p.decoded.shot_results) shotResults.push({ clock, entry, used: false });
+    }
+  }
+  const critEvents = buildCritTimeline(packets, extras);
 
-    const [attackerRaw, attackerTank] = tankOf(dmg.attacker_id);
-    const [victimRaw, victimTank] = tankOf(dmg.victim_id);
+  const take = (list, clock, match) => {
+    let best = null;
+    let bestDelta = MATCH_WINDOW_SEC;
+    for (const row of list) {
+      if (row.used) continue;
+      const delta = Math.abs(row.clock - clock);
+      if (delta > bestDelta || !match(row)) continue;
+      best = row;
+      bestDelta = delta;
+    }
+    if (best) best.used = true;
+    return best;
+  };
+
+  const shots = [];
+  for (const { clock, hit } of hits) {
+    const shooterState = nearestByClock(positions.get(hit.attacker_id), clock);
+    const victimState = nearestByClock(positions.get(hit.victim_id), clock);
+
+    const [attackerRaw, attackerTank] = tankOf(hit.attacker_id);
+    const [victimRaw, victimTank] = tankOf(hit.victim_id);
+
+    const health = take(healthEvents, clock,
+      (row) => row.event.victim_id === hit.victim_id && row.event.attacker_id === hit.attacker_id);
+    const result = take(shotResults, clock, (row) => row.entry.vehicle_id === hit.victim_id);
+
+    const flags = result ? result.entry.flags : null;
+    const shells = vehicleDb?.[attackerRaw]?.shells || [];
+    const shell = shells.find((s) => s.effects_index === hit.effects_index) || null;
 
     shots.push({
       hit_clock: round2(clock),
-      attacker_id: dmg.attacker_id,
-      attacker_name: label(dmg.attacker_id),
+      attacker_id: hit.attacker_id,
+      attacker_name: label(hit.attacker_id),
       attacker_tank: attackerTank,
       attacker_tank_raw: attackerRaw,
-      victim_id: dmg.victim_id,
-      victim_name: label(dmg.victim_id),
+      victim_id: hit.victim_id,
+      victim_name: label(hit.victim_id),
       victim_tank: victimTank,
       victim_tank_raw: victimRaw,
-      attacker_team: entityInfo.get(dmg.attacker_id)?.team ?? null,
-      victim_team: entityInfo.get(dmg.victim_id)?.team ?? null,
-      damage: dmg.damage,
+      attacker_team: entityInfo.get(hit.attacker_id)?.team ?? null,
+      victim_team: entityInfo.get(hit.victim_id)?.team ?? null,
+      damage: health ? health.event.damage : 0,
+      is_destroyed: health ? health.event.is_destroyed : false,
+      outcome: classifyHit(hit, flags),
+      segments: hit.segments,
+      effects_index: hit.effects_index,
+      damage_factor: hit.damage_factor,
+      last_material_is_shield: hit.last_material_is_shield,
+      hit_flags: flags,
+      shell,
+      crits_damaged: [],
+      crits_destroyed: [],
       shooter_pos: shooterState?.position ?? null,
       shooter_ypr: shooterState?.hull_orientation ?? null,
       victim_pos: victimState?.position ?? null,
       victim_ypr: victimState?.hull_orientation ?? null,
-      impact_point: aim?.point_a ?? null,
     });
   }
 
+  // Крит относится к последнему попаданию по этой машине.
+  for (const event of critEvents) {
+    let owner = null;
+    for (const shot of shots) {
+      if (shot.victim_id !== event.vehicle_id) continue;
+      const delay = event.clock - shot.hit_clock;
+      if (delay < -MATCH_WINDOW_SEC || delay > CRIT_WINDOW_SEC) continue;
+      if (!owner || shot.hit_clock > owner.hit_clock) owner = shot;
+    }
+    if (!owner) continue;
+    owner.crits_damaged.push(...event.damaged);
+    owner.crits_destroyed.push(...event.destroyed);
+  }
+
+  shots.sort((a, b) => a.hit_clock - b.hit_clock);
   return shots;
 }
 
@@ -349,7 +490,23 @@ export async function buildReport(arrayBuffer, sourceName, deps) {
   const coordsByEntity = buildCoordinates(packets, [...entityInfo.keys()], startClock ?? 0.0);
   const { dealt, received } = buildDamageLists(packets, entityInfo);
   const captureTimeline = buildCaptureTimeline(packets);
-  const shots = buildShots(packets, entityInfo, tanksDb);
+
+  // Броня и боекомплект — из распакованных игровых XML. Без них отчёт
+  // остаётся рабочим, но у попаданий не будет ни толщины, ни типа снаряда.
+  const vehicleTypes = [...entityInfo.values()].map((info) => info.vehicle_type_full).filter(Boolean);
+  let vehicleDb = {};
+  let extras = [];
+  if (deps.loadGameXml) {
+    try {
+      const db = await buildVehicleDb(vehicleTypes, { loadGameXml: deps.loadGameXml });
+      vehicleDb = db.vehicles;
+      extras = db.extras;
+    } catch (err) {
+      console.warn('Не удалось прочитать данные техники:', err);
+    }
+  }
+
+  const shots = buildShots(packets, entityInfo, tanksDb, vehicleDb, extras);
 
   const playersOut = [];
   for (const eid of [...entityInfo.keys()].sort((a, b) => a - b)) {
@@ -445,5 +602,6 @@ export async function buildReport(arrayBuffer, sourceName, deps) {
     },
     players: playersOut,
     shots,
+    vehicle_db: vehicleDb,
   };
 }
