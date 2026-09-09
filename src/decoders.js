@@ -54,6 +54,144 @@ export function decodeAim(view) {
   return result;
 }
 
+const ENTITY_ID_MIN = 1_000_000;
+const ENTITY_ID_MAX = 100_000_000;
+
+const isEntityId = (id) => id >= ENTITY_ID_MIN && id <= ENTITY_ID_MAX;
+
+/**
+ * Идентификаторы клиентских методов в потоке пакетов 0x08. Значения привязаны
+ * к сборке клиента, поэтому каждый декодер дополнительно проверяет длину и
+ * содержимое хвоста — при сдвиге нумерации метод просто не опознается.
+ */
+const METHOD = {
+  SHOW_SHOOTING: 1,
+  ON_HEALTH_CHANGED: 3,
+  SHOW_DAMAGE_FROM_SHOT: 10,
+  STOP_TRACER: 29,
+  SHOW_TRACER: 38,
+  SHOW_DAMAGED_DEVICES: 59,
+  SHOW_SHOT_RESULTS: 60,
+  BATTLE_EVENT: 66,
+};
+
+/** Vehicle.onHealthChanged: сколько HP снято и чем именно. */
+function decodeHealthChanged(tail, view, victimId) {
+  if (tail.length !== 9) return null;
+
+  const newHp = view.getInt16(0, true);
+  const oldHp = view.getInt16(2, true);
+  const attackerId = view.getUint32(4, true);
+  if (oldHp <= 0 || oldHp > 5000 || newHp > oldHp) return null;
+  if (!isEntityId(victimId) || !isEntityId(attackerId)) return null;
+
+  return {
+    victim_id: victimId,
+    attacker_id: attackerId,
+    old_hp: oldHp,
+    new_hp: newHp,
+    // При добивании клиент присылает отрицательное здоровье: снятыми
+    // считаются только те HP, что у машины оставались.
+    damage: oldHp - Math.max(newHp, 0),
+    is_destroyed: newHp <= 0,
+    attack_reason: tail[8],
+  };
+}
+
+/**
+ * Vehicle.showDamageFromShot — приходит на каждое попадание, включая
+ * непробития. Точки — отрезки, которые снаряд прошёл внутри узла техники,
+ * координаты квантованы по габаритному ящику узла (0…255 на ось).
+ */
+function decodeDamageFromShot(tail, view) {
+  if (tail.length < 12) return null;
+
+  const segmentCount = tail[4];
+  if (tail.length !== 5 + segmentCount * 8 + 3) return null;
+
+  const attackerId = view.getUint32(0, true);
+  if (!isEntityId(attackerId)) return null;
+
+  const segments = [];
+  for (let i = 0; i < segmentCount; i++) {
+    const at = 5 + i * 8;
+    segments.push({
+      effect_code: tail[at],
+      component: tail[at + 1],
+      start: [tail[at + 2], tail[at + 3], tail[at + 4]],
+      end: [tail[at + 5], tail[at + 6], tail[at + 7]],
+    });
+  }
+
+  const extra = 5 + segmentCount * 8;
+  return {
+    attacker_id: attackerId,
+    segments,
+    effects_index: tail[extra],
+    damage_factor: tail[extra + 1],
+    last_material_is_shield: tail[extra + 2] !== 0,
+  };
+}
+
+/** Avatar.showShotResults — битовые флаги исхода для собственных выстрелов. */
+function decodeShotResults(tail, view) {
+  const count = tail[0];
+  if (!count || tail.length !== 1 + count * 8) return null;
+
+  const results = [];
+  for (let i = 0; i < count; i++) {
+    const vehicleId = view.getUint32(1 + i * 8, true);
+    if (!isEntityId(vehicleId)) return null;
+    results.push({ vehicle_id: vehicleId, flags: view.getUint32(5 + i * 8, true) });
+  }
+  return results;
+}
+
+/** Avatar.showOtherVehicleDamagedDevices — индексы повреждённых модулей и экипажа. */
+function decodeDamagedDevices(tail, view) {
+  if (tail.length < 6) return null;
+
+  const vehicleId = view.getUint32(0, true);
+  if (!isEntityId(vehicleId)) return null;
+
+  const damagedCount = tail[4];
+  const destroyedAt = 5 + damagedCount;
+  if (destroyedAt >= tail.length) return null;
+  const destroyedCount = tail[destroyedAt];
+  if (tail.length !== destroyedAt + 1 + destroyedCount) return null;
+
+  return {
+    vehicle_id: vehicleId,
+    damaged: Array.from(tail.subarray(5, destroyedAt)),
+    destroyed: Array.from(tail.subarray(destroyedAt + 1)),
+  };
+}
+
+/** Avatar.showTracer — старт трассера: кто стрелял, чем и с какой скоростью. */
+function decodeTracer(tail, view) {
+  if (tail.length < 50) return null;
+
+  const shooterId = view.getUint32(0, true);
+  if (!isEntityId(shooterId)) return null;
+
+  return {
+    shooter_id: shooterId,
+    shot_id: view.getUint32(4, true),
+    is_ricochet: tail[8] !== 0,
+    effects_index: tail[9],
+    start: {
+      x: round2(view.getFloat32(10, true)),
+      y: round2(view.getFloat32(14, true)),
+      z: round2(view.getFloat32(18, true)),
+    },
+    velocity: {
+      x: round2(view.getFloat32(22, true)),
+      y: round2(view.getFloat32(26, true)),
+      z: round2(view.getFloat32(30, true)),
+    },
+  };
+}
+
 export function decodeBattleEvent(view, raw) {
   const result = {
     clock: round2(view.getFloat32(8, true)),
@@ -61,14 +199,15 @@ export function decodeBattleEvent(view, raw) {
   };
   if (view.byteLength < 24) return result;
 
-  const field16 = view.getUint32(16, true);
+  const methodId = view.getUint32(16, true);
   const tailLength = view.getUint32(20, true);
-  result.field16 = field16;
-  result.tail_length = tailLength;
+  result.method_id = methodId;
 
   const tail = raw.subarray(24, 24 + tailLength);
+  if (tail.length !== tailLength) return result;
+  const tailView = new DataView(tail.buffer, tail.byteOffset, tail.byteLength);
 
-  if (tailLength === 19 && field16 === 66 && tail.length >= 3) {
+  if (methodId === METHOD.BATTLE_EVENT && tailLength === 19 && tail.length >= 3) {
     try {
       const at = findMarker(tail, PICKLE_MARKER);
       if (at !== -1) {
@@ -83,26 +222,52 @@ export function decodeBattleEvent(view, raw) {
         }
       }
     } catch {   }
+    return result;
   }
 
-  if (tailLength === 9 && tail.length >= 8) {
-    const victimId = result.player_id;
-    const tailView = new DataView(tail.buffer, tail.byteOffset, tail.byteLength);
-    const newHp = tailView.getUint16(0, true);
-    const oldHp = tailView.getUint16(2, true);
-    const attackerId = tailView.getUint32(4, true);
-    if (newHp <= 5000 && oldHp <= 5000 && newHp <= oldHp
-        && victimId >= 1_000_000 && victimId <= 100_000_000
-        && attackerId >= 1_000_000 && attackerId <= 100_000_000) {
-      result.damage_event = {
-        victim_id: victimId,
-        attacker_id: attackerId,
-        old_hp: oldHp,
-        new_hp: newHp,
-        damage: oldHp - newHp,
-        is_destroyed: newHp === 0,
-      };
-    }
+  if (methodId === METHOD.ON_HEALTH_CHANGED) {
+    const event = decodeHealthChanged(tail, tailView, result.player_id);
+    if (event) result.damage_event = event;
+    return result;
+  }
+
+  if (methodId === METHOD.SHOW_DAMAGE_FROM_SHOT) {
+    const hit = decodeDamageFromShot(tail, tailView);
+    if (hit) result.hit = { victim_id: result.player_id, ...hit };
+    return result;
+  }
+
+  if (methodId === METHOD.SHOW_SHOT_RESULTS) {
+    const results = decodeShotResults(tail, tailView);
+    if (results) result.shot_results = results;
+    return result;
+  }
+
+  if (methodId === METHOD.SHOW_DAMAGED_DEVICES) {
+    const devices = decodeDamagedDevices(tail, tailView);
+    if (devices) result.damaged_devices = devices;
+    return result;
+  }
+
+  if (methodId === METHOD.SHOW_TRACER) {
+    const tracer = decodeTracer(tail, tailView);
+    if (tracer) result.tracer = tracer;
+    return result;
+  }
+
+  if (methodId === METHOD.STOP_TRACER && tailLength === 16) {
+    result.tracer_end = {
+      shot_id: tailView.getUint32(0, true),
+      x: round2(tailView.getFloat32(4, true)),
+      y: round2(tailView.getFloat32(8, true)),
+      z: round2(tailView.getFloat32(12, true)),
+    };
+    return result;
+  }
+
+  if (methodId === METHOD.SHOW_SHOOTING && tailLength === 2 && isEntityId(result.player_id)) {
+    result.shooting = { burst: tail[0], gun_index: tail[1] };
+    return result;
   }
 
   return result;

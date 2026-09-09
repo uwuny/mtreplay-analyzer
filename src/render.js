@@ -90,6 +90,7 @@ export function renderMapPage(view, { template, tokens, hitsViewerUrl = '', resP
 export function renderHitsPage(view, { template, tokens, backToMapUrl = '', resPrefix = '../', hideInPageNav = false }) {
   const payload = escJson({
     shots: view.shots,
+    armor: view.armor,
     my_team: view.my_team,
     ally_clan: view.ally_clan,
     enemy_clan: view.enemy_clan,

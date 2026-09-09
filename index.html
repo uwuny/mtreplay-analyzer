@@ -774,6 +774,18 @@ async function loadMapBuffer(mapName) {
   return buffer;
 }
 
+// Распакованные игровые XML: броня узлов и характеристики снарядов.
+const gameXmlBuffers = new Map();
+function loadGameXml(path) {
+  if (!/^[\w-]+(\/[\w-]+)*\.xml$/.test(path)) return Promise.resolve(null);
+  if (!gameXmlBuffers.has(path)) {
+    gameXmlBuffers.set(path, fetch(`./vehicles/${path}`)
+      .then((r) => (r.ok ? r.arrayBuffer() : null))
+      .catch(() => null));
+  }
+  return gameXmlBuffers.get(path);
+}
+
 const resultOf = (r) => (r.winner_team === 0 ? 'ничья'
   : r.winner_team === r.creator_team ? 'победа' : 'поражение');
 
@@ -989,7 +1001,7 @@ async function processFiles(files) {
     await new Promise((r) => setTimeout(r, 0));
 
     try {
-      const report = await buildReport(await fresh[i].arrayBuffer(), fresh[i].name, { tanksDb, loadMapBuffer });
+      const report = await buildReport(await fresh[i].arrayBuffer(), fresh[i].name, { tanksDb, loadMapBuffer, loadGameXml });
       const summary = makeSummary(report);
       await putBattle(fresh[i].name, summary, report);
       rows.push({ ...summary, id: fresh[i].name });

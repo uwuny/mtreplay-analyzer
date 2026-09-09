@@ -63,6 +63,41 @@ export function packedValue(bytes, view, names, entry) {
   return null;
 }
 
+export function packedOwnValue(bytes, view, entry) {
+  const { start } = entry;
+  const count = view.getUint16(start, true);
+  const ownEnd = view.getUint32(start + 2, true) & 0x0fffffff;
+  const dataAt = start + 6 + count * 6;
+  if (!ownEnd) return null;
+
+  let value = 0n;
+  for (let i = ownEnd - 1; i >= 0; i--) value = (value << 8n) | BigInt(bytes[dataAt + i]);
+  if (bytes[dataAt + ownEnd - 1] & 0x80) value -= 1n << BigInt(8 * ownEnd);
+  return Number(value);
+}
+
+export function openPacked(buffer) {
+  if (!buffer) return null;
+  const bytes = new Uint8Array(buffer);
+  const view = new DataView(buffer);
+  const decoded = decodePacked(bytes, view);
+  if (decoded === null) return null;
+  return {
+    bytes,
+    view,
+    names: decoded.names,
+    root: packedSection(view, decoded.names, decoded.rootAt),
+  };
+}
+
+export function sectionOf(file, section, name) {
+  return packedPick(file.bytes, file.view, file.names, section, name);
+}
+
+export function valueOf(file, entry) {
+  return packedValue(file.bytes, file.view, file.names, entry);
+}
+
 export function packedPick(bytes, view, names, section, name) {
   if (!Array.isArray(section)) return null;
   const entry = section.find((item) => item.name === name);
