@@ -3,6 +3,7 @@ import { openPacked, packedOwnValue, sectionOf, valueOf } from './bigworld.js?v=
 const SHELL_KINDS = {
   ARMOR_PIERCING: { short: 'ББ', full: 'бронебойный' },
   ARMOR_PIERCING_CR: { short: 'БП', full: 'подкалиберный' },
+  ARMOR_PIERCING_FSDS: { short: 'БОПС', full: 'бронебойный оперённый подкалиберный' },
   HOLLOW_CHARGE: { short: 'КС', full: 'кумулятивный' },
   HIGH_EXPLOSIVE: { short: 'ОФ', full: 'осколочно-фугасный' },
   ARMOR_PIERCING_HE: { short: 'ББ-ОФ', full: 'бронебойно-фугасный' },
@@ -23,10 +24,11 @@ function num(value) {
   return null;
 }
 
-function firstNum(value) {
-  if (Array.isArray(value) && typeof value[0] === 'number') return value[0];
-  if (typeof value === 'string') return num(value.trim().split(/\s+/)[0]);
-  return num(value);
+function numbers(value) {
+  if (Array.isArray(value)) return value.filter((item) => typeof item === 'number');
+  if (typeof value === 'string') return value.trim().split(/\s+/).map(num).filter((item) => item !== null);
+  const single = num(value);
+  return single === null ? [] : [single];
 }
 
 function isSection(value) {
@@ -68,9 +70,12 @@ function collisionKey(file, node) {
 }
 
 function readShot(file, shotSection) {
+  // Бронепробитие задано парой «на 100 м, на 500 м».
+  const [near = null, far = near] = numbers(sectionOf(file, shotSection, 'piercingPower'));
   return {
     speed: num(sectionOf(file, shotSection, 'speed')),
-    piercing: firstNum(sectionOf(file, shotSection, 'piercingPower')),
+    piercing: near,
+    piercing_far: far,
     max_distance: num(sectionOf(file, shotSection, 'maxDistance')),
   };
 }
@@ -78,8 +83,12 @@ function readShot(file, shotSection) {
 function readShell(file, shellSection) {
   const damage = sectionOf(file, shellSection, 'damage');
   const kind = sectionOf(file, shellSection, 'kind');
+  const icon = sectionOf(file, shellSection, 'icon');
   return {
     kind: typeof kind === 'string' ? kind : null,
+    // Вид у специального снаряда тот же, что у обычного (ARMOR_PIERCING_CR и т. п.),
+    // отличает его только иконка: ap_premium, ap_cr_premium, hc_premium…
+    premium: typeof icon === 'string' && icon.endsWith('_premium'),
     caliber: num(sectionOf(file, shellSection, 'caliber')),
     damage: isSection(damage) ? num(sectionOf(file, damage, 'armor')) : null,
     devices_damage: isSection(damage) ? num(sectionOf(file, damage, 'devices')) : null,
@@ -105,6 +114,7 @@ function collectGuns(file) {
 const EFFECT_SUFFIX = {
   ARMOR_PIERCING: 'ArmorPiercing',
   ARMOR_PIERCING_CR: 'APCR',
+  ARMOR_PIERCING_FSDS: 'APFSDS',
   HOLLOW_CHARGE: 'HollowCharge',
   HIGH_EXPLOSIVE: 'HighExplosive',
 };
@@ -205,6 +215,7 @@ function readShells(file, sharedGuns, shells, effectIndexes, classByCaliber) {
       || classByCaliber.get(loaded[0]?.caliber)
       || null;
 
+    const own = new Map();
     for (const shell of loaded) {
       let index = effectIndexes.get(shell.effects);
       if (index === undefined && gunClass && EFFECT_SUFFIX[shell.kind]) {
@@ -214,12 +225,49 @@ function readShells(file, sharedGuns, shells, effectIndexes, classByCaliber) {
       if (index === undefined) continue;
 
       shell.effects_index = index;
-      // Верхняя пушка идёт в XML последней — она и должна победить.
-      byEffect.set(index, shell);
+      if (!own.has(index)) own.set(index, []);
+      own.get(index).push(shell);
     }
+    // Верхняя пушка идёт в XML последней — она и должна победить. Снаряды
+    // одного вида у пушки делят запись эффекта, поэтому остаются все.
+    for (const [index, list] of own) byEffect.set(index, list);
   }
 
-  return [...byEffect.values()].sort((a, b) => a.effects_index - b.effects_index);
+  return [...byEffect.values()].flat().sort((a, b) => a.effects_index - b.effects_index);
+}
+
+/**
+ * Колёса колёсной техники: у каждого своя коллизия, и в реплее попадание
+ * в колесо приходит отдельным узлом с номером 4 + index. Катки гусеничных
+ * машин коллизии не имеют и сюда не попадают.
+ */
+function readWheels(file) {
+  const variants = sectionOf(file, file.root, 'chassis') || [];
+  const chassis = variants.length ? valueOf(file, variants[variants.length - 1]) : null;
+
+  const wheels = [];
+  for (const entry of sectionOf(file, chassis, 'wheels') || []) {
+    if (entry.name !== 'wheel') continue;
+    const wheel = valueOf(file, entry);
+    if (!isSection(wheel) || !isSection(sectionOf(file, wheel, 'hitTester'))) continue;
+
+    const geometry = sectionOf(file, wheel, 'geometry');
+    const armor = sectionOf(file, wheel, 'armor');
+    const position = numbers(sectionOf(file, wheel, 'wheelPos'));
+    const index = num(sectionOf(file, wheel, 'index'));
+    const radius = num(sectionOf(file, geometry, 'radius'));
+    const width = num(sectionOf(file, geometry, 'width'));
+    if (index === null || !radius || !width || position.length < 3) continue;
+
+    wheels.push({
+      index,
+      radius,
+      width,
+      position: position.slice(0, 3),
+      mm: num(sectionOf(file, armor, 'wheel')),
+    });
+  }
+  return wheels;
 }
 
 function splitVehicleType(vehicleType) {
@@ -273,6 +321,7 @@ export async function buildVehicleDb(vehicleTypes, { loadGameXml }) {
     const { guns, shells, classByCaliber } = await nationFiles(parts.nation);
     vehicles[vehicleType] = {
       armor: readArmor(file),
+      wheels: readWheels(file),
       shells: readShells(file, guns, shells, effectIndexes, classByCaliber),
     };
   }

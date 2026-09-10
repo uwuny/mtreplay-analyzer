@@ -265,7 +265,7 @@ backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
 box-shadow: var(--glass-shadow);
 display: none;
 }
-#panel .row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+#panel .row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 10px; }
 #panel .row:last-child { margin-bottom: 0; }
 #panel > .row:first-child {
 padding-bottom: 12px;
@@ -299,27 +299,29 @@ white-space: nowrap;
 .outcome-no_damage   { color: #c8f2d4; background: var(--color-accent-dim); }
 
 #panel .row.row-outcome { align-items: center; }
-#panel .plate-name { font-family: var(--font-mono); font-size: 11px; color: var(--text-secondary); }
 
-#panel .path {
-margin: 10px 0 0 0;
-display: flex;
-flex-direction: column;
-gap: 5px;
-}
-#panel .path:empty { display: none; }
-#panel .path-step {
-display: grid;
-grid-template-columns: auto 1fr auto;
+#panel .shell-value {
+display: inline-flex;
 align-items: baseline;
 gap: 8px;
-font-family: var(--font-mono);
-font-size: 11px;
-color: var(--text-secondary);
+white-space: nowrap;
 }
-#panel .path-step .step-idx { color: var(--text-dim); }
-#panel .path-step .step-plate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-#panel .path-step .step-mm { color: var(--text); font-variant-numeric: tabular-nums; }
+#panel .shell-kind {
+--shell-special-rgb: 242 195 91;
+font-size: 11px;
+font-weight: 600;
+padding: 2px 7px;
+border-radius: var(--radius-sm);
+color: var(--text-secondary);
+background: rgb(255 255 255 / 6%);
+}
+#panel .shell-kind:empty { display: none; }
+#panel .shell-kind.special {
+color: rgb(var(--shell-special-rgb));
+background: rgb(var(--shell-special-rgb) / 16%);
+box-shadow: inset 0 0 0 1px rgb(var(--shell-special-rgb) / 30%);
+}
+#panel .value[title] { cursor: help; }
 
 #panel .crits {
 margin-top: 10px;
@@ -538,6 +540,7 @@ font-family: var(--font-mono);
 #panel .value.dmg { font-size: 16px; }
 #panel .entity-name { font-size: 12px; }
 #panel .entity-tank { display: none; }
+#panel .pen-word { display: none; }
 
 #shotlist-container {
     right: 10px; bottom: 10px;
@@ -617,10 +620,9 @@ font-family: var(--font-mono);
     <span class="outcome-tag" id="v-outcome"></span>
 </div>
 <hr>
-<div class="row"><span class="label">Снаряд</span><span class="value" id="v-shell">—</span></div>
-<div class="row"><span class="label">Броня</span><span class="value" id="v-armor">—</span></div>
-<div class="row"><span class="label">Угол / привед.</span><span class="value" id="v-angle">—</span></div>
-<div class="path" id="v-path"></div>
+<div class="row"><span class="label">Снаряд</span><span class="value shell-value"><span class="shell-kind" id="v-shell-kind"></span><span id="v-shell-pen">—</span></span></div>
+<div class="row"><span class="label">Примерное пробитие</span><span class="value" id="v-pen">—</span></div>
+<div class="row"><span class="label">Бронирование</span><span class="value" id="v-armor">—</span></div>
 <div class="crits" id="v-crits"></div>
 <hr>
 <div class="row row-meta"><span class="label">Расстояние</span><span class="value" id="v-dist">—</span></div>
@@ -673,10 +675,10 @@ victimName: document.getElementById('v-victim-name'),
 victimTank: document.getElementById('v-victim-tank'),
 dmg: document.getElementById('v-dmg'),
 outcome: document.getElementById('v-outcome'),
-shell: document.getElementById('v-shell'),
+shellKind: document.getElementById('v-shell-kind'),
+shellPen: document.getElementById('v-shell-pen'),
+pen: document.getElementById('v-pen'),
 armor: document.getElementById('v-armor'),
-angle: document.getElementById('v-angle'),
-path: document.getElementById('v-path'),
 crits: document.getElementById('v-crits'),
 dist: document.getElementById('v-dist'),
 idx: document.getElementById('v-idx'),
@@ -775,6 +777,7 @@ scene.add(floor);
 const BATTLE_DATA = {{DATA_PAYLOAD}};
 
 const ARMOR_DB = BATTLE_DATA.armor || {};
+const WHEELS_DB = BATTLE_DATA.wheels || {};
 const MY_TEAM = parseInt(BATTLE_DATA.my_team, 10) || 1;
 const ALLY_CLAN_TAG = String(BATTLE_DATA.ally_clan || '').trim();
 const ENEMY_CLAN_TAG = String(BATTLE_DATA.enemy_clan || '').trim();
@@ -995,17 +998,50 @@ no_damage:      { label: 'без урона',  color: 0x45d66f },
 };
 
 const SHELL_KINDS = {
-ARMOR_PIERCING:    'ББ',
-ARMOR_PIERCING_CR: 'БП',
-HOLLOW_CHARGE:     'КС',
-HIGH_EXPLOSIVE:    'ОФ',
-ARMOR_PIERCING_HE: 'ББ-ОФ',
+ARMOR_PIERCING:      'ББ',
+ARMOR_PIERCING_CR:   'БП',
+ARMOR_PIERCING_FSDS: 'БОПС',
+HOLLOW_CHARGE:       'КС',
+HIGH_EXPLOSIVE:      'ОФ',
+ARMOR_PIERCING_HE:   'ББ-ОФ',
+FLAME:               'ОС',
+SMOKE:               'ДС',
+};
+
+/**
+ * Правила пробития по виду снаряда: нормализация в градусах, угол встречи,
+ * с которого рикошет, падает ли пробитие с расстоянием и действует ли правило
+ * трёх калибров. Фугасные, огнесмесь и НУРС не нормализуются и не рикошетят.
+ */
+const SHELL_RULES = {
+ARMOR_PIERCING:      { normalization: 5, ricochet: 70, falloff: true,  overmatch: true },
+ARMOR_PIERCING_CR:   { normalization: 2, ricochet: 70, falloff: true,  overmatch: true },
+ARMOR_PIERCING_FSDS: { normalization: 2, ricochet: 70, falloff: true,  overmatch: true },
+HOLLOW_CHARGE:       { normalization: 0, ricochet: 85, falloff: false, overmatch: false },
+};
+const NO_SHELL_RULES = { normalization: 0, ricochet: null, falloff: false, overmatch: false };
+
+// Режимы, где специальные снаряды пробивают слабее: тип боя → множитель пробития.
+const SPECIAL_SHELL_PIERCING = {
+20: { factor: 0.95, where: 'в Вылазках' },
+};
+const BATTLE_TYPE = Number(BATTLE_DATA.battle_type) || null;
+
+/**
+ * Материалы из vehicle_common.xml: броня учитывает угол встречи и калибр,
+ * гусеницы, приборы наблюдения и ствол считаются по номинальной толщине.
+ */
+const ARMOR_MATERIAL = { useHitAngle: true, mayRicochet: true, checkCaliber: true };
+const DEVICE_MATERIAL = { useHitAngle: false, mayRicochet: false, checkCaliber: false };
+const MATERIAL_RULES = {
+gun:       { useHitAngle: false, mayRicochet: true, checkCaliber: false },
+gunBreech: { useHitAngle: true,  mayRicochet: true, checkCaliber: false },
 };
 
 const WORLD_UP = new THREE.Vector3(0, 1, 0);
-const CAMERA_FIT = 1.55;
+const CAMERA_FIT = 0.775;
 const CAMERA_SHIFT_LEFT = 0.34;
-const CAMERA_SHIFT_UP = 0.38;
+const CAMERA_SHIFT_UP = 0.24;
 const CAMERA_MIN_HEIGHT = 0.6;
 
 function outcomeOf(shot) {
@@ -1024,20 +1060,38 @@ const parsed = /^(.+?)_havok_s_(.+)_(\d+)$/.exec(String(name || ''));
 return parsed ? { component: parsed[1], material: parsed[2] } : null;
 }
 
+// Визуальные модели (EBR 105, Concept No. 5) на плиты не разбиты: узел
+// узнаётся по имени объекта, а толщину брони в точке взять неоткуда.
+const VISUAL_PARTS = [
+[/^hull/i, 'Hull'],
+[/^turret/i, 'Turret'],
+[/^gun/i, 'Gun'],
+[/chass|wheel|track/i, 'Chassis'],
+];
+
+function parseVisualName(name) {
+const match = VISUAL_PARTS.find(([pattern]) => pattern.test(String(name || '')));
+return match ? { component: match[1], material: null } : null;
+}
+
 /**
- * Узлы коллизионной модели с их габаритными ящиками: именно по этим ящикам
- * реплей квантует точки попадания — 0…255 на каждую ось.
+ * Узлы модели с их габаритными ящиками: именно по этим ящикам реплей квантует
+ * точки попадания — 0…255 на каждую ось. У визуальной модели ящик лишь близок
+ * к коллизионному, поэтому попадания на ней приблизительные.
  */
 function buildPartIndex(tank) {
 const parts = new Map();
 tank.traverse(mesh => {
     if (!mesh.isMesh) return;
-    const parsed = parsePartName(mesh.name) || parsePartName(mesh.parent && mesh.parent.name);
+    const collision = parsePartName(mesh.name) || parsePartName(mesh.parent && mesh.parent.name);
+    const parsed = collision || parseVisualName(mesh.name);
     if (!parsed) return;
 
     mesh.userData.materialName = parsed.material;
     if (!parts.has(parsed.component)) {
-        parts.set(parsed.component, { meshes: [], box: new THREE.Box3() });
+        parts.set(parsed.component, {
+            name: parsed.component, meshes: [], box: new THREE.Box3(), approximate: !collision,
+        });
     }
     const part = parts.get(parsed.component);
     part.meshes.push(mesh);
@@ -1055,12 +1109,17 @@ for (const name of parts.keys()) if (name.startsWith(kind)) return name;
 return null;
 }
 
+/**
+ * Точки реплея заданы в осях игры, где перед машины — +Z, а модели .obj
+ * выгружены передом в −Z (ствол уходит в минус). Ось Z поэтому отражается,
+ * иначе попадание в лоб рисуется в корме.
+ */
 function decodePoint(box, bytes) {
 const size = box.getSize(new THREE.Vector3());
 return new THREE.Vector3(
     box.min.x + (bytes[0] / 255) * size.x,
     box.min.y + (bytes[1] / 255) * size.y,
-    box.min.z + (bytes[2] / 255) * size.z,
+    box.max.z - (bytes[2] / 255) * size.z,
 );
 }
 
@@ -1077,9 +1136,15 @@ if (!table) {
 return (table && table[materialName]) || null;
 }
 
-function describePlate(contact, direction, componentName, tankRaw) {
-const materialName = contact.object.userData.materialName;
-const armor = plateOf(tankRaw, componentName, materialName);
+function materialRules(materialName) {
+if (/^armor_\d+$/.test(materialName || '')) return ARMOR_MATERIAL;
+return MATERIAL_RULES[materialName] || DEVICE_MATERIAL;
+}
+
+function describePlate(contact, direction, part, tankRaw) {
+const wheel = part.wheel || null;
+const materialName = wheel ? 'wheel' : contact.object.userData.materialName;
+const armor = wheel ? { mm: wheel.mm } : plateOf(tankRaw, part.name, materialName);
 const normal = contact.face
     ? contact.face.normal.clone()
         .applyNormalMatrix(new THREE.Matrix3().getNormalMatrix(contact.object.matrixWorld)).normalize()
@@ -1088,58 +1153,90 @@ const cosine = normal ? Math.min(1, Math.abs(direction.dot(normal))) : null;
 
 return {
     point: contact.point.clone(),
-    mesh: contact.object,
+    // У визуальной модели объект — весь узел целиком, подсвечивать его нечего.
+    mesh: part.approximate ? null : contact.object,
     material: materialName,
-    label: materialLabel(materialName),
-    // Модули (гусеница, приборы, казённик) собственной брони не имеют.
-    isDevice: !/^armor_\d+$/.test(materialName || ''),
-    mm: armor ? armor.mm : null,
-    // vehicleDamageFactor 0 — экран: снаряд его проходит, но урона он не наносит.
-    isScreen: Boolean(armor && armor.df === 0),
+    label: wheel ? 'колесо' : materialLabel(materialName),
+    rules: materialRules(materialName),
+    mm: armor ? (armor.mm ?? null) : null,
     angle: cosine === null ? null : THREE.MathUtils.radToDeg(Math.acos(cosine)),
-    effective: (armor && armor.mm && cosine && cosine > 0.02) ? armor.mm / cosine : null,
 };
 }
 
-/**
- * Отрезок попадания: где снаряд коснулся узла и во что упёрся. Первая
- * пересечённая поверхность — точка попадания, последняя перед точкой
- * остановки — та броня, которая исход и решила: наружу часто выходят
- * тонкие крылья и экраны, а держит плита за ними.
- */
-function analyseSegment(segment, parts, tank, tankRaw) {
-const componentName = componentNameFor(parts, segment.component);
-const part = componentName ? parts.get(componentName) : null;
-if (!part || part.box.isEmpty()) return null;
+// Отрезок попадания в реплее — метр вдоль полёта снаряда с серединой в точке
+// попадания. Внешний конец часто обрезан габаритом узла, внутренний — нет.
+const SEGMENT_HALF = 0.5;
+const CONTACT_TOLERANCE = 0.35;
+// Попадание в колесо реплей присылает узлом 4 + номер колеса из XML.
+const WHEEL_COMPONENT_BASE = 4;
 
-const enter = tank.localToWorld(decodePoint(part.box, segment.start));
+/**
+ * Узел колеса. Точки квантованы по цилиндру колеса (ось вдоль X), он берётся
+ * из XML; поверхность для луча — шины ходовой, общие на весь борт.
+ */
+function wheelPart(parts, tankRaw, index) {
+const key = `Wheel_${index}`;
+if (parts.has(key)) return parts.get(key);
+
+const wheel = (WHEELS_DB[tankRaw] || []).find(item => item.index === index);
+const chassis = parts.get(componentNameFor(parts, 0));
+if (!wheel || !chassis) return null;
+
+// Позиция колеса задана в осях игры, а у моделей ось Z отражена.
+const [x, y, z] = wheel.position;
+const box = new THREE.Box3(
+    new THREE.Vector3(x - wheel.width / 2, y - wheel.radius, -z - wheel.radius),
+    new THREE.Vector3(x + wheel.width / 2, y + wheel.radius, -z + wheel.radius),
+);
+const part = { name: key, meshes: chassis.meshes, box, approximate: true, wheel };
+parts.set(key, part);
+return part;
+}
+
+/** Где снаряд попал в узел, куда летел и какую плиту встретил. */
+function analyseSegment(segment, parts, tank, tankRaw) {
+const part = segment.component >= WHEEL_COMPONENT_BASE
+    ? wheelPart(parts, tankRaw, segment.component - WHEEL_COMPONENT_BASE)
+    : parts.get(componentNameFor(parts, segment.component));
+if (!part || part.box.isEmpty()) return null;
+const componentName = part.name;
+
+const start = tank.localToWorld(decodePoint(part.box, segment.start));
 const exit = tank.localToWorld(decodePoint(part.box, segment.end));
 
-const direction = exit.clone().sub(enter);
-const travel = direction.length();
-if (travel < 1e-4) return { componentName, enter, exit, direction: null, contact: null, plate: null };
+const direction = exit.clone().sub(start);
+if (direction.lengthSq() < 1e-8) {
+    return { segment, componentName, hit: start, exit, direction: null, contact: null, plate: null };
+}
 direction.normalize();
 
-const result = { componentName, enter, exit, direction, contact: null, plate: null };
+// У колеса и визуальной модели ящик мал или неточен, и обрезанными часто
+// оказываются оба конца отрезка — точнее тогда его середина.
+const hit = part.approximate
+    ? start.clone().lerp(exit, 0.5)
+    : exit.clone().addScaledVector(direction, -SEGMENT_HALF);
+const result = { segment, componentName, hit, exit, direction, contact: null, plate: null };
 
-// Луч пускается заведомо снаружи машины, чтобы первым пересечением была
-// внешняя поверхность, а не случайная грань внутри узла.
-const APPROACH = travel + 3;
+// Луч проходит узел насквозь; поражённая плита — пересечение, ближайшее
+// к точке попадания, а не первое или последнее по ходу луча. Шины борта —
+// один меш, поэтому для колеса берутся только пересечения в его цилиндре.
+const APPROACH = 3;
 const raycaster = new THREE.Raycaster(
-    exit.clone().addScaledVector(direction, -APPROACH), direction, 0, APPROACH + 0.6);
-const contacts = raycaster.intersectObjects(part.meshes, false);
-if (!contacts.length) return result;
-
-let stopped = null;
-for (const contact of contacts) {
-    if (contact.distance <= APPROACH + 0.02) stopped = contact;
+    hit.clone().addScaledVector(direction, -APPROACH), direction, 0, APPROACH * 2);
+const wheelBox = part.wheel ? part.box.clone().expandByScalar(0.05).applyMatrix4(tank.matrixWorld) : null;
+let nearest = null;
+let nearestOffset = CONTACT_TOLERANCE;
+for (const contact of raycaster.intersectObjects(part.meshes, false)) {
+    if (wheelBox && !wheelBox.containsPoint(contact.point)) continue;
+    const offset = Math.abs(contact.distance - APPROACH);
+    if (offset > nearestOffset) continue;
+    nearest = contact;
+    nearestOffset = offset;
 }
+if (!nearest) return result;
 
-result.contact = contacts[0].point.clone();
-result.plate = describePlate(stopped || contacts[0], direction, componentName, tankRaw);
-if (stopped && stopped !== contacts[0]) {
-    result.entryPlate = describePlate(contacts[0], direction, componentName, tankRaw);
-}
+result.contact = nearest.point.clone();
+result.plate = describePlate(nearest, direction, part, tankRaw);
 return result;
 }
 
@@ -1211,28 +1308,68 @@ mesh.material.emissive = new THREE.Color(color);
 mesh.material.emissiveIntensity = 0.18;
 }
 
-/** Камера смотрит в точку попадания со стороны стрелка — чуть левее и выше. */
-function aimCameraAtImpact(tank, impactPoint, direction) {
+/**
+ * Камера смотрит на машину со стороны стрелка — чуть левее и выше: попадание
+ * оказывается на обращённой к зрителю стороне, а сама машина — в центре кадра.
+ */
+function aimCamera(tank, parts, direction) {
 const back = direction ? direction.clone().negate() : new THREE.Vector3(0, 0.4, 1).normalize();
 const left = new THREE.Vector3().crossVectors(back, WORLD_UP);
 if (left.lengthSq() < 1e-4) left.set(1, 0, 0);
 left.normalize();
 
-// Отход считается от габаритов самой машины, чтобы она целиком влезала в кадр.
+// Центр кадра — корпус с башней: длинный ствол увёл бы машину в сторону.
+const body = new THREE.Box3();
+for (const [name, part] of parts) if (!name.startsWith('Gun')) body.union(part.box);
+const center = body.isEmpty()
+    ? new THREE.Box3().setFromObject(tank).getCenter(new THREE.Vector3())
+    : tank.localToWorld(body.getCenter(new THREE.Vector3()));
+
+// Отход считается от габаритов самой машины.
 const bounds = new THREE.Box3().setFromObject(tank).getBoundingSphere(new THREE.Sphere());
 const distance = CAMERA_FIT * bounds.radius / Math.sin(THREE.MathUtils.degToRad(camera.fov) / 2);
 
-const eye = impactPoint.clone()
+const eye = center.clone()
     .addScaledVector(back, distance)
     .addScaledVector(left, distance * CAMERA_SHIFT_LEFT)
     .addScaledVector(WORLD_UP, distance * CAMERA_SHIFT_UP);
 eye.y = Math.max(eye.y, CAMERA_MIN_HEIGHT);
 
-// Точка прицеливания ставится сразу — так попадание всегда в центре кадра,
-// а камера уже плавно доезжает до своей позиции.
-controls.target.copy(impactPoint);
+// Точка прицеливания ставится сразу, а камера плавно доезжает до своей позиции.
+controls.target.copy(center);
 cameraTargetPos.copy(eye);
 cameraAnimating = true;
+}
+
+// Насколько вглубь за ходовой ищется плита корпуса.
+const BEHIND_CHASSIS_REACH = 2;
+
+/**
+ * Урон нанесён, а в реплее только сегмент ходовой или колеса: снаряд прошёл
+ * гусеницу либо колесо и пробил корпус за ними, но корпус реплей не прислал.
+ * Плита ищется продолжением того же луча — иначе бронирование свелось бы
+ * к толщине гусеницы или колеса.
+ */
+function plateBehindChassis(analysed, parts, tankRaw) {
+const last = analysed[analysed.length - 1];
+const component = last ? last.segment.component : null;
+if (!last || !last.direction || (component !== 0 && component < WHEEL_COMPONENT_BASE)) return null;
+const hull = parts.get(componentNameFor(parts, 1));
+if (!hull) return null;
+
+const raycaster = new THREE.Raycaster((last.contact || last.hit).clone(), last.direction, 0, BEHIND_CHASSIS_REACH);
+const [contact] = raycaster.intersectObjects(hull.meshes, false);
+if (!contact) return null;
+
+return {
+    segment: { effect_code: null, component: 1 },
+    componentName: hull.name,
+    hit: contact.point.clone(),
+    exit: contact.point.clone().addScaledVector(last.direction, SEGMENT_HALF),
+    direction: last.direction,
+    contact: contact.point.clone(),
+    plate: describePlate(contact, last.direction, hull, tankRaw),
+};
 }
 
 async function buildShotScene(shot, token) {
@@ -1263,10 +1400,14 @@ for (const segment of shot.segments || []) {
     const info = analyseSegment(segment, parts, tank, shot.victim_tank_raw);
     if (info) analysed.push(info);
 }
+if (shot.outcome === 'penetration') {
+    const behind = plateBehindChassis(analysed, parts, shot.victim_tank_raw);
+    if (behind) analysed.push(behind);
+}
 
 const primary = analysed[0] || null;
 const impactPoint = primary
-    ? (primary.contact ? primary.contact.clone() : primary.enter.clone())
+    ? (primary.contact || primary.hit).clone()
     : new THREE.Vector3(0, footOffsetY + 1.0, 0);
 const shellDirection = (analysed.find(info => info.direction) || {}).direction || null;
 
@@ -1275,19 +1416,17 @@ if (shellDirection) addTracer(group, impactPoint, shellDirection.clone(), outcom
 
 const innerPath = [];
 for (const info of analysed) {
-    innerPath.push(info.contact || info.enter, info.exit);
+    innerPath.push(info.contact || info.hit, info.exit);
     if (info.plate) highlightPlate(info.plate.mesh, outcome.color);
-    if (info.entryPlate) highlightPlate(info.entryPlate.mesh, outcome.color);
 }
 addInnerPath(group, innerPath, outcome.color);
 
 scene.add(group);
 currentShotObjects = { group, tank, halo: group.children.find(c => c.userData.pulse) || null };
 
-aimCameraAtImpact(tank, impactPoint, shellDirection);
+aimCamera(tank, parts, shellDirection);
 
-const worldDist = vecOf(shot.shooter_pos).distanceTo(vecOf(shot.victim_pos));
-return { worldDist, analysed };
+return { analysed };
 }
 
 function fmtClock(seconds) {
@@ -1553,7 +1692,7 @@ const myToken = ++loadToken;
 const built = await buildShotScene(shot, myToken);
 
 if (!built || myToken !== loadToken) return;
-const { worldDist } = built;
+const distance = shotDistance(shot);
 
 ui.clock.textContent = fmtClock(shot.hit_clock);
 ui.attackerName.textContent = entityNameOf(shot, 'attacker');
@@ -1564,8 +1703,8 @@ ui.victimName.textContent = entityNameOf(shot, 'victim');
 ui.victimName.classList.toggle('team-ally', isAllyTeam(shot.victim_team));
 ui.victimName.classList.toggle('team-enemy', !isAllyTeam(shot.victim_team));
 ui.victimTank.textContent = entityTankOf(shot, 'victim');
-fillShotDetails(shot, built.analysed);
-ui.dist.textContent = worldDist.toFixed(1) + ' м';
+fillShotDetails(shot, built.analysed, distance);
+ui.dist.textContent = distance === null ? '—' : distance.toFixed(1) + ' м';
 ui.idx.textContent = `${currentIndex + 1} / ${playerShots.length}`;
 updateHash();
 
@@ -1579,24 +1718,118 @@ document.querySelectorAll('.shot-item').forEach((el, idx) => {
 }
 
 const mm = (value) => `${Math.round(value)} мм`;
+const degrees = (value) => `${Number(value.toFixed(1))}°`;
 
-function shellSummary(shell) {
-if (!shell) return '—';
-const kind = SHELL_KINDS[shell.kind] || shell.kind || '?';
-const parts = [kind];
-if (shell.caliber) parts.push(`${shell.caliber} мм`);
-if (shell.piercing) parts.push(`пр. ${Math.round(shell.piercing)}`);
-return parts.join(' · ');
+// Код эффекта сегмента, означающий рикошет.
+const RICOCHET_EFFECT_CODE = 1;
+
+/** Сколько пролетел снаряд: от точки вылета трассера, иначе от позиции стрелка. */
+function shotDistance(shot) {
+if (Number.isFinite(shot.shot_distance)) return shot.shot_distance;
+if (!shot.shooter_pos || !shot.victim_pos) return null;
+return vecOf(shot.shooter_pos).distanceTo(vecOf(shot.victim_pos));
 }
 
-function plateSummary(plate) {
-if (!plate) return '—';
-if (plate.mm === null) return plate.isDevice ? `${plate.label} · модуль` : plate.label;
-const suffix = plate.isScreen ? ' · экран' : '';
-return `${plate.label} · ${mm(plate.mm)}${suffix}`;
+function shellRules(shell) {
+return (shell && SHELL_RULES[shell.kind]) || NO_SHELL_RULES;
 }
 
-function fillShotDetails(shot, analysed) {
+/** Ослабление специального снаряда в режиме этого боя, если оно там есть. */
+function specialPenalty(shell) {
+return (shell && shell.premium && SPECIAL_SHELL_PIERCING[BATTLE_TYPE]) || null;
+}
+
+/** Табличное пробитие на 100 и на 500 м с поправкой режима. */
+function shellPiercing(shell) {
+if (!shell || !shell.piercing) return null;
+const factor = specialPenalty(shell)?.factor ?? 1;
+return { near: shell.piercing * factor, far: (shell.piercing_far ?? shell.piercing) * factor };
+}
+
+/**
+ * Пробитие на дистанции без учёта разброса: до 100 м — табличное, дальше
+ * у бронебойных и подкалиберных линейно идёт к значению на 500 м.
+ */
+function piercingAt(shell, distance) {
+const piercing = shellPiercing(shell);
+if (!piercing) return null;
+if (!shellRules(shell).falloff || distance === null || distance <= 100) return piercing.near;
+return Math.max(0, piercing.near + (piercing.far - piercing.near) * (distance - 100) / 400);
+}
+
+/**
+ * Приведённая толщина слоя. Нормализация доворачивает снаряд к нормали и по
+ * правилу двух калибров растёт в 1,4 × калибр / (2 × толщина) раза. Рикошет
+ * решается по углу до нормализации, и его нет, если калибр больше толщины втрое.
+ */
+function layerArmor(plate, shell) {
+if (!plate || plate.mm === null) return null;
+const { useHitAngle, mayRicochet, checkCaliber } = plate.rules;
+if (!useHitAngle || plate.angle === null || plate.mm <= 0) {
+    return { mm: plate.mm, normalization: 0, ricochet: false };
+}
+
+const rules = shellRules(shell);
+const caliber = (shell && shell.caliber) || 0;
+let normalization = rules.normalization;
+if (normalization && checkCaliber && caliber > 2 * plate.mm) {
+    normalization *= 1.4 * caliber / (2 * plate.mm);
+}
+const angle = Math.max(0, plate.angle - normalization);
+const overmatched = rules.overmatch && checkCaliber && caliber > 3 * plate.mm;
+
+return {
+    mm: plate.mm / Math.max(Math.cos(THREE.MathUtils.degToRad(angle)), 0.001),
+    normalization,
+    ricochet: mayRicochet && rules.ricochet !== null && plate.angle >= rules.ricochet && !overmatched,
+};
+}
+
+/**
+ * Бронирование на пути снаряда — сумма приведённых толщин: экран или гусеница
+ * тоже съедают пробитие. Отрикошетив, снаряд летит уже в другую сторону,
+ * поэтому пройденное до рикошета в сумму не входит.
+ */
+function armorAlongPath(analysed, shell) {
+let total = null;
+let layers = [];
+let previous = null;
+analysed.forEach((info, index) => {
+    const plate = info.plate;
+    if (info.segment.effect_code === RICOCHET_EFFECT_CODE && index < analysed.length - 1) {
+        total = null;
+        layers = [];
+        previous = null;
+        return;
+    }
+    // Один и тот же удар реплей порой присылает двумя сегментами.
+    if (!plate || (previous && plate.mesh === previous.mesh && plate.point.distanceTo(previous.point) < 0.02)) return;
+    previous = plate;
+
+    const layer = layerArmor(plate, shell);
+    if (!layer) return;
+    total = (total ?? 0) + layer.mm;
+    layers.push({ plate, layer });
+});
+return { total, layers };
+}
+
+function layerTitle({ plate, layer }) {
+const bits = [`${plate.label} ${mm(plate.mm)}`];
+if (plate.rules.useHitAngle && plate.angle !== null) {
+    bits.push(`угол ${Math.round(plate.angle)}°`);
+    if (layer.normalization) bits.push(`нормализация ${degrees(layer.normalization)}`);
+}
+if (layer.ricochet) bits.push('угол рикошета');
+return bits.join(', ');
+}
+
+function setTip(el, text) {
+if (text) el.title = text;
+else el.removeAttribute('title');
+}
+
+function fillShotDetails(shot, analysed, distance) {
 const outcome = outcomeOf(shot);
 const pierced = shot.outcome === 'penetration';
 
@@ -1605,38 +1838,26 @@ ui.dmg.classList.toggle('blocked', !pierced);
 ui.outcome.textContent = outcome.label + (shot.is_destroyed ? ' · уничтожен' : '');
 ui.outcome.className = 'outcome-tag outcome-' + shot.outcome;
 
-ui.shell.textContent = shellSummary(shot.shell);
+// Специальный снаряд выделяется золотом, обычный остаётся серым.
+const shell = shot.shell || null;
+const piercing = shellPiercing(shell);
+const penalty = specialPenalty(shell);
+ui.shellKind.textContent = shell ? (SHELL_KINDS[shell.kind] || shell.kind || '?') : '';
+ui.shellKind.classList.toggle('special', Boolean(shell && shell.premium));
+ui.shellPen.replaceChildren();
+if (piercing) ui.shellPen.append(span('pen-word', 'пробитие '), mm(piercing.near));
+else if (!shell) ui.shellPen.textContent = '—';
+setTip(ui.shellPen.parentElement, penalty
+    ? `−${Math.round((1 - penalty.factor) * 100)}% ${penalty.where}, по таблице ${mm(shell.piercing)}`
+    : '');
 
-const decisive = (analysed || []).filter(info => info.plate).pop() || null;
-const plate = decisive ? decisive.plate : null;
-ui.armor.textContent = plateSummary(plate);
+const pen = piercingAt(shell, distance);
+ui.pen.textContent = pen === null ? '—' : mm(pen);
+setTip(ui.pen, pen !== null && distance !== null && shellRules(shell).falloff ? `на ${Math.round(distance)} м` : '');
 
-if (plate && plate.angle !== null) {
-    ui.angle.textContent = plate.effective
-        ? `${Math.round(plate.angle)}° · ${mm(plate.effective)}`
-        : `${Math.round(plate.angle)}°`;
-} else {
-    ui.angle.textContent = '—';
-}
-
-ui.path.replaceChildren();
-const steps = [];
-for (const info of analysed || []) {
-    if (info.entryPlate) steps.push(info.entryPlate);
-    if (info.plate) steps.push(info.plate);
-}
-if (steps.length > 1) {
-    steps.forEach((step, index) => {
-        const row = document.createElement('div');
-        row.className = 'path-step';
-        row.append(
-            span('step-idx', `${index + 1}`),
-            span('step-plate', step.label),
-            span('step-mm', step.mm === null ? (step.isDevice ? 'модуль' : '—') : mm(step.mm)),
-        );
-        ui.path.appendChild(row);
-    });
-}
+const { total, layers } = armorAlongPath(analysed || [], shell);
+ui.armor.textContent = total === null ? '—' : mm(total);
+setTip(ui.armor, layers.map(layerTitle).join(' + '));
 
 ui.crits.replaceChildren();
 for (const name of shot.crits_destroyed || []) ui.crits.appendChild(span('crit-tag destroyed', name));
