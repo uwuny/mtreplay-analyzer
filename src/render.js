@@ -91,6 +91,8 @@ export function renderHitsPage(view, { template, tokens, backToMapUrl = '', resP
   const payload = escJson({
     shots: view.shots,
     armor: view.armor,
+    wheels: view.wheels,
+    battle_type: view.battle_type,
     my_team: view.my_team,
     ally_clan: view.ally_clan,
     enemy_clan: view.enemy_clan,

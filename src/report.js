@@ -229,14 +229,18 @@ function nearestByClock(records, targetClock) {
 }
 
 // Коды из Vehicle.showDamageFromShot. Имён в клиентских данных нет, поэтому
-// разбивка выведена сверкой 500+ попаданий с фактическим уроном и с флагами
-// Avatar.showShotResults: 4/5/6 — материал пройден, 1/3 — рикошет, 0/2 — не пробит.
+// разбивка выведена сверкой 1200+ попаданий с фактическим уроном, с флагами
+// Avatar.showShotResults и с углом встречи по коллизионной модели:
+// 4/5/6 — материал пройден, 1 — рикошет (угол от 70°), 2/3 — не пробит
+// (угол любой, приведённая броня не меньше пробития), 0 — пройден экран
+// или гусеница.
 const PIERCING_EFFECT_CODES = new Set([4, 5, 6]);
-const RICOCHET_EFFECT_CODES = new Set([1, 3]);
+const RICOCHET_EFFECT_CODES = new Set([1]);
 
-// Биты Avatar.showShotResults, подтверждённые на собственных выстрелах.
+// Биты Avatar.showShotResults, подтверждённые на собственных выстрелах:
+// бит 5 ставится на непробитие (код 3), рикошет (код 1) несёт бит 3.
+const HIT_FLAG_RICOCHET = 1 << 3;
 const HIT_FLAG_PIERCED = 1 << 4;
-const HIT_FLAG_RICOCHET = 1 << 5;
 
 const MATCH_WINDOW_SEC = 0.6;
 const CRIT_WINDOW_SEC = 4.0;
@@ -312,11 +316,42 @@ function classifyHit(hit, flags) {
   return 'no_penetration';
 }
 
+// Трассер летит со скоростью 0,8 от табличной скорости снаряда — сверено
+// на 1200 выстрелах техники всех наций.
+const TRACER_SPEED_FACTOR = 0.8;
+const TRACER_WINDOW_SEC = 6.0;
+
+/** Последний трассер этого стрелка с тем же эффектом, вылетевший до попадания. */
+function findTracer(tracers, clock, hit) {
+  let found = null;
+  for (const row of tracers) {
+    const lead = clock - row.clock;
+    if (lead < -0.05 || lead > TRACER_WINDOW_SEC) continue;
+    if (row.tracer.shooter_id !== hit.attacker_id || row.tracer.effects_index !== hit.effects_index) continue;
+    if (!found || row.clock > found.clock) found = row;
+  }
+  return found ? found.tracer : null;
+}
+
+/**
+ * Запись эффекта общая у снарядов одного вида: обычный и специальный
+ * бронебойный у пушки неразличимы по ней. Летевший узнаётся по скорости трассера.
+ */
+function pickShell(shells, effectsIndex, tracer) {
+  const candidates = shells.filter((shell) => shell.effects_index === effectsIndex);
+  if (candidates.length < 2 || !tracer) return candidates[0] || null;
+
+  const { x, y, z } = tracer.velocity;
+  const speed = Math.hypot(x, y, z) / TRACER_SPEED_FACTOR;
+  return candidates.reduce((best, shell) => (
+    Math.abs((shell.speed ?? 0) - speed) < Math.abs((best.speed ?? 0) - speed) ? shell : best));
+}
+
 /**
  * Каждое попадание снарядом: куда пришлось, чем стреляли и почему получилось
  * именно так. Основа — Vehicle.showDamageFromShot, он приходит и на непробития;
- * к нему подтягиваются снятые HP, критованные модули и — для выстрелов автора
- * реплея — точные флаги исхода.
+ * к нему подтягиваются снятые HP, критованные модули, трассер выстрела и — для
+ * выстрелов автора реплея — точные флаги исхода.
  */
 function buildShots(packets, entityInfo, tanksDb, vehicleDb, extras) {
   const positions = new Map();
@@ -340,11 +375,13 @@ function buildShots(packets, entityInfo, tanksDb, vehicleDb, extras) {
 
   const healthEvents = [];
   const shotResults = [];
+  const tracers = [];
   const hits = [];
   for (const p of packets) {
     if (p.type !== 0x08 || !p.decoded) continue;
     const clock = p.decoded.clock;
     if (p.decoded.hit) hits.push({ clock, hit: p.decoded.hit });
+    if (p.decoded.tracer) tracers.push({ clock, tracer: p.decoded.tracer });
     if (p.decoded.damage_event) healthEvents.push({ clock, event: p.decoded.damage_event, used: false });
     if (p.decoded.shot_results) {
       for (const entry of p.decoded.shot_results) shotResults.push({ clock, entry, used: false });
@@ -379,8 +416,12 @@ function buildShots(packets, entityInfo, tanksDb, vehicleDb, extras) {
     const result = take(shotResults, clock, (row) => row.entry.vehicle_id === hit.victim_id);
 
     const flags = result ? result.entry.flags : null;
-    const shells = vehicleDb?.[attackerRaw]?.shells || [];
-    const shell = shells.find((s) => s.effects_index === hit.effects_index) || null;
+    const tracer = findTracer(tracers, clock, hit);
+    const shell = pickShell(vehicleDb?.[attackerRaw]?.shells || [], hit.effects_index, tracer);
+    // Пробитие падает с расстоянием, которое пролетел снаряд. Точка вылета
+    // трассера точнее позиции стрелка: та у невидимой машины устаревает.
+    const origin = tracer?.start ?? shooterState?.position ?? null;
+    const target = victimState?.position ?? null;
 
     shots.push({
       hit_clock: round2(clock),
@@ -403,6 +444,10 @@ function buildShots(packets, entityInfo, tanksDb, vehicleDb, extras) {
       last_material_is_shield: hit.last_material_is_shield,
       hit_flags: flags,
       shell,
+      shot_origin: tracer?.start ?? null,
+      shot_distance: origin && target
+        ? round2(Math.hypot(target.x - origin.x, target.y - origin.y, target.z - origin.z))
+        : null,
       crits_damaged: [],
       crits_destroyed: [],
       shooter_pos: shooterState?.position ?? null,
@@ -577,6 +622,8 @@ export async function buildReport(arrayBuffer, sourceName, deps) {
       map_name_ru: gb.mapDisplayName ?? null,
       battle_datetime: formatBattleDatetime(common.arenaCreateTime),
       game_version: gb.clientVersionFromExe ?? null,
+      // Тип боя (ARENA_BONUS_TYPE): 20 — Вылазки.
+      battle_type: gb.battleType ?? common.bonusType ?? null,
       creator_name: gb.playerName ?? null,
       creator_team: ownTeam,
 
