@@ -1,4 +1,4 @@
-import { escText } from './render.js?v=1';
+import { escText } from './render.js?v=2';
 
 const num = (v) => (v ?? 0).toLocaleString('ru');
 

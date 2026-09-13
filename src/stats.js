@@ -1,4 +1,4 @@
-import { STAT_ICON_MARKUP } from './stat_icons.js?v=1';
+import { STAT_ICON_MARKUP } from './stat_icons.js?v=2';
 
 export const STAT_TYPES = [
   { key: 'damage', label: 'Урон', svgIcon: 'damage' },

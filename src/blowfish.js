@@ -1,4 +1,4 @@
-import { P_INIT, S_INIT } from './blowfish_const.js?v=1';
+import { P_INIT, S_INIT } from './blowfish_const.js?v=2';
 
 export class Blowfish {
   constructor(key) {

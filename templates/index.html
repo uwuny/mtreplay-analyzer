@@ -1448,6 +1448,55 @@ canvas:active { cursor: grabbing; }
 
 .dmg-entry .kill-icon { margin-left: 3px; color: #ff6060; }
 
+.player-row__reload {
+    display: none;
+    align-items: center;
+    gap: 3px;
+    padding: 2px 6px;
+    border-radius: var(--radius-full);
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    font-weight: 600;
+    color: var(--color-link);
+    background: rgb(124 199 222 / 12%);
+    box-shadow: inset 0 0 0 1px rgb(124 199 222 / 22%);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.player-row__reload.is-active { display: inline-flex; }
+
+.dmg-entry__icon {
+    width: 11px;
+    height: 11px;
+    margin-right: 4px;
+    vertical-align: -1px;
+    color: var(--text-dim);
+}
+
+.dmg-entry__icon.is-fire { color: #ff9a3d; }
+.dmg-entry__icon.is-ram  { color: #ffd166; }
+
+.dmg-entry__tick {
+    margin-left: 2px;
+    font-family: var(--font-mono);
+    font-size: 0.72em;
+    font-weight: 600;
+    color: var(--text-dim);
+    vertical-align: super;
+}
+
+.dmg-entry__crit {
+    width: 11px;
+    height: 11px;
+    margin-left: 5px;
+    vertical-align: -1px;
+    color: var(--text-secondary);
+    cursor: help;
+}
+
+.dmg-entry__crit.is-destroyed { color: var(--danger); }
+
 .ui-tooltip {
     position: fixed;
     z-index: 9999;
@@ -1471,6 +1520,13 @@ canvas:active { cursor: grabbing; }
 }
 
 .ui-tooltip.is-visible { opacity: 1; transform: translateY(0); }
+
+.ui-tooltip.is-log {
+    max-width: 250px;
+    white-space: normal;
+    text-align: left;
+    line-height: 1.35;
+}
 
 @media (max-width: 900px) {
     #sidebar {
@@ -1571,6 +1627,16 @@ canvas:active { cursor: grabbing; }
             <div class="map-filter-option" id="mfo-tankNames" data-key="tankNames"
                  role="checkbox" aria-checked="false" tabindex="0">
                 <span class="map-filter-option__dot" aria-hidden="true"></span>Название танка
+            </div>
+            <div class="map-filter-option" id="mfo-marks" data-key="marks"
+                 role="checkbox" aria-checked="false" tabindex="0"
+                 data-tooltip="Рисование союзников на карте">
+                <span class="map-filter-option__dot" aria-hidden="true"></span>Метки игроков
+            </div>
+            <div class="map-filter-option" id="mfo-destruction" data-key="destruction"
+                 role="checkbox" aria-checked="false" tabindex="0"
+                 data-tooltip="Поломки объектов: точность — квадрат 100 м, только вокруг автора">
+                <span class="map-filter-option__dot" aria-hidden="true"></span>Разрушения
             </div>
 
             <div class="map-filter-panel__divider" role="separator" aria-hidden="true"></div>
@@ -2107,7 +2173,10 @@ function updateCaptureIndicator() {
 }
 
 let maxTime = DATA.duration_sec || 0;
-let currentTime = 0;
+// Шкала начинается до нуля: к этому времени все уже появились на карте, и видно
+// метки, которые ставят до старта. Ноль остаётся началом боя.
+const MIN_TIME = Math.min(0, DATA.min_time ?? 0);
+let currentTime = MIN_TIME;
 let isPlaying = false;
 let playerFilter = 'all';
 let zoom = 1;
@@ -2118,7 +2187,7 @@ let dragStartX = 0;
 let dragStartY = 0;
 let lastFrameTime = null;
 
-const mapFilters = { paths: true, shots: true, damage: true, deaths: true, nicknames: true, tankNames: false, tankIcons: false };
+const mapFilters = { paths: true, shots: true, damage: true, deaths: true, nicknames: true, tankNames: false, tankIcons: false, marks: false, destruction: false };
 const MAP_FILTER_DEFAULTS = { ...mapFilters };
 const visibility = {};
 const deathTimeMap = new Map();
@@ -2142,6 +2211,38 @@ function getLastPtAtTime(pid, t) {
         else hi = mid - 1;
     }
     return result;
+}
+
+// Дальние позиции приходят раз в 2 секунды. Между соседними точками маркер идёт
+// линейно, иначе машина за зоной отрисовки стояла бы и раз в две секунды прыгала.
+const INTERPOLATE_MAX_GAP = 3.0;
+
+function getPointAtTime(pid, t) {
+    const idx = positionIndex[pid];
+    if (!idx) return null;
+    const pts = idx.pts;
+    let lo = 0, hi = pts.length - 1, end = -1;
+    while (lo <= hi) {
+        const mid = (lo + hi) >> 1;
+        if (pts[mid].t <= t) { end = mid; lo = mid + 1; }
+        else hi = mid - 1;
+    }
+    if (end < 0) return null;
+
+    const prev = pts[end];
+    const next = pts[end + 1];
+    if (!next) return prev;
+
+    const span = next.t - prev.t;
+    if (span <= 0 || span > INTERPOLATE_MAX_GAP) return prev;
+
+    const k = (t - prev.t) / span;
+    return {
+        t,
+        x: prev.x + (next.x - prev.x) * k,
+        y: prev.y + (next.y - prev.y) * k,
+        f: prev.f || next.f,
+    };
 }
 
 function getPathUpToTime(pid, t) {
@@ -2233,6 +2334,37 @@ function getPlayerDamageAtTime(pid, t) {
     return result.cumDmg;
 }
 
+// Объявления о перезарядке приходят из командного чата: они есть только по союзникам
+// и только тогда, когда игрок сам дал команду, поэтому это не постоянный таймер.
+const reloadCalls = new Map();
+
+function buildReloadIndex() {
+    (DATA.reload_calls || []).forEach(call => {
+        if (!reloadCalls.has(call.player)) reloadCalls.set(call.player, []);
+        reloadCalls.get(call.player).push(call);
+    });
+    reloadCalls.forEach(list => list.sort((a, b) => a.time - b.time));
+}
+
+function reloadLeftAtTime(pid, t) {
+    const list = reloadCalls.get(pid);
+    if (!list) return 0;
+    for (let i = list.length - 1; i >= 0; i--) {
+        if (list[i].time > t) continue;
+        const left = list[i].time + list[i].seconds - t;
+        return left > 0 ? left : 0;
+    }
+    return 0;
+}
+
+function updateReloadBadge(pid, el) {
+    const left = reloadLeftAtTime(pid, currentTime);
+    const text = left > 0 ? `⟳ ${Math.ceil(left)}с` : '';
+    if (el.textContent === text) return;
+    el.textContent = text;
+    el.classList.toggle('is-active', left > 0);
+}
+
 let destroyedCacheTime = null;
 let destroyedCache = null;
 
@@ -2263,13 +2395,21 @@ function getPlayerPath(pid, t) {
 
     const pts = getPathUpToTime(pid, t);
     let path2d = null;
+    let farPath = null;
     if (pts.length > 0) {
         path2d = new Path2D();
-        path2d.moveTo(pts[0].x, pts[0].y);
-        for (let i = 1; i < pts.length; i++) path2d.lineTo(pts[i].x, pts[i].y);
+        farPath = new Path2D();
+        for (let i = 1; i < pts.length; i++) {
+            const a = pts[i - 1];
+            const b = pts[i];
+
+            const target = (a.f || b.f) ? farPath : path2d;
+            target.moveTo(a.x, a.y);
+            target.lineTo(b.x, b.y);
+        }
     }
     const lastPt = pts.length > 0 ? pts[pts.length - 1] : null;
-    const result = { time: t, path2d, lastPt };
+    const result = { time: t, path2d, farPath, lastPt };
     pathCache.set(pid, result);
     return result;
 }
@@ -2373,13 +2513,15 @@ function updateHPBars() {
 }
 
 function formatTime(s) {
-    const m = Math.floor(s / 60);
-    const ss = Math.floor(s % 60);
-    return `${String(m).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
+    const total = Math.abs(s);
+    const m = Math.floor(total / 60);
+    const ss = Math.floor(total % 60);
+    return `${s < 0 ? '−' : ''}${String(m).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
 }
 
 function updateProgress() {
-    slider.style.setProperty('--progress', (maxTime > 0 ? currentTime / maxTime * 100 : 0) + '%');
+    const span = maxTime - MIN_TIME;
+    slider.style.setProperty('--progress', (span > 0 ? (currentTime - MIN_TIME) / span * 100 : 0) + '%');
     updateCaptureIndicator();
 }
 
@@ -2389,6 +2531,66 @@ function updateTime() {
 }
 
 let lastRenderedEventIndex = 0;
+
+// Причина урона из события изменения прочности: касания и столкновения считаем тараном.
+const REASON_KIND = { 0: 'shot', 1: 'fire', 2: 'ram', 3: 'ram', 7: 'ram' };
+const FIRE_MERGE_SEC = 12;
+
+const REASON_ICON_PATHS = {
+    shot: '<path d="M8 1.4c1.7 1.5 2.6 3.2 2.6 5v3.2H5.4V6.4c0-1.8.9-3.5 2.6-5z" fill="currentColor"/>'
+        + '<rect x="5.2" y="10.6" width="5.6" height="1.7" rx="0.7" fill="currentColor"/>'
+        + '<rect x="5.9" y="13" width="4.2" height="1.6" rx="0.7" fill="currentColor"/>',
+    fire: '<path d="M9 1.2c.4 2.2-.9 3-2.1 4.3C5.5 6.9 5 8.1 5 9.3a3.7 3.7 0 0 0 7.4 0c0-1.7-.8-3-1.8-4-.2.9-.7 1.4-1.3 1.5.7-1.8.4-4-.3-5.6z" fill="currentColor"/>',
+    ram: '<path d="M1.6 8h3.4M11 8h3.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>'
+        + '<path d="M5.6 4.9 8.2 8l-2.6 3.1M10.4 4.9 7.8 8l2.6 3.1" stroke="currentColor" stroke-width="1.6"'
+        + ' fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+};
+
+const CRIT_ICON_PATH = '<path d="M8 5.7a2.3 2.3 0 1 0 0 4.6 2.3 2.3 0 0 0 0-4.6zm5.5 2.3c0-.35-.03-.7-.09-1.03'
+    + 'l1.26-.98-1.45-2.5-1.5.6a5.6 5.6 0 0 0-1.79-1.04L9.7 1.4H6.3l-.24 1.65c-.65.22-1.25.57-1.78 1.03l-1.5-.59'
+    + '-1.45 2.5 1.26.98a6.2 6.2 0 0 0 0 2.06l-1.26.98 1.45 2.5 1.5-.59c.53.46 1.13.81 1.78 1.03l.24 1.65h3.4'
+    + 'l.24-1.65c.65-.22 1.25-.57 1.79-1.04l1.5.6 1.45-2.5-1.26-.98c.06-.34.09-.68.09-1.03z" fill="currentColor"/>';
+
+function buildInlineIcon(markup, className) {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('viewBox', '0 0 16 16');
+    svg.setAttribute('aria-hidden', 'true');
+    svg.setAttribute('class', className);
+    svg.innerHTML = markup;
+    return svg;
+}
+
+function buildCritIcon(crits) {
+    const damaged = crits.filter(crit => !crit.destroyed).map(crit => crit.name);
+    const destroyed = crits.filter(crit => crit.destroyed).map(crit => crit.name);
+
+    const parts = [];
+    if (damaged.length) parts.push(`Повреждено: ${damaged.join(', ')}`);
+    if (destroyed.length) parts.push(`Уничтожено: ${destroyed.join(', ')}`);
+
+    const icon = buildInlineIcon(CRIT_ICON_PATH, 'dmg-entry__crit' + (destroyed.length ? ' is-destroyed' : ''));
+    icon.dataset.tooltip = parts.join('. ');
+    bindTooltip(icon, TOOLTIP_DELAY_FAST, true);
+    return icon;
+}
+
+// Пожар тикает раз в пару секунд: тики одного пожара живут одной строкой лога.
+const fireEntries = new Map();
+
+function appendFireTick(ev) {
+    if (REASON_KIND[ev.reason] !== 'fire' || ev.is_destroyed || ev.damage <= 0) return false;
+
+    const entry = fireEntries.get(`${ev.attacker}>${ev.target}`);
+    if (!entry || ev.time - entry.lastTime > FIRE_MERGE_SEC) return false;
+
+    entry.total += ev.damage;
+    entry.ticks.push(ev.damage);
+    entry.lastTime = ev.time;
+    entry.valueEl.textContent = `−${entry.total}`;
+    entry.tickEl.textContent = ev.damage;
+    entry.tickEl.dataset.tooltip = `Урон за тик: ${entry.ticks.join(', ')}`;
+    return true;
+}
 
 function renderDmgLog() {
     const sorted = DATA.damage_events;
@@ -2404,16 +2606,15 @@ function renderDmgLog() {
 
     if (end < lastRenderedEventIndex) {
         dmgLogEl.innerHTML = '';
+        fireEntries.clear();
         lastRenderedEventIndex = 0;
     }
 
-    const fragment = document.createDocumentFragment();
     for (let i = lastRenderedEventIndex; i < end; i++) {
         const ev = sorted[i];
-        const entry = buildDmgLogEntry(ev);
-        fragment.insertBefore(entry, fragment.firstChild);
+        if (appendFireTick(ev)) continue;
+        dmgLogEl.insertBefore(buildDmgLogEntry(ev), dmgLogEl.firstChild);
     }
-    dmgLogEl.insertBefore(fragment, dmgLogEl.firstChild);
     lastRenderedEventIndex = end;
 }
 
@@ -2432,6 +2633,9 @@ function buildDmgLogEntry(ev) {
     timeTag.className = 'time-tag';
     timeTag.textContent = `[${formatTime(ev.time)}]`;
     div.appendChild(timeTag);
+
+    const kind = REASON_KIND[ev.reason];
+    if (kind) div.appendChild(buildInlineIcon(REASON_ICON_PATHS[kind], `dmg-entry__icon is-${kind}`));
 
     const atkSpan = document.createElement('span');
     atkSpan.className = 'attacker-name ' + atkClass;
@@ -2465,7 +2669,27 @@ function buildDmgLogEntry(ev) {
         dmgSpan.textContent = `−${ev.damage}`;
         div.appendChild(document.createTextNode(' '));
         div.appendChild(dmgSpan);
+
+        if (kind === 'fire') {
+
+            const tickEl = document.createElement('span');
+            tickEl.className = 'dmg-entry__tick';
+            tickEl.textContent = ev.damage;
+            tickEl.dataset.tooltip = `Урон за тик: ${ev.damage}`;
+            bindTooltip(tickEl, TOOLTIP_DELAY_FAST, true);
+            div.appendChild(tickEl);
+
+            fireEntries.set(`${ev.attacker}>${ev.target}`, {
+                total: ev.damage,
+                ticks: [ev.damage],
+                lastTime: ev.time,
+                valueEl: dmgSpan,
+                tickEl,
+            });
+        }
     }
+
+    if (ev.crits && ev.crits.length) div.appendChild(buildCritIcon(ev.crits));
 
     return div;
 }
@@ -2576,6 +2800,7 @@ function resetTriggeredEvents() {
     activePopups.length = 0;
     lastRenderedEventIndex = 0;
     dmgLogEl.innerHTML = '';
+    fireEntries.clear();
     invalidatePathCache();
 }
 
@@ -2618,9 +2843,11 @@ function init() {
     buildPositionIndex();
     buildHpSnapshots();
     buildPlayerDamageTimelines();
+    buildReloadIndex();
     playerTimelines = buildPlayerTimelines();
 
-    currentTime = 0.05;
+    currentTime = MIN_TIME;
+    slider.min = MIN_TIME;
     slider.max = maxTime;
     slider.value = currentTime;
     updateProgress();
@@ -2726,7 +2953,9 @@ function draw() {
 
     drawAttackLines();
     drawPlayerPaths();
+    drawDestruction();
     drawPlayerMarkers();
+    drawMapMarks();
     drawPlayerLabels();
     updateRosterStatuses();
 }
@@ -2737,7 +2966,7 @@ function drawPlayerPaths() {
         if (!visibility[pid]) continue;
         const pInfo = playerMap.get(pid);
         if (!pInfo) continue;
-        const { path2d } = getPlayerPath(pid, currentTime);
+        const { path2d, farPath } = getPlayerPath(pid, currentTime);
         if (!path2d) continue;
 
         fgCtx.strokeStyle = playerColor(pInfo);
@@ -2746,8 +2975,109 @@ function drawPlayerPaths() {
         fgCtx.lineCap = 'round';
         fgCtx.globalAlpha = 0.65;
         fgCtx.stroke(path2d);
+
+        if (farPath) {
+
+            fgCtx.globalAlpha = 0.38;
+            fgCtx.setLineDash([5 / zoom, 5 / zoom]);
+            fgCtx.stroke(farPath);
+            fgCtx.setLineDash([]);
+        }
         fgCtx.globalAlpha = 1;
     }
+}
+
+// Метка живёт 3 секунды и гаснет — как в бою.
+const MARK_LIFE_SEC = 3;
+const MARK_COLOR = '#ff8a1f';
+
+function drawMapMarks() {
+    if (!mapFilters.marks || !DATA.map_marks) return;
+
+    DATA.map_marks.forEach(mark => {
+        const age = currentTime - mark.t;
+        if (age < 0 || age > MARK_LIFE_SEC) return;
+
+        const fade = 1 - age / MARK_LIFE_SEC;
+        const r = 5 / zoom;
+
+        fgCtx.save();
+        fgCtx.fillStyle = MARK_COLOR;
+
+        fgCtx.globalAlpha = 0.3 * fade;
+        fgCtx.beginPath();
+        fgCtx.arc(mark.x, mark.y, r * 2.2, 0, Math.PI * 2);
+        fgCtx.fill();
+
+        fgCtx.globalAlpha = 0.95 * fade;
+        fgCtx.beginPath();
+        fgCtx.arc(mark.x, mark.y, r, 0, Math.PI * 2);
+        fgCtx.fill();
+        fgCtx.strokeStyle = 'rgba(20, 26, 29, 0.85)';
+        fgCtx.lineWidth = 1.4 / zoom;
+        fgCtx.stroke();
+        fgCtx.restore();
+    });
+}
+
+const DESTRUCTION_FADE_SEC = 25;
+const DESTRUCTION_COLOR = '#3bf07a';
+const DESTRUCTION_HALO = 'rgba(12, 20, 16, 0.9)';
+
+function traceDestructionArrow(x1, y1, x2, y2) {
+    const head = 12.1 / zoom;
+    const angle = Math.atan2(y2 - y1, x2 - x1);
+
+    fgCtx.beginPath();
+    fgCtx.moveTo(x1, y1);
+    fgCtx.lineTo(x2, y2);
+    fgCtx.stroke();
+
+    fgCtx.beginPath();
+    fgCtx.moveTo(x2, y2);
+    fgCtx.lineTo(x2 - head * Math.cos(angle - 0.42), y2 - head * Math.sin(angle - 0.42));
+    fgCtx.lineTo(x2 - head * Math.cos(angle + 0.42), y2 - head * Math.sin(angle + 0.42));
+    fgCtx.closePath();
+    fgCtx.fill();
+}
+
+function traceDestructionCross(mark) {
+    const r = (mark.count > 1 ? 6.6 : 4.4) / zoom;
+    fgCtx.beginPath();
+    fgCtx.moveTo(mark.x - r, mark.y - r);
+    fgCtx.lineTo(mark.x + r, mark.y + r);
+    fgCtx.moveTo(mark.x + r, mark.y - r);
+    fgCtx.lineTo(mark.x - r, mark.y + r);
+    fgCtx.stroke();
+}
+
+function drawDestruction() {
+    if (!mapFilters.destruction || !DATA.destruction) return;
+
+    DATA.destruction.forEach(mark => {
+        if (mark.t > currentTime) return;
+        const age = currentTime - (mark.t_end ?? mark.t);
+        if (age > DESTRUCTION_FADE_SEC) return;
+
+        const fade = 1 - Math.max(0, age) / DESTRUCTION_FADE_SEC;
+        fgCtx.save();
+        fgCtx.lineCap = 'round';
+        fgCtx.lineJoin = 'round';
+
+        // Поломки ложатся прямо на след техники, поэтому под метку идёт тёмная
+        // подложка — иначе зелёное по зелёному не читается.
+        for (const pass of [0, 1]) {
+            const halo = pass === 0;
+            fgCtx.globalAlpha = (halo ? 0.75 : 0.9) * fade;
+            fgCtx.strokeStyle = halo ? DESTRUCTION_HALO : DESTRUCTION_COLOR;
+            fgCtx.fillStyle = halo ? DESTRUCTION_HALO : DESTRUCTION_COLOR;
+            fgCtx.lineWidth = (halo ? 5 : 2.2) / zoom;
+
+            if (mark.x2 !== undefined) traceDestructionArrow(mark.x, mark.y, mark.x2, mark.y2);
+            else traceDestructionCross(mark);
+        }
+        fgCtx.restore();
+    });
 }
 
 function drawPlayerMarkers() {
@@ -2756,7 +3086,7 @@ function drawPlayerMarkers() {
         const pInfo = playerMap.get(pid);
         if (!pInfo) continue;
 
-        const { lastPt } = getPlayerPath(pid, currentTime);
+        const lastPt = getPointAtTime(pid, currentTime);
 
         if (!lastPt) {
 
@@ -2784,13 +3114,25 @@ function drawPlayerMarkers() {
         if (dead && mapFilters.deaths) {
             drawDeathMarker(lastPt, zoom, isAlly(pInfo.team));
         } else if (!dead) {
-            fgCtx.fillStyle = color;
             fgCtx.beginPath();
             fgCtx.arc(lastPt.x, lastPt.y, 6 / zoom, 0, Math.PI * 2);
-            fgCtx.fill();
-            fgCtx.strokeStyle = '#141a1d';
-            fgCtx.lineWidth = 2 / zoom;
-            fgCtx.stroke();
+
+            if (lastPt.f) {
+
+                fgCtx.fillStyle = 'rgba(20, 26, 29, 0.55)';
+                fgCtx.fill();
+                fgCtx.strokeStyle = color;
+                fgCtx.lineWidth = 2.4 / zoom;
+                fgCtx.setLineDash([3.5 / zoom, 3 / zoom]);
+                fgCtx.stroke();
+                fgCtx.setLineDash([]);
+            } else {
+                fgCtx.fillStyle = color;
+                fgCtx.fill();
+                fgCtx.strokeStyle = '#141a1d';
+                fgCtx.lineWidth = 2 / zoom;
+                fgCtx.stroke();
+            }
         }
     }
 }
@@ -2814,7 +3156,7 @@ function drawPlayerLabels() {
         if (dead && !mapFilters.deaths) continue;
 
         const effectiveTime = Math.min(currentTime, deathTime);
-        const lastPt = getLastPtAtTime(pid, effectiveTime);
+        const lastPt = getPointAtTime(pid, effectiveTime);
         if (!lastPt) continue;
 
         const shortName = pInfo.name.split('[')[0];
@@ -2958,6 +3300,13 @@ function buildPlayerRow(p) {
     const aside = document.createElement('div');
     aside.className = 'player-row__aside';
 
+    const reloadSpan = document.createElement('span');
+    reloadSpan.className = 'player-row__reload';
+    reloadSpan.dataset.tooltip = 'Игрок сообщил о перезарядке';
+    bindTooltip(reloadSpan, TOOLTIP_DELAY_FAST);
+    updateReloadBadge(p.id, reloadSpan);
+    aside.appendChild(reloadSpan);
+
     const valuesCol = document.createElement('div');
     valuesCol.className = 'player-row__values';
 
@@ -2987,7 +3336,7 @@ function buildPlayerRow(p) {
 
     row.appendChild(aside);
 
-    rowRefs.set(p.id, { dmgSpan, hpSpan, hpCurrentSpan, statusSpan });
+    rowRefs.set(p.id, { dmgSpan, hpSpan, hpCurrentSpan, statusSpan, reloadSpan });
 
     row.addEventListener('click', () => {
         visibility[p.id] = !visibility[p.id];
@@ -3017,33 +3366,59 @@ function updatePlayerDamages() {
             refs.hpCurrentSpan.textContent = hpText;
             refs.hpSpan.className = 'player-row__hp' + (curHp <= 0 ? ' is-zero' : '');
         }
+
+        if (refs.reloadSpan) updateReloadBadge(p.id, refs.reloadSpan);
     });
 }
 
-(function initGlobalTooltips() {
-    const tooltip = document.getElementById('uiTooltip');
+const TOOLTIP_DELAY = 1000;
+const TOOLTIP_DELAY_FAST = 180;
 
-    const TOOLTIP_DELAY = 1000;
+const bindTooltip = (function initGlobalTooltips() {
+    const tooltip = document.getElementById('uiTooltip');
     let showTimer = null;
-    document.querySelectorAll('[data-tooltip]').forEach(el => {
+
+    function bind(el, delay = TOOLTIP_DELAY, inLog = false) {
         el.addEventListener('mouseenter', () => {
             clearTimeout(showTimer);
             showTimer = setTimeout(() => {
                 tooltip.textContent = el.dataset.tooltip;
-                const r = el.getBoundingClientRect();
-                tooltip.style.left = (r.left + r.width / 2) + 'px';
-                tooltip.style.top = (r.top - 8) + 'px';
-                tooltip.style.transform = 'translateX(-50%) translateY(calc(-100% + 3px))';
+                tooltip.classList.toggle('is-log', inLog);
+
+                if (inLog) {
+
+                    const rowRect = (el.closest('.dmg-entry') || el).getBoundingClientRect();
+                    const panel = dmgLogEl.getBoundingClientRect();
+                    const height = tooltip.getBoundingClientRect().height;
+
+                    tooltip.style.left = panel.left + 'px';
+                    if (rowRect.top - height < 8) {
+                        tooltip.style.top = (rowRect.bottom + 4) + 'px';
+                        tooltip.style.transform = 'none';
+                    } else {
+                        tooltip.style.top = (rowRect.top - 4) + 'px';
+                        tooltip.style.transform = 'translateY(-100%)';
+                    }
+                } else {
+                    const r = el.getBoundingClientRect();
+                    tooltip.style.left = (r.left + r.width / 2) + 'px';
+                    tooltip.style.top = (r.top - 8) + 'px';
+                    tooltip.style.transform = 'translateX(-50%) translateY(calc(-100% + 3px))';
+                }
+
                 tooltip.removeAttribute('aria-hidden');
                 requestAnimationFrame(() => tooltip.classList.add('is-visible'));
-            }, TOOLTIP_DELAY);
+            }, delay);
         });
         el.addEventListener('mouseleave', () => {
             clearTimeout(showTimer);
             tooltip.classList.remove('is-visible');
             tooltip.setAttribute('aria-hidden', 'true');
         });
-    });
+    }
+
+    document.querySelectorAll('[data-tooltip]').forEach(el => bind(el));
+    return bind;
 })();
 
 function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
@@ -3221,7 +3596,7 @@ const playBtn = document.getElementById('playBtn');
 
 playBtn.onclick = () => {
     if (currentTime >= maxTime) {
-        currentTime = 0;
+        currentTime = MIN_TIME;
         resetTriggeredEvents();
         isPlaying = true;
         playBtn.classList.add('is-active');
@@ -3492,7 +3867,7 @@ if (typeof ResizeObserver === 'function') {
 }
 
 function scrubBy(deltaSeconds) {
-    currentTime = Math.min(maxTime, Math.max(0, currentTime + deltaSeconds));
+    currentTime = Math.min(maxTime, Math.max(MIN_TIME, currentTime + deltaSeconds));
     slider.value = currentTime;
     applyTimeChange();
     scheduleHashUpdate();
@@ -3505,7 +3880,7 @@ function readTimeFromHash() {
     if (!hash) return null;
     const value = new URLSearchParams(hash).get(HASH_PARAM_TIME);
     const seconds = parseFloat(value);
-    return Number.isFinite(seconds) && seconds >= 0 ? seconds : null;
+    return Number.isFinite(seconds) ? seconds : null;
 }
 
 let hashUpdateTimer = null;
@@ -3514,13 +3889,13 @@ function scheduleHashUpdate() {
     clearTimeout(hashUpdateTimer);
     hashUpdateTimer = setTimeout(() => {
         const seconds = Math.round(currentTime);
-        const hash = seconds > 0 ? `#${HASH_PARAM_TIME}=${seconds}` : ' ';
+        const hash = seconds !== 0 ? `#${HASH_PARAM_TIME}=${seconds}` : ' ';
         history.replaceState(null, '', hash === ' ' ? location.pathname + location.search : hash);
     }, 400);
 }
 
 function seekTo(seconds) {
-    currentTime = Math.min(maxTime, Math.max(0, seconds));
+    currentTime = Math.min(maxTime, Math.max(MIN_TIME, seconds));
     slider.value = currentTime;
     applyTimeChange();
 }

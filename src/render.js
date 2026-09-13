@@ -69,6 +69,11 @@ export function renderMapPage(view, { template, tokens, hitsViewerUrl = '', resP
     team_health: view.team_health,
     duration_sec: view.duration_sec,
     capture_timeline: view.capture_timeline,
+    min_time: view.min_time,
+    map_marks: view.map_marks,
+    reload_calls: view.reload_calls,
+    destruction: view.destruction,
+    first_spotted: view.first_spotted,
   });
 
   const rendered = applyReplacements(template, {
