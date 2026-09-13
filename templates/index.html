@@ -93,15 +93,20 @@ img {
     -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
     box-shadow: var(--glass-shadow);
     transition: box-shadow var(--duration-med) var(--ease-out);
+    /* Размер области нужен карте, чтобы вписаться по меньшей стороне. */
+    container-type: size;
 }
 
+/*
+ * Ширина берётся наименьшей из ширины области, высоты области в пропорции
+ * карты и 1000 px. Раньше ширина всегда была 100 %, а высота обрезалась
+ * max-height — и карта растягивалась, когда области не хватало высоты.
+ */
 #canvas-wrap {
     position: relative;
-    width: 100%;
-    max-width: 1000px;
-    max-height: 100%;
+    width: min(100cqw, 100cqh * var(--map-w, 1) / var(--map-h, 1), 1000px);
     aspect-ratio: var(--map-w, 1) / var(--map-h, 1);
-    flex-shrink: 1;
+    flex-shrink: 0;
 }
 
 canvas {
@@ -2195,6 +2200,24 @@ const MIN_TIME = Math.min(0, DATA.min_time ?? 0);
 let currentTime = MIN_TIME;
 let isPlaying = false;
 let playerFilter = 'all';
+
+// Случайный бой — 15 на 15: весь состав в панель не помещается, поэтому
+// команды показываются по одной и кнопки «Все» нет. Высота строки считается
+// по большей команде, чтобы не прыгать при переключении.
+const TEAM_TABS_ONLY = DATA.battle_mode === 'random';
+const LARGEST_TEAM = Math.max(1, ...Object.values(DATA.players.reduce((sizes, p) => {
+    sizes[p.team] = (sizes[p.team] || 0) + 1;
+    return sizes;
+}, {})));
+
+if (TEAM_TABS_ONLY) {
+    playerFilter = 'ally';
+    document.querySelector('.team-filter__btn[data-filter="all"]')?.remove();
+    document.querySelectorAll('.team-filter__btn').forEach(btn => {
+        btn.classList.toggle('is-active', btn.dataset.filter === playerFilter);
+        if (btn.dataset.filter === 'enemy') btn.textContent = 'Противники';
+    });
+}
 let zoom = 1;
 let panX = 0;
 let panY = 0;
@@ -3272,7 +3295,7 @@ function applyPlayerRowHeights() {
     const listH = list.getBoundingClientRect().height;
     if (listH <= 0) return;
 
-    const slots = Math.max(DATA.players.length, list.children.length, 1);
+    const slots = Math.max(TEAM_TABS_ONLY ? LARGEST_TEAM : DATA.players.length, list.children.length, 1);
     const gap = parseFloat(getComputedStyle(list).rowGap) || 0;
     const rowHeight = (listH - gap * (slots - 1)) / slots;
 

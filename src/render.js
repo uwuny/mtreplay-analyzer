@@ -74,6 +74,7 @@ export function renderMapPage(view, { template, tokens, hitsViewerUrl = '', resP
     reload_calls: view.reload_calls,
     destruction: view.destruction,
     first_spotted: view.first_spotted,
+    battle_mode: view.battle_mode,
   });
 
   const rendered = applyReplacements(template, {

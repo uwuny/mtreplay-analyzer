@@ -1,3 +1,4 @@
+import { BATTLE_MODES } from './modes.js?v=1';
 import { round2 } from './pyround.js?v=2';
 
 const CANVAS = 1000.0;
@@ -420,6 +421,7 @@ export function buildMapView(data, { mapFileList = null } = {}) {
     duration_sec: durationSec,
     winner_team: meta.winner_team ?? null,
     finish_reason_code: meta.finish_reason_code ?? null,
+    battle_mode: BATTLE_MODES[meta.battle_type]?.key ?? null,
     players,
     positions,
     deaths: Object.values(deaths),
