@@ -1,6 +1,5 @@
 # Blender 5.1.0
 # www.blender.org
-mtllib R45_IS-7.mtl
 o Chassis_havok_s_leftTrack_0
 v -1.766247 0.001946 -2.413805
 v -1.766247 0.897038 -2.589376
