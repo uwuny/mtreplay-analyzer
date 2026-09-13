@@ -732,15 +732,15 @@ button.spotlight svg { width: 15px; height: 15px; flex-shrink: 0; }
 </div>
 
 <script type="module">
-import { buildReport, parseTanksDb } from './src/report.js?v=1';
-import { buildMapView, buildHitsView } from './src/viewmodel.js?v=1';
-import { renderMapPage, renderHitsPage } from './src/render.js?v=1';
-import { renderResultsPage } from './src/results.js?v=1';
-import { renderStatsTable, renderStatButtons } from './src/stats.js?v=1';
+import { buildReport, parseTanksDb } from './src/report.js?v=3';
+import { buildMapView, buildHitsView } from './src/viewmodel.js?v=3';
+import { renderMapPage, renderHitsPage } from './src/render.js?v=2';
+import { renderResultsPage } from './src/results.js?v=2';
+import { renderStatsTable, renderStatButtons } from './src/stats.js?v=2';
 import {
   putBattle, listSummaries, getReport, existingIds, clearAll,
   storageEstimate, makeSummary, rebuildSummaries,
-} from './src/storage.js?v=1';
+} from './src/storage.js?v=2';
 
 const RES_PREFIX = document.documentElement.dataset.resPrefix || '../';
 
@@ -752,14 +752,14 @@ const once = (key, load) => {
 const text = (url) => fetch(url).then((r) => (r.ok ? r.text() : ''));
 
 const getTanksDb = () => once('tanks', () => text('./tank_db.txt').then(parseTanksDb).catch(() => ({})));
-const getTokens = () => once('tokens', () => text('./assets/tokens.css?v=1').catch(() => ''));
+const getTokens = () => once('tokens', () => text('./assets/tokens.css?v=2').catch(() => ''));
 
-const getMapTemplate = () => once('tpl-map', () => text('./templates/index.html?v=1'));
+const getMapTemplate = () => once('tpl-map', () => text('./templates/index.html?v=2'));
 
 const getMapFileList = () => once('map-files', () => fetch('./maps/index.json')
   .then((r) => (r.ok ? r.json() : null))
   .catch(() => null));
-const getHitsTemplate = () => once('tpl-hits', () => text('./templates/hits.html?v=1'));
+const getHitsTemplate = () => once('tpl-hits', () => text('./templates/hits.html?v=2'));
 
 const mapBuffers = new Map();
 async function loadMapBuffer(mapName) {
@@ -771,6 +771,20 @@ async function loadMapBuffer(mapName) {
     if (res.ok) buffer = await res.arrayBuffer();
   } catch {   }
   mapBuffers.set(mapName, buffer);
+  return buffer;
+}
+
+// Таблицы разрушаемых объектов: номер объекта в квадрате карты → координаты.
+const destructibleBuffers = new Map();
+async function loadDestructiblesBuffer(mapName) {
+  if (!mapName) return null;
+  if (destructibleBuffers.has(mapName)) return destructibleBuffers.get(mapName);
+  let buffer = null;
+  try {
+    const res = await fetch(`./maps/destructibles/${encodeURIComponent(mapName)}.bin`);
+    if (res.ok) buffer = await res.arrayBuffer();
+  } catch {   }
+  destructibleBuffers.set(mapName, buffer);
   return buffer;
 }
 
@@ -1001,7 +1015,8 @@ async function processFiles(files) {
     await new Promise((r) => setTimeout(r, 0));
 
     try {
-      const report = await buildReport(await fresh[i].arrayBuffer(), fresh[i].name, { tanksDb, loadMapBuffer, loadGameXml });
+      const report = await buildReport(await fresh[i].arrayBuffer(), fresh[i].name,
+        { tanksDb, loadMapBuffer, loadGameXml, loadDestructiblesBuffer });
       const summary = makeSummary(report);
       await putBattle(fresh[i].name, summary, report);
       rows.push({ ...summary, id: fresh[i].name });

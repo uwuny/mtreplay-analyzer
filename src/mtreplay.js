@@ -1,4 +1,4 @@
-import { Blowfish } from './blowfish.js?v=1';
+import { Blowfish } from './blowfish.js?v=2';
 
 export const REPLAY_MAGIC = 0x11343212;
 export const PACKET_HEADER_SIZE = 12;

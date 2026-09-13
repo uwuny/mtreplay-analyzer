@@ -1,4 +1,4 @@
-import { openPacked, packedOwnValue, sectionOf, valueOf } from './bigworld.js?v=1';
+import { openPacked, packedOwnValue, sectionOf, valueOf } from './bigworld.js?v=2';
 
 const SHELL_KINDS = {
   ARMOR_PIERCING: { short: 'ББ', full: 'бронебойный' },

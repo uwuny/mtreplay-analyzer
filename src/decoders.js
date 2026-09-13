@@ -1,7 +1,8 @@
-import { loadPickle } from './pickle.js?v=1';
-import { round2 } from './pyround.js?v=1';
+import { loadPickle } from './pickle.js?v=2';
+import { round2 } from './pyround.js?v=2';
 
 const PICKLE_MARKER = [0x80, 0x02];
+const latin = new TextDecoder('latin1');
 
 function findMarker(bytes, marker, from = 0) {
   const last = bytes.length - marker.length;
@@ -72,8 +73,44 @@ const METHOD = {
   SHOW_TRACER: 38,
   SHOW_DAMAGED_DEVICES: 59,
   SHOW_SHOT_RESULTS: 60,
-  BATTLE_EVENT: 66,
+  UPDATE_ARENA: 66,
+  UPDATE_POSITIONS: 67,
 };
+
+/** Типы обновлений арены (ARENA_UPDATE), нужные для списка машин. */
+export const ARENA_UPDATE = {
+  VEHICLE_LIST: 1,
+  VEHICLE_ADDED: 2,
+};
+
+/** Номер сущности AreaDestructibles — квадрата карты с разрушаемыми объектами. */
+export const ENTITY_DESTRUCTIBLES = 7;
+
+/**
+ * Разрушаемые объекты квадрата: четыре массива подряд, в порядке описания
+ * сущности. Номер массива приходит в пути к свойству, размер записи от него
+ * же и зависит.
+ */
+export const DESTRUCTIBLE_KIND = {
+  MODULE: 0,
+  FRAGILE: 1,
+  COLUMN: 2,
+  TREE: 3,
+};
+
+const DESTRUCTIBLE_RECORD = { 0: 3, 1: 3, 2: 3, 3: 5 };
+
+/** Команды командного чата: рисование на карте и объявление перезарядки. */
+export const CHAT_ACTION = {
+  ATTENTION_TO_POSITION: 30,
+  RELOADING_GUN: 44,
+};
+
+/** Длина в аргументах BigWorld: один байт, либо 0xFF и три байта. */
+function readPackedLength(tail, at) {
+  if (tail[at] !== 0xff) return [tail[at], at + 1];
+  return [tail[at + 1] | (tail[at + 2] << 8) | (tail[at + 3] << 16), at + 4];
+}
 
 /** Vehicle.onHealthChanged: сколько HP снято и чем именно. */
 function decodeHealthChanged(tail, view, victimId) {
@@ -207,21 +244,37 @@ export function decodeBattleEvent(view, raw) {
   if (tail.length !== tailLength) return result;
   const tailView = new DataView(tail.buffer, tail.byteOffset, tail.byteLength);
 
-  if (methodId === METHOD.BATTLE_EVENT && tailLength === 19 && tail.length >= 3) {
-    try {
-      const at = findMarker(tail, PICKLE_MARKER);
-      if (at !== -1) {
-        const obj = loadPickle(tail.subarray(at));
-        if (Array.isArray(obj) && obj.length === 6) {
-          result.capture_progress = {
-            base_index: obj[1],
-            percent: obj[2],
-            seconds_remaining: obj[3],
-            player_count: obj[4],
-          };
+  if (methodId === METHOD.UPDATE_ARENA) {
+    const [size, at] = readPackedLength(tail, 1);
+    // Список машин арены приходит сжатым: под туманом войны он пополняется по ходу боя.
+    if ((tail[0] === ARENA_UPDATE.VEHICLE_LIST || tail[0] === ARENA_UPDATE.VEHICLE_ADDED)
+        && size > 0 && at + size <= tail.length) {
+      result.arena_update = { type: tail[0], data: tail.subarray(at, at + size) };
+      return result;
+    }
+
+    if (tailLength === 19 && tail.length >= 3) {
+      try {
+        const marker = findMarker(tail, PICKLE_MARKER);
+        if (marker !== -1) {
+          const obj = loadPickle(tail.subarray(marker));
+          if (Array.isArray(obj) && obj.length === 6) {
+            result.capture_progress = {
+              base_index: obj[1],
+              percent: obj[2],
+              seconds_remaining: obj[3],
+              player_count: obj[4],
+            };
+          }
         }
-      }
-    } catch {   }
+      } catch {   }
+    }
+    return result;
+  }
+
+  if (methodId === METHOD.UPDATE_POSITIONS) {
+    const positions = decodeFarPositions(tail, tailView);
+    if (positions) result.far_positions = positions;
     return result;
   }
 
@@ -293,9 +346,130 @@ function round4(x) {
   return x < 0 ? -out : out;
 }
 
+/**
+ * Avatar.updatePositions — позиции машин за пределами зоны отрисовки: индекс в
+ * отсортированном списке машин арены и пара x, z в метрах, раз в 2 секунды.
+ */
+function decodeFarPositions(tail, view) {
+  const [count, at] = readPackedLength(tail, 0);
+  if (!count) return null;
+
+  const [values, from] = readPackedLength(tail, at + count);
+  if (values !== count * 2 || from + values * 2 !== tail.length) return null;
+
+  const positions = [];
+  for (let i = 0; i < count; i++) {
+    positions.push({
+      index: tail[at + i],
+      x: view.getInt16(from + i * 4, true),
+      z: view.getInt16(from + i * 4 + 2, true),
+    });
+  }
+  return positions;
+}
+
+/** Сущность вошла в зону отрисовки: id, тип и позиция появления. */
+export function decodeEntityCreate(view) {
+  const result = {
+    clock: round2(view.getFloat32(8, true)),
+    entity_id: view.getUint32(12, true),
+    entity_type: view.getUint16(16, true),
+  };
+  if (view.byteLength >= 42) {
+    result.position = {
+      x: round2(view.getFloat32(30, true)),
+      y: round2(view.getFloat32(34, true)),
+      z: round2(view.getFloat32(38, true)),
+    };
+  }
+  return result;
+}
+
+/**
+ * Сломался конкретный объект: забор, дерево, часть дома. Приходит как
+ * изменение вложенного свойства сущности-квадрата карты.
+ *
+ * Тело: [u32 сущность][u8 срез][u32 длина][биты пути][запись]. В пути четыре
+ * бита на номер свойства (8, 10, 12, 14 — четыре массива разрушаемых), затем
+ * границы среза; запись выровнена по байту, поэтому её достаточно взять с
+ * конца тела. В самой записи — номер объекта внутри квадрата.
+ */
+export function decodeDestructibles(view, raw) {
+  const result = {
+    clock: round2(view.getFloat32(8, true)),
+    entity_id: view.getUint32(12, true),
+  };
+  if (view.byteLength < 22) return result;
+
+  const size = view.getUint32(17, true);
+  const body = raw.subarray(21, 21 + size);
+  if (body.length !== size) return result;
+
+  const kind = (body[0] >> 5) - 4;
+  const record = DESTRUCTIBLE_RECORD[kind];
+  if (record === undefined || (body[0] & 0x10) || body.length <= record) return result;
+
+  const value = body.subarray(body.length - record);
+  result.destructible = {
+    kind,
+    index: (value[0] << 8) | value[1],
+  };
+  return result;
+}
+
+/** Вектор из строки в аргументах чата: три float32 подряд. */
+function chatPosition(text) {
+  if (typeof text !== 'string' || text.length !== 12) return null;
+  const bytes = new Uint8Array(12);
+  for (let i = 0; i < 12; i++) bytes[i] = text.charCodeAt(i) & 0xff;
+  const view = new DataView(bytes.buffer);
+  return {
+    x: round2(view.getFloat32(0, true)),
+    y: round2(view.getFloat32(4, true)),
+    z: round2(view.getFloat32(8, true)),
+  };
+}
+
+/**
+ * Событие, которое клиент записал в реплей сам: имя, затем pickle. Из них нужен
+ * командный чат — рисование на карте и объявления о перезарядке.
+ */
+export function decodeReplayEvent(view, raw) {
+  const result = { clock: round2(view.getFloat32(8, true)) };
+  if (view.byteLength < 16) return result;
+
+  const nameLength = view.getUint32(12, true);
+  const nameEnd = 16 + nameLength;
+  if (nameEnd + 4 > raw.length) return result;
+  if (latin.decode(raw.subarray(16, nameEnd)) !== 'bw_chat2.onActionReceived') return result;
+
+  const size = view.getUint32(nameEnd, true);
+  const body = raw.subarray(nameEnd + 4, nameEnd + 4 + size);
+  if (body.length !== size) return result;
+
+  try {
+    const action = loadPickle(body);
+    if (!Array.isArray(action) || action.length < 3) return result;
+    const args = action[2];
+    if (!args || typeof args !== 'object') return result;
+
+    result.chat = {
+      action: action[0],
+      vehicle_id: args.int64Arg1 ?? null,
+      index: args.int32Arg1 ?? null,
+      seconds: args.floatArg1 ?? 0,
+      position: chatPosition(args.strArg2),
+    };
+  } catch {   }
+  return result;
+}
+
 export const REPORT_DECODERS = {
-  0x0a: decodeMovement,
+  0x05: decodeEntityCreate,
   0x08: decodeBattleEvent,
+  0x0a: decodeMovement,
   0x1a: decodeAim,
+  0x24: decodeDestructibles,
   0x2b: decodeBattlePhase,
+  0x31: decodeReplayEvent,
 };

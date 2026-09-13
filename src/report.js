@@ -1,8 +1,10 @@
-import { loadMapXml } from './bigworld.js?v=1';
-import { REPORT_DECODERS } from './decoders.js?v=1';
-import { parseReplay } from './mtreplay.js?v=1';
-import { round2 } from './pyround.js?v=1';
-import { buildVehicleDb } from './vehicles.js?v=1';
+import { loadMapXml } from './bigworld.js?v=2';
+import { ARENA_UPDATE, CHAT_ACTION, ENTITY_DESTRUCTIBLES, REPORT_DECODERS } from './decoders.js?v=3';
+import { chunkIdFromPosition, loadDestructibles } from './destructibles.js?v=1';
+import { inflate, parseReplay } from './mtreplay.js?v=2';
+import { loadPickle } from './pickle.js?v=2';
+import { round2 } from './pyround.js?v=2';
+import { buildVehicleDb } from './vehicles.js?v=2';
 
 const FINISH_REASON_NAMES = {
   1: 'уничтожение техники / истечение времени',
@@ -165,7 +167,7 @@ function buildCoordinates(packets, entityIds, startClock) {
   return coords;
 }
 
-function buildDamageLists(packets, entityInfo) {
+function buildDamageLists(packets, entityInfo, critEvents) {
   const dealt = new Map();
   const received = new Map();
   for (const eid of entityInfo.keys()) {
@@ -178,23 +180,52 @@ function buildDamageLists(packets, entityInfo) {
     return info ? formatNameClan(info.name, info.clan) : 'Неизвестно';
   };
 
+  const events = [];
   for (const p of packets) {
     if (p.type !== 0x08) continue;
     const dmg = p.decoded?.damage_event;
     if (!dmg) continue;
 
+    // Список критов общий у обеих копий события: он дополняется уже после разбора.
+    const crits = [];
     const base = {
       time: round2(p.decoded.clock),
       damage: dmg.damage,
       is_ricochet: dmg.damage === 0,
       old_hp: dmg.old_hp,
       new_hp: dmg.new_hp,
+      reason: dmg.attack_reason ?? 0,
+      crits,
     };
     if (dealt.has(dmg.attacker_id)) dealt.get(dmg.attacker_id).push({ ...base, target: label(dmg.victim_id) });
     if (received.has(dmg.victim_id)) received.get(dmg.victim_id).push({ ...base, attacker: label(dmg.attacker_id) });
+    events.push({ victim_id: dmg.victim_id, time: base.time, crits });
   }
 
+  attachCrits(events, critEvents);
   return { dealt, received };
+}
+
+/** Крит приписывается последнему попаданию по этой машине — как и в списке выстрелов. */
+function attachCrits(damageEvents, critEvents) {
+  for (const event of critEvents) {
+    let owner = null;
+    for (const row of damageEvents) {
+      if (row.victim_id !== event.vehicle_id) continue;
+      const delay = event.clock - row.time;
+      if (delay < -MATCH_WINDOW_SEC || delay > CRIT_WINDOW_SEC) continue;
+      if (!owner || row.time > owner.time) owner = row;
+    }
+    if (!owner) continue;
+
+    const add = (name, destroyed) => {
+      if (!owner.crits.some((crit) => crit.name === name && crit.destroyed === destroyed)) {
+        owner.crits.push({ name, destroyed });
+      }
+    };
+    for (const name of event.damaged) add(name, false);
+    for (const name of event.destroyed) add(name, true);
+  }
 }
 
 function buildCaptureTimeline(packets) {
@@ -353,7 +384,7 @@ function pickShell(shells, effectsIndex, tracer) {
  * к нему подтягиваются снятые HP, критованные модули, трассер выстрела и — для
  * выстрелов автора реплея — точные флаги исхода.
  */
-function buildShots(packets, entityInfo, tanksDb, vehicleDb, extras) {
+function buildShots(packets, entityInfo, tanksDb, vehicleDb, critEvents) {
   const positions = new Map();
   for (const p of packets) {
     if (p.type === 0x0a && p.decoded?.position) {
@@ -387,8 +418,6 @@ function buildShots(packets, entityInfo, tanksDb, vehicleDb, extras) {
       for (const entry of p.decoded.shot_results) shotResults.push({ clock, entry, used: false });
     }
   }
-  const critEvents = buildCritTimeline(packets, extras);
-
   const take = (list, clock, match) => {
     let best = null;
     let bestDelta = MATCH_WINDOW_SEC;
@@ -475,6 +504,132 @@ function buildShots(packets, entityInfo, tanksDb, vehicleDb, extras) {
   return shots;
 }
 
+/**
+ * Позиции машин за зоной отрисовки: Avatar.updatePositions присылает не id машины,
+ * а её место в отсортированном списке арены. Под туманом войны список пополняется
+ * по ходу боя (противник добавляется в момент первого засвета), поэтому он ведётся
+ * по шагам, а не берётся один раз на старте.
+ */
+async function buildFarPositions(packets, inflateFn) {
+  const arena = new Set();
+  const spotted = new Map();
+  const far = new Map();
+  let ids = [];
+
+  for (const p of packets) {
+    const decoded = p.decoded;
+    if (!decoded) continue;
+
+    if (decoded.arena_update) {
+      let rows = null;
+      try {
+        rows = loadPickle(await inflateFn(decoded.arena_update.data));
+      } catch {
+        continue;
+      }
+
+      if (decoded.arena_update.type === ARENA_UPDATE.VEHICLE_LIST) arena.clear();
+      const list = decoded.arena_update.type === ARENA_UPDATE.VEHICLE_LIST ? rows : [rows];
+      for (const row of Array.isArray(list) ? list : []) {
+        const vehicleId = Array.isArray(row) ? row[0] : null;
+        if (!Number.isInteger(vehicleId)) continue;
+        if (!arena.has(vehicleId)) spotted.set(vehicleId, decoded.clock);
+        arena.add(vehicleId);
+      }
+      ids = [...arena].sort((a, b) => a - b);
+      continue;
+    }
+
+    if (!decoded.far_positions) continue;
+    for (const item of decoded.far_positions) {
+      const vehicleId = ids[item.index];
+      if (vehicleId === undefined) continue;
+      if (!far.has(vehicleId)) far.set(vehicleId, []);
+      far.get(vehicleId).push({ clock: decoded.clock, x: item.x, z: item.z });
+    }
+  }
+
+  return { far, spotted };
+}
+
+/**
+ * Командный чат: рисование на карте (серии точек с шагом около 0,2 с) и объявления
+ * о перезарядке. И то и другое приходит только по союзникам — чат командный.
+ */
+function buildChatMarks(packets, entityInfo, startClock) {
+  const marks = [];
+  const reloads = [];
+
+  const label = (eid) => {
+    const info = entityInfo.get(eid);
+    return info ? formatNameClan(info.name, info.clan) : null;
+  };
+
+  for (const p of packets) {
+    const chat = p.decoded?.chat;
+    if (!chat || !entityInfo.has(chat.vehicle_id)) continue;
+    const time = round2(p.decoded.clock - startClock);
+
+    if (chat.action === CHAT_ACTION.ATTENTION_TO_POSITION && chat.position) {
+      marks.push({ time, player: label(chat.vehicle_id), x: chat.position.x, z: chat.position.z });
+    } else if (chat.action === CHAT_ACTION.RELOADING_GUN && chat.seconds > 0) {
+      reloads.push({ time, player: label(chat.vehicle_id), seconds: round2(chat.seconds) });
+    }
+  }
+
+  return { marks, reloads };
+}
+
+/**
+ * Поломки объектов. Событие приходит на сущность-квадрат карты и несёт номер
+ * сломанного объекта внутри квадрата, а координаты этого объекта лежат в
+ * таблице карты. Без таблицы остаётся центр квадрата — точность 100 метров.
+ * Квадраты приходят и уходят вместе с зоной отрисовки, так что поломки видны
+ * только вокруг автора.
+ */
+function buildDestruction(packets, startClock, lookup) {
+  const chunks = new Map();
+  const events = [];
+
+  for (const p of packets) {
+    const decoded = p.decoded;
+    if (!decoded) continue;
+
+    if (p.type === 0x05) {
+      if (decoded.entity_type === ENTITY_DESTRUCTIBLES && decoded.position) {
+        chunks.set(decoded.entity_id, decoded.position);
+      }
+      continue;
+    }
+    if (p.type !== 0x24) continue;
+
+    const chunk = chunks.get(decoded.entity_id);
+    if (!chunk) continue;
+
+    let x = chunk.x;
+    let z = chunk.z;
+    let exact = false;
+    const item = decoded.destructible;
+    if (lookup && item) {
+      const chunkId = chunkIdFromPosition(chunk.x, chunk.z);
+      const found = chunkId === null ? null : lookup(chunkId, item.index);
+      if (found) {
+        [x, z] = found;
+        exact = true;
+      }
+    }
+    events.push({
+      time: round2(decoded.clock - startClock),
+      x: round2(x),
+      z: round2(z),
+      kind: item ? item.kind : null,
+      exact,
+    });
+  }
+
+  return events;
+}
+
 function formatBattleDatetime(timestamp) {
   if (!timestamp) return null;
   const d = new Date(timestamp * 1000);
@@ -532,8 +687,17 @@ export async function buildReport(arrayBuffer, sourceName, deps) {
   const mapBuffer = await deps.loadMapBuffer(mapName);
   const mapXml = loadMapXml(mapBuffer, `${mapName}.xml`, gb.gameplayID || '');
 
-  const coordsByEntity = buildCoordinates(packets, [...entityInfo.keys()], startClock ?? 0.0);
-  const { dealt, received } = buildDamageLists(packets, entityInfo);
+  // Таблица разрушаемых объектов карты: без неё поломки остаются с точностью
+  // до квадрата, остальной отчёт от неё не зависит.
+  let destructibles = null;
+  if (deps.loadDestructiblesBuffer) {
+    try {
+      destructibles = loadDestructibles(await deps.loadDestructiblesBuffer(mapName));
+    } catch {   }
+  }
+
+  const relativeTo = startClock ?? 0.0;
+  const coordsByEntity = buildCoordinates(packets, [...entityInfo.keys()], relativeTo);
   const captureTimeline = buildCaptureTimeline(packets);
 
   // Броня и боекомплект — из распакованных игровых XML. Без них отчёт
@@ -551,7 +715,15 @@ export async function buildReport(arrayBuffer, sourceName, deps) {
     }
   }
 
-  const shots = buildShots(packets, entityInfo, tanksDb, vehicleDb, extras);
+  const critEvents = buildCritTimeline(packets, extras);
+  const { dealt, received } = buildDamageLists(packets, entityInfo, critEvents);
+  const shots = buildShots(packets, entityInfo, tanksDb, vehicleDb, critEvents);
+
+  // Дальние позиции, метки и поломки не влияют на остальной отчёт: если что-то
+  // из этого не разобралось, бой всё равно собирается.
+  const { far, spotted } = await buildFarPositions(packets, deps.inflate || inflate);
+  const { marks, reloads } = buildChatMarks(packets, entityInfo, relativeTo);
+  const destruction = buildDestruction(packets, relativeTo, destructibles);
 
   const playersOut = [];
   for (const eid of [...entityInfo.keys()].sort((a, b) => a - b)) {
@@ -612,6 +784,16 @@ export async function buildReport(arrayBuffer, sourceName, deps) {
         killed_by: killedBy,
       },
       coordinates: coordsByEntity.get(eid) || [],
+      // Позиции за зоной отрисовки: раз в 2 секунды, метры округлены до целых.
+      far_coordinates: (far.get(eid) || []).map((c) => ({
+        time: round2(c.clock - relativeTo),
+        x: c.x,
+        z: c.z,
+      })),
+      // Момент первого засвета: для союзников список арены известен с начала боя.
+      first_spotted: spotted.has(eid) && spotted.get(eid) - relativeTo > 1
+        ? round2(spotted.get(eid) - relativeTo)
+        : null,
     });
   }
 
@@ -646,6 +828,9 @@ export async function buildReport(arrayBuffer, sourceName, deps) {
       total_players: entityInfo.size,
       map_bounds_and_bases: mapXml,
       capture_timeline: captureTimeline,
+      map_marks: marks,
+      reload_calls: reloads,
+      destruction_events: destruction,
     },
     players: playersOut,
     shots,
