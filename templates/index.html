@@ -82,7 +82,13 @@ img {
     display: flex;
     align-items: center;
     justify-content: center;
-    flex: 1;
+    /*
+     * Плитка облегает карту: ширина — высота области (окно без полей body)
+     * в пропорции карты плюс свои поля и рамка (34 px). Если окну не хватает
+     * ширины, плитка сжимается вместе с картой.
+     */
+    flex: 0 1 auto;
+    width: min(calc((100dvh - 22px - 34px) * var(--map-w, 1) / var(--map-h, 1) + 34px), 1034px);
     min-width: 0;
     background: var(--card-bg);
     border: 1px solid var(--glass-border);
@@ -372,7 +378,8 @@ canvas:active { cursor: grabbing; }
 
 #sidebar {
     width: 42%;
-    flex: 0 0 42%;
+    /* Забирает ширину, которую не заняла плитка карты. */
+    flex: 1 0 42%;
     min-width: 380px;
     min-height: 0;
     display: flex;
@@ -1637,13 +1644,11 @@ canvas:active { cursor: grabbing; }
                 <span class="map-filter-option__dot" aria-hidden="true"></span>Название танка
             </div>
             <div class="map-filter-option" id="mfo-marks" data-key="marks"
-                 role="checkbox" aria-checked="false" tabindex="0"
-                 data-tooltip="Рисование союзников на карте">
+                 role="checkbox" aria-checked="false" tabindex="0">
                 <span class="map-filter-option__dot" aria-hidden="true"></span>Метки игроков
             </div>
             <div class="map-filter-option" id="mfo-destruction" data-key="destruction"
-                 role="checkbox" aria-checked="false" tabindex="0"
-                 data-tooltip="Поломки объектов: точность — квадрат 100 м, только вокруг автора">
+                 role="checkbox" aria-checked="false" tabindex="0">
                 <span class="map-filter-option__dot" aria-hidden="true"></span>Разрушения
             </div>
 
