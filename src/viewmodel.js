@@ -1,5 +1,5 @@
 import { BATTLE_MODES } from './modes.js?v=1';
-import { round2 } from './pyround.js?v=2';
+import { round2 } from './pyround.js?v=3';
 
 const CANVAS = 1000.0;
 const OUT_OF_FRAME = 50;

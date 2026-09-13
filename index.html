@@ -237,22 +237,22 @@ button.spotlight svg { width: 15px; height: 15px; flex-shrink: 0; }
 #grid tbody tr.glow-red   { --glow-rgb: var(--glow-red-rgb); }
 
 #grid tbody tr.glow td {
-    --glow-edge: rgb(var(--glow-rgb) / 55%);
+    --glow-edge: rgb(var(--glow-rgb) / 32%);
     --glow-vertical: linear-gradient(180deg,
-        rgb(var(--glow-rgb) / 20%), transparent 40%, transparent 60%, rgb(var(--glow-rgb) / 20%));
+        rgb(var(--glow-rgb) / 13%), transparent 40%, transparent 60%, rgb(var(--glow-rgb) / 13%));
     background: var(--glow-vertical), rgb(var(--glow-rgb) / 6%);
     box-shadow: inset 0 1px 0 var(--glow-edge), inset 0 -1px 0 var(--glow-edge);
     border-bottom-color: transparent;
     border-radius: 0;
 }
 #grid tbody tr.glow td:first-child {
-    background: linear-gradient(90deg, rgb(var(--glow-rgb) / 20%), transparent 28px),
+    background: linear-gradient(90deg, rgb(var(--glow-rgb) / 13%), transparent 28px),
         var(--glow-vertical), rgb(var(--glow-rgb) / 6%);
     box-shadow: inset 1px 0 0 var(--glow-edge), inset 0 1px 0 var(--glow-edge), inset 0 -1px 0 var(--glow-edge);
     border-radius: 12px 0 0 12px;
 }
 #grid tbody tr.glow td:last-child {
-    background: linear-gradient(270deg, rgb(var(--glow-rgb) / 20%), transparent 28px),
+    background: linear-gradient(270deg, rgb(var(--glow-rgb) / 13%), transparent 28px),
         var(--glow-vertical), rgb(var(--glow-rgb) / 6%);
     box-shadow: inset -1px 0 0 var(--glow-edge), inset 0 1px 0 var(--glow-edge), inset 0 -1px 0 var(--glow-edge);
     border-radius: 0 12px 12px 0;
@@ -759,8 +759,10 @@ button.spotlight svg { width: 15px; height: 15px; flex-shrink: 0; }
 </div>
 
 <script type="module">
-import { buildReport, parseTanksDb } from './src/report.js?v=6';
-import { buildMapView, buildHitsView } from './src/viewmodel.js?v=6';
+import { buildReport, parseTanksDb } from './src/report.js?v=7';
+import { createLoaders } from './src/loaders.js?v=1';
+import { buildReports } from './src/report_pool.js?v=1';
+import { buildMapView, buildHitsView } from './src/viewmodel.js?v=7';
 import { renderMapPage, renderHitsPage } from './src/render.js?v=3';
 import { renderResultsPage } from './src/results.js?v=3';
 import { renderStatsTable, renderStatButtons } from './src/stats.js?v=5';
@@ -781,51 +783,15 @@ const text = (url) => fetch(url).then((r) => (r.ok ? r.text() : ''));
 const getTanksDb = () => once('tanks', () => text('./tank_db.txt').then(parseTanksDb).catch(() => ({})));
 const getTokens = () => once('tokens', () => text('./assets/tokens.css?v=2').catch(() => ''));
 
-const getMapTemplate = () => once('tpl-map', () => text('./templates/index.html?v=5'));
+const getMapTemplate = () => once('tpl-map', () => text('./templates/index.html?v=6'));
 
 const getMapFileList = () => once('map-files', () => fetch('./maps/index.json')
   .then((r) => (r.ok ? r.json() : null))
   .catch(() => null));
-const getHitsTemplate = () => once('tpl-hits', () => text('./templates/hits.html?v=3'));
+const getHitsTemplate = () => once('tpl-hits', () => text('./templates/hits.html?v=4'));
 
-const mapBuffers = new Map();
-async function loadMapBuffer(mapName) {
-  if (!mapName) return null;
-  if (mapBuffers.has(mapName)) return mapBuffers.get(mapName);
-  let buffer = null;
-  try {
-    const res = await fetch(`./maps/definitions/${encodeURIComponent(mapName)}.xml`);
-    if (res.ok) buffer = await res.arrayBuffer();
-  } catch {   }
-  mapBuffers.set(mapName, buffer);
-  return buffer;
-}
-
-// Таблицы разрушаемых объектов: номер объекта в квадрате карты → координаты.
-const destructibleBuffers = new Map();
-async function loadDestructiblesBuffer(mapName) {
-  if (!mapName) return null;
-  if (destructibleBuffers.has(mapName)) return destructibleBuffers.get(mapName);
-  let buffer = null;
-  try {
-    const res = await fetch(`./maps/destructibles/${encodeURIComponent(mapName)}.bin`);
-    if (res.ok) buffer = await res.arrayBuffer();
-  } catch {   }
-  destructibleBuffers.set(mapName, buffer);
-  return buffer;
-}
-
-// Распакованные игровые XML: броня узлов и характеристики снарядов.
-const gameXmlBuffers = new Map();
-function loadGameXml(path) {
-  if (!/^[\w-]+(\/[\w-]+)*\.xml$/.test(path)) return Promise.resolve(null);
-  if (!gameXmlBuffers.has(path)) {
-    gameXmlBuffers.set(path, fetch(`./vehicles/${path}`)
-      .then((r) => (r.ok ? r.arrayBuffer() : null))
-      .catch(() => null));
-  }
-  return gameXmlBuffers.get(path);
-}
+// Загрузчики данных для разбора в основном потоке — если воркеры недоступны.
+const loaders = createLoaders();
 
 const resultOf = (r) => (r.incomplete ? 'нет итогов'
   : r.winner_team === 0 ? 'ничья'
@@ -867,7 +833,8 @@ const COLUMNS = [
     key: 'enemy_clan', title: 'Противник', width: '100px',
     html: (r) => {
       const tag = String(r.enemy_clan || '').toUpperCase();
-      if (!tag) return '<span class="dim">—</span>';
+      // В Натиске противник собирается из случайных игроков — клана у команды нет.
+      if (!tag || r.mode === 'onslaught') return '<span class="dim">—</span>';
       const href = `https://hemero.ru/ru/ru2026may/personal.php?tag=${encodeURIComponent(tag)}`;
 
       return `<a class="clan-link" href="${href}" target="_blank" rel="noopener" data-tip="Открыть клан на Hemero">${tag}</a>`
@@ -1046,25 +1013,33 @@ async function processFiles(files) {
   const started = performance.now();
   let failures = 0;
   let offFormat = 0;
+  let done = 0;
 
-  for (let i = 0; i < fresh.length; i++) {
-    statusEl.innerHTML = `<progress max="${fresh.length}" value="${i}"></progress>`
-      + `Разбираю ${i + 1} из ${fresh.length}: ${fresh[i].name}`;
+  const showProgress = () => {
+    statusEl.innerHTML = `<progress max="${fresh.length}" value="${done}"></progress>`
+      + `Разбираю: готово ${done} из ${fresh.length}`;
+  };
+  showProgress();
 
-    await new Promise((r) => setTimeout(r, 0));
-
-    try {
-      const report = await buildReport(await fresh[i].arrayBuffer(), fresh[i].name,
-        { tanksDb, loadMapBuffer, loadGameXml, loadDestructiblesBuffer });
-      const summary = makeSummary(report);
-      await putBattle(fresh[i].name, summary, report);
-      rows.push({ ...summary, id: fresh[i].name });
-      if (summary.off_format) offFormat++;
-    } catch (err) {
-      failures++;
-      console.error(fresh[i].name, err);
-    }
-  }
+  // Файлы разбираются параллельно в воркерах и сохраняются по мере готовности.
+  await buildReports(fresh, {
+    tanksDb,
+    buildLocally: (buffer, name) => buildReport(buffer, name, { tanksDb, ...loaders }),
+    onResult: async (file, report, error) => {
+      try {
+        if (!report) throw error || new Error('разбор не вернул отчёт');
+        const summary = makeSummary(report);
+        await putBattle(file.name, summary, report);
+        rows.push({ ...summary, id: file.name });
+        if (summary.off_format) offFormat++;
+      } catch (err) {
+        failures++;
+        console.error(file.name, err);
+      }
+      done++;
+      showProgress();
+    },
+  });
 
   const seconds = ((performance.now() - started) / 1000).toFixed(1);
   renderBody();

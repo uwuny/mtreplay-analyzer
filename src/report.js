@@ -1,9 +1,9 @@
 import { loadMapXml } from './bigworld.js?v=3';
-import { ARENA_UPDATE, CHAT_ACTION, ENTITY_DESTRUCTIBLES, REPORT_DECODERS } from './decoders.js?v=5';
+import { ARENA_UPDATE, CHAT_ACTION, ENTITY_DESTRUCTIBLES, REPORT_DECODERS } from './decoders.js?v=6';
 import { chunkIdFromPosition, loadDestructibles } from './destructibles.js?v=1';
 import { inflate, parseReplay } from './mtreplay.js?v=2';
 import { loadPickle } from './pickle.js?v=2';
-import { round2 } from './pyround.js?v=2';
+import { round2 } from './pyround.js?v=3';
 import { BATTLE_MODES } from './modes.js?v=1';
 import { buildVehicleDb, buildVehicleTypeResolver, effectKind } from './vehicles.js?v=4';
 
@@ -193,27 +193,28 @@ function buildClanDbidLookup(replay) {
 }
 
 function findBattleStartClock(packets) {
-  const byClock = packets
-    .map((p, index) => ({ p, index, clock: p.decoded?.clock ?? 0 }))
-
-    .sort((a, b) => a.clock - b.clock || a.index - b.index);
+  // Старт движения — самый ранний момент, когда машина отъехала больше чем на метр
+  // от своей первой позиции. Первая позиция — самая ранняя по времени (при равном
+  // времени — раньше в потоке): два прохода вместо сортировки всех пакетов.
+  const firstPositions = new Map();
+  packets.forEach((p, index) => {
+    if (p.type !== 0x0a || !p.decoded?.position) return;
+    const first = firstPositions.get(p.decoded.player_id);
+    if (!first || p.decoded.clock < first.clock) {
+      firstPositions.set(p.decoded.player_id, { clock: p.decoded.clock, index, position: p.decoded.position });
+    }
+  });
 
   let moveStart = null;
-  const firstPositions = new Map();
-  for (const { p } of byClock) {
-    if (p.type !== 0x0a || !p.decoded?.position) continue;
-    const eid = p.decoded.player_id;
+  packets.forEach((p, index) => {
+    if (p.type !== 0x0a || !p.decoded?.position) return;
+    const first = firstPositions.get(p.decoded.player_id);
+    if (first.index === index) return;
     const pos = p.decoded.position;
-    const clock = p.decoded.clock;
-    if (!firstPositions.has(eid)) {
-      firstPositions.set(eid, [clock, pos.x, pos.z]);
-      continue;
+    if (Math.hypot(pos.x - first.position.x, pos.z - first.position.z) > 1.0) {
+      moveStart = moveStart === null ? p.decoded.clock : Math.min(moveStart, p.decoded.clock);
     }
-    const [, x0, z0] = firstPositions.get(eid);
-    if (Math.hypot(pos.x - x0, pos.z - z0) > 1.0) {
-      moveStart = moveStart === null ? clock : Math.min(moveStart, clock);
-    }
-  }
+  });
 
   const markers = packets.filter((p) => p.type === 0x2b).map((p) => p.decoded.clock).sort((a, b) => a - b);
   if (moveStart !== null && markers.length) {

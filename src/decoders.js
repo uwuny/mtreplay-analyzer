@@ -1,5 +1,5 @@
 import { loadPickle } from './pickle.js?v=2';
-import { round2 } from './pyround.js?v=2';
+import { round2, roundTo } from './pyround.js?v=3';
 
 const PICKLE_MARKER = [0x80, 0x02];
 const latin = new TextDecoder('latin1');
@@ -334,23 +334,7 @@ export function decodeBattleEvent(view, raw) {
 }
 
 function round4(x) {
-
-  const scaled = Math.abs(x);
-  if (!Number.isFinite(scaled)) return x;
-  const s = scaled.toFixed(20);
-  const dot = s.indexOf('.');
-  const kept = s.slice(dot + 1, dot + 5);
-  const rest = s.slice(dot + 5);
-  let n = Number(s.slice(0, dot) + kept);
-  const first = rest.charCodeAt(0) - 48;
-  let up;
-  if (first > 5) up = true;
-  else if (first < 5) up = false;
-  else if (/[1-9]/.test(rest.slice(1))) up = true;
-  else up = n % 2 === 1;
-  if (up) n += 1;
-  const out = n / 10000;
-  return x < 0 ? -out : out;
+  return roundTo(x, 4);
 }
 
 /**
