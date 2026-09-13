@@ -121,6 +121,23 @@ const EFFECT_SUFFIX = {
 
 const EFFECT_CLASSES = ['superhuge', 'huge', 'large', 'main', 'medium', 'small', 'auto'];
 
+// Вид снаряда по имени записи эффекта. У пушек суффикс — полное имя вида,
+// у САУ — буквы: SF — фугасный, SC — кумулятивный, A на конце — с оглушением.
+const EFFECT_KIND_PATTERNS = [
+  [/APFSDS$/, 'ARMOR_PIERCING_FSDS'],
+  [/APCR$/, 'ARMOR_PIERCING_CR'],
+  [/ArmorPiercing$/, 'ARMOR_PIERCING'],
+  [/HighExplosive$/, 'HIGH_EXPLOSIVE'],
+  [/HollowCharge$/, 'HOLLOW_CHARGE'],
+  [/SFA?$/, 'HIGH_EXPLOSIVE'],
+  [/SCA?$/, 'HOLLOW_CHARGE'],
+];
+
+export function effectKind(name) {
+  if (typeof name !== 'string') return null;
+  return EFFECT_KIND_PATTERNS.find(([pattern]) => pattern.test(name))?.[1] ?? null;
+}
+
 function effectClass(name, kind) {
   const suffix = EFFECT_SUFFIX[kind];
   if (typeof name !== 'string' || !suffix || !name.endsWith(suffix)) return null;
@@ -222,7 +239,9 @@ function readShells(file, sharedGuns, shells, effectIndexes, classByCaliber) {
         shell.effects = gunClass + EFFECT_SUFFIX[shell.kind];
         index = effectIndexes.get(shell.effects);
       }
-      if (index === undefined) continue;
+      // Запись эффекта не восстановилась (у пушки нет соседа с понятным классом
+      // калибра): снаряд остаётся без номера и в отчёте узнаётся по трассеру.
+      if (index === undefined) index = null;
 
       shell.effects_index = index;
       if (!own.has(index)) own.set(index, []);
@@ -233,7 +252,8 @@ function readShells(file, sharedGuns, shells, effectIndexes, classByCaliber) {
     for (const [index, list] of own) byEffect.set(index, list);
   }
 
-  return [...byEffect.values()].flat().sort((a, b) => a.effects_index - b.effects_index);
+  const order = (shell) => shell.effects_index ?? Number.MAX_SAFE_INTEGER;
+  return [...byEffect.values()].flat().sort((a, b) => order(a) - order(b));
 }
 
 /**
@@ -270,6 +290,42 @@ function readWheels(file) {
   return wheels;
 }
 
+// Номера наций в компактном описании машины.
+const NATIONS = ['ussr', 'germany', 'usa', 'china', 'france', 'uk', 'japan', 'czech', 'sweden', 'poland', 'italy', 'intunion'];
+
+/**
+ * Тип машины по компактному описанию из списка арены. Старшие четыре бита
+ * заголовка — нация, флаг 0x02 — номер машины занимает два байта, а не один.
+ * Номер ищется в list.xml нации.
+ */
+export function buildVehicleTypeResolver({ loadGameXml }) {
+  const lists = new Map();
+  const listOf = (nation) => {
+    if (!lists.has(nation)) {
+      lists.set(nation, Promise.resolve(loadGameXml(`${nation}/list.xml`)).then((buffer) => {
+        const byId = new Map();
+        const file = openPacked(buffer);
+        for (const entry of file?.root || []) {
+          const section = valueOf(file, entry);
+          const id = isSection(section) ? num(sectionOf(file, section, 'id')) : null;
+          if (id !== null) byId.set(id, `${nation}:${entry.name}`);
+        }
+        return byId;
+      }).catch(() => new Map()));
+    }
+    return lists.get(nation);
+  };
+
+  return async (compactDescr) => {
+    if (typeof compactDescr !== 'string' || compactDescr.length < 3) return '';
+    const byte = (i) => compactDescr.charCodeAt(i) & 0xff;
+    const nation = NATIONS[byte(0) >> 4];
+    if (!nation) return '';
+    const id = byte(0) & 0x02 ? byte(1) | (byte(2) << 8) : byte(1);
+    return (await listOf(nation)).get(id) || '';
+  };
+}
+
 function splitVehicleType(vehicleType) {
   const at = String(vehicleType || '').indexOf(':');
   if (at === -1) return null;
@@ -292,6 +348,7 @@ export async function buildVehicleDb(vehicleTypes, { loadGameXml }) {
   const effects = await open('common/shot_effects.xml');
   const effectIndexes = new Map();
   if (effects) effects.root.forEach((entry, index) => effectIndexes.set(entry.name, index));
+  const effectNames = effects ? effects.root.map((entry) => entry.name) : [];
 
   const common = await open('common/vehicle_common.xml');
   const extras = [];
@@ -326,5 +383,5 @@ export async function buildVehicleDb(vehicleTypes, { loadGameXml }) {
     };
   }
 
-  return { vehicles, extras };
+  return { vehicles, extras, effects: effectNames };
 }

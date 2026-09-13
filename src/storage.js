@@ -1,12 +1,18 @@
 const DB_NAME = 'mtreplay';
 
-const DB_VERSION = 5;
+import { BATTLE_MODES } from './modes.js?v=1';
 
-const REPORT_FORMAT_VERSIONS = [5];
+export { BATTLE_MODES };
+
+const DB_VERSION = 7;
+
+// Версии, в которых менялся формат отчёта: сохранённые отчёты старше надо разобрать заново.
+const REPORT_FORMAT_VERSIONS = [5, 6, 7];
 const SUMMARIES = 'summaries';
 const REPORTS = 'reports';
 
-const MAX_TEAM_SIZE = 7;
+// Размер команды в режимах, которых нет в BATTLE_MODES.
+const DEFAULT_TEAM_SIZE = 7;
 
 let dbPromise = null;
 
@@ -115,11 +121,17 @@ export function makeSummary(report) {
     else enemiesDestroyed++;
   }
 
+  // В неполном реплее противник известен только засвеченный, так что вторая
+  // команда может быть неполной или вовсе пустой.
+  const incomplete = Boolean(meta.incomplete);
+  const teamSize = BATTLE_MODES[meta.battle_type]?.teamSize ?? DEFAULT_TEAM_SIZE;
   const teamSizes = new Map();
   for (const p of report.players) teamSizes.set(p.team, (teamSizes.get(p.team) || 0) + 1);
-  const offFormat = teamSizes.size !== 2
-    || Math.max(...teamSizes.values()) > MAX_TEAM_SIZE
-    || report.players.length > MAX_TEAM_SIZE * 2;
+  const offFormat = !report.players.length
+    || teamSizes.size > 2
+    || (!incomplete && teamSizes.size !== 2)
+    || Math.max(...teamSizes.values()) > teamSize
+    || report.players.length > teamSize * 2;
 
   const roster = report.players
     .filter((p) => p.team === meta.creator_team)
@@ -172,6 +184,9 @@ export function makeSummary(report) {
     survived: !stats.is_destroyed,
     life_time_sec: stats.life_time_sec ?? 0,
     total_players: meta.total_players ?? 0,
+    battle_type: meta.battle_type ?? null,
+    mode: BATTLE_MODES[meta.battle_type]?.key ?? null,
+    incomplete,
     off_format: offFormat,
     shots_count: report.shots.length,
     xp: stats.xp ?? 0,

@@ -1,0 +1,7 @@
+# Игровые XML упакованы в двоичный формат BigWorld: переводы строк в них
+# трогать нельзя, иначе файлы перестанут читаться.
+vehicles/**/*.xml binary
+maps/definitions/*.xml binary
+*.mtreplay binary
+*.bin binary
+*.png binary
