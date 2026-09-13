@@ -1895,8 +1895,10 @@ playerShots.forEach((shot, idx) => {
     );
 
     const pierced = shot.outcome === 'penetration';
+    // Фугас снимает HP и без пробития — такой урон показывается рядом с исходом.
     const damageTag = span(`dmg-tag${pierced ? '' : ' blocked'}`,
-        pierced ? String(shot.damage || 0) : outcomeOf(shot).label);
+        pierced ? String(shot.damage || 0)
+            : shot.damage ? `${outcomeOf(shot).label} · ${shot.damage}` : outcomeOf(shot).label);
     item.append(line, damageTag);
     item.addEventListener('click', () => selectShot(idx));
     item.addEventListener('keydown', (e) => {

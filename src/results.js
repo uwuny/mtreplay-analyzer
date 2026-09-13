@@ -91,6 +91,9 @@ const COLUMNS = [
 
         return `<td class="dead" data-tip-plain data-tip="${escText(s.killed_by ? `уничтожил: ${s.killed_by}` : 'уничтожен')}">✗</td>`;
       }
+      if (s.health === null || s.health === undefined) {
+        return '<td class="dead" data-tip-plain data-tip="реплей записан не до конца — итогов нет">—</td>';
+      }
       const left = s.health ?? 0;
       const max = p.max_hp || 0;
       return `<td class="alive" data-tip="осталось ${num(left)} из ${num(max)} HP">${num(left)}</td>`;
@@ -133,6 +136,7 @@ function teamBlock(title, clan, players, ownerLabel, side, resPrefix) {
 }
 
 function finishReasonText(meta, allies, enemies) {
+  if (meta.incomplete) return 'Реплей записан не до конца — итогов боя нет';
   const dead = (list) => list.filter((p) => p.final_stats?.is_destroyed).length;
   const won = meta.winner_team === meta.creator_team;
 
@@ -161,12 +165,15 @@ export function renderResultsPage(report, { tokens = '', resPrefix = '../' } = {
 
   const alliesLost = allies.filter((p) => p.final_stats?.is_destroyed).length;
   const enemiesLost = enemies.filter((p) => p.final_stats?.is_destroyed).length;
-  const won = meta.winner_team === ownTeam;
-  const draw = meta.winner_team === 0;
-  const verdict = draw ? 'ничья' : won ? 'победа' : 'поражение';
+  const incomplete = Boolean(meta.incomplete);
+  const won = !incomplete && meta.winner_team === ownTeam;
+  const draw = incomplete || meta.winner_team === 0;
+  const verdict = incomplete ? 'нет итогов' : draw ? 'ничья' : won ? 'победа' : 'поражение';
 
-  const minutes = Math.floor((meta.battle_duration_sec || 0) / 60);
-  const seconds = String((meta.battle_duration_sec || 0) % 60).padStart(2, '0');
+  const duration = meta.battle_duration_sec;
+  const durationText = duration === null || duration === undefined
+    ? '—'
+    : `${Math.floor(duration / 60)}:${String(duration % 60).padStart(2, '0')}`;
 
   const stamp = String(meta.battle_datetime || '');
   const battleDate = stamp.slice(0, 10);
@@ -388,7 +395,7 @@ td.dead  { color: var(--text-dim); cursor: help; }
         <svg class="clock-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true">
             <circle cx="8" cy="8" r="6.6" stroke="currentColor" stroke-width="1.7"/>
             <path d="M8 4.4V8l2.6 1.9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>${minutes}:${seconds}</span>
+        </svg>${durationText}</span>
 </div>
 
 ${teamBlock('Союзники', meta.creator_clan, allies, ownerLabel, 'ally', resPrefix)}

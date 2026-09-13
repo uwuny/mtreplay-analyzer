@@ -194,6 +194,10 @@ export function loadMapXml(buffer, fileName, gameplayId = '') {
       result.team_spawn_points = Object.fromEntries(
         Object.entries(spawns).map(([team, positions]) => [team, positions[0]]),
       );
+
+      // В Натиске на части карт вместо баз команды одна точка захвата.
+      const controlPoint = toPosition(packedPick(bytes, view, names, node, 'controlPoint'));
+      if (controlPoint) result.control_point = controlPoint;
     }
 
     return result;

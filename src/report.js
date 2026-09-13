@@ -1,10 +1,11 @@
-import { loadMapXml } from './bigworld.js?v=2';
-import { ARENA_UPDATE, CHAT_ACTION, ENTITY_DESTRUCTIBLES, REPORT_DECODERS } from './decoders.js?v=3';
+import { loadMapXml } from './bigworld.js?v=3';
+import { ARENA_UPDATE, CHAT_ACTION, ENTITY_DESTRUCTIBLES, REPORT_DECODERS } from './decoders.js?v=5';
 import { chunkIdFromPosition, loadDestructibles } from './destructibles.js?v=1';
 import { inflate, parseReplay } from './mtreplay.js?v=2';
 import { loadPickle } from './pickle.js?v=2';
 import { round2 } from './pyround.js?v=2';
-import { buildVehicleDb } from './vehicles.js?v=2';
+import { BATTLE_MODES } from './modes.js?v=1';
+import { buildVehicleDb, buildVehicleTypeResolver, effectKind } from './vehicles.js?v=4';
 
 const FINISH_REASON_NAMES = {
   1: 'уничтожение техники / истечение времени',
@@ -63,6 +64,81 @@ function buildEntityInfo(replay) {
     });
   }
   return info;
+}
+
+// Поля строки в списке машин арены.
+const ARENA_ROW = {
+  VEHICLE_ID: 0, COMPACT_DESCR: 1, NAME: 2, TEAM: 3, ACCOUNT_DBID: 7, CLAN: 8, CLAN_DBID: 9, MAX_HEALTH: 24,
+};
+
+/**
+ * Реплей, записанный не до конца (выход из боя, вылет клиента), итогового блока
+ * не содержит. Состав тогда собирается из списка арены, который пополняется по
+ * мере засвета противника. Тип машины берётся из последнего её описания: в
+ * Натиске технику меняют на отсчёте, и в начале боя у союзников записан ещё
+ * прежний выбор — он остаётся только запасным вариантом.
+ */
+async function buildEntityInfoFromArena(replay, inflateFn, resolveType) {
+  const info = new Map();
+  for (const [eidStr, v] of Object.entries(replay.gameBegin?.vehicles || {})) {
+    info.set(Number(eidStr), {
+      name: v.name ?? null,
+      team: v.team ?? null,
+      clan: v.clanAbbrev || '',
+      max_hp: v.maxHealth ?? null,
+      vehicle_type_full: v.vehicleType || '',
+      account_dbid: null,
+      final_stats_raw: {},
+    });
+  }
+
+  const clanDbids = new Map();
+  for (const p of replay.packets) {
+    const update = p.decoded?.arena_update;
+    if (!update) continue;
+    let rows;
+    try {
+      rows = loadPickle(await inflateFn(update.data));
+    } catch {
+      continue;
+    }
+
+    for (const row of update.type === ARENA_UPDATE.VEHICLE_LIST ? rows : [rows]) {
+      if (!Array.isArray(row) || !Number.isInteger(row[ARENA_ROW.VEHICLE_ID])) continue;
+      const eid = row[ARENA_ROW.VEHICLE_ID];
+      const known = info.get(eid);
+      const accountDbid = row[ARENA_ROW.ACCOUNT_DBID] ?? null;
+      info.set(eid, {
+        name: row[ARENA_ROW.NAME] ?? known?.name ?? null,
+        team: row[ARENA_ROW.TEAM] ?? known?.team ?? null,
+        clan: row[ARENA_ROW.CLAN] || known?.clan || '',
+        max_hp: row[ARENA_ROW.MAX_HEALTH] || known?.max_hp || null,
+        vehicle_type_full: await resolveType(row[ARENA_ROW.COMPACT_DESCR]) || known?.vehicle_type_full || '',
+        account_dbid: accountDbid,
+        final_stats_raw: known?.final_stats_raw || {},
+      });
+      if (accountDbid !== null) clanDbids.set(accountDbid, row[ARENA_ROW.CLAN_DBID] || null);
+    }
+  }
+  return { info, clanDbids };
+}
+
+/** Итогов нет — гибель и убийца берутся из снятия HP до нуля. */
+function fillDeathsFromHealth(packets, entityInfo) {
+  for (const p of packets) {
+    const dmg = p.type === 0x08 ? p.decoded?.damage_event : null;
+    if (!dmg?.is_destroyed) continue;
+    const raw = entityInfo.get(dmg.victim_id)?.final_stats_raw;
+    if (!raw) continue;
+    raw.deathCount = 1;
+    raw.killerID = dmg.attacker_id;
+  }
+}
+
+/** «10.09.2026 18:59:27» из начала боя — в формат отчёта. */
+function parseBeginDatetime(text) {
+  const m = /^(\d{2})\.(\d{2})\.(\d{4}) (\d{2}:\d{2}:\d{2})$/.exec(String(text || ''));
+  return m ? `${m[3]}-${m[2]}-${m[1]} ${m[4]}` : null;
 }
 
 export function buildTeamClans(entityInfo, clanDbidByAccount) {
@@ -235,6 +311,8 @@ function buildCaptureTimeline(packets) {
       const cap = p.decoded.capture_progress;
       timeline.push({
         time: round2(p.decoded.clock),
+        // Команда, которой принадлежит база: в стандартном бою у каждой своя.
+        team: cap.team ?? null,
         base_index: cap.base_index,
         players_capturing: cap.player_count,
         percent: cap.percent,
@@ -267,6 +345,13 @@ function nearestByClock(records, targetClock) {
 // или гусеница.
 const PIERCING_EFFECT_CODES = new Set([4, 5, 6]);
 const RICOCHET_EFFECT_CODES = new Set([1]);
+const BLOCKED_EFFECT_CODES = new Set([1, 2, 3]);
+
+// Фугас наносит урон и без пробития: ненулевой коэффициент урона у него
+// пробития не означает. Непробитие снимает не больше половины урона снаряда,
+// пробитие — полный урон с разбросом ±25 %.
+const EXPLOSIVE_KINDS = new Set(['HIGH_EXPLOSIVE']);
+const EXPLOSIVE_PIERCED_DAMAGE_SHARE = 0.75;
 
 // Биты Avatar.showShotResults, подтверждённые на собственных выстрелах:
 // бит 5 ставится на непробитие (код 3), рикошет (код 1) несёт бит 3.
@@ -275,6 +360,38 @@ const HIT_FLAG_PIERCED = 1 << 4;
 
 const MATCH_WINDOW_SEC = 0.6;
 const CRIT_WINDOW_SEC = 4.0;
+
+// Причина урона в Vehicle.onHealthChanged: 0 — выстрел.
+const ATTACK_REASON_SHOT = 0;
+
+/**
+ * Сводит попадания с событиями одного выстрела по ближайшему времени.
+ * Разбор по порядку попаданий ошибается на автоматах заряжания: снаряды
+ * серии прилетают чаще окна сверки, и урон пробития забирает соседнее
+ * непробитие. Поэтому пары набираются от самых близких, а попадания
+ * с меньшим rank получают события первыми.
+ */
+function pairByClock(hits, rows, match, rank = () => 0) {
+  const candidates = [];
+  hits.forEach((item, hitIndex) => {
+    rows.forEach((row, rowIndex) => {
+      const delta = Math.abs(row.clock - item.clock);
+      if (delta <= MATCH_WINDOW_SEC && match(item, row)) {
+        candidates.push({ hitIndex, rowIndex, delta, rank: rank(item) });
+      }
+    });
+  });
+  candidates.sort((a, b) => a.rank - b.rank || a.delta - b.delta || a.hitIndex - b.hitIndex);
+
+  const paired = new Array(hits.length).fill(null);
+  const used = new Set();
+  for (const { hitIndex, rowIndex } of candidates) {
+    if (paired[hitIndex] || used.has(rowIndex)) continue;
+    paired[hitIndex] = rows[rowIndex];
+    used.add(rowIndex);
+  }
+  return paired;
+}
 
 const EXTRA_LABELS = {
   engineHealth: 'двигатель',
@@ -332,7 +449,21 @@ function buildCritTimeline(packets, extras) {
   return events;
 }
 
-function classifyHit(hit, flags) {
+/**
+ * Исход попадания фугасом, нанёсшим урон. Сверено с итоговыми пробитиями
+ * стрелков в случайных боях (арта, ОФ и HESH): код непробития в пути снаряда
+ * или разрыв на экране — не пробил; урон от трёх четвертей снаряда или
+ * добивание (урон упёрся в остаток HP) — пробил.
+ */
+function classifyExplosiveHit(hit, shell, health) {
+  if (hit.last_material_is_shield) return 'no_penetration';
+  if (hit.segments.some((segment) => BLOCKED_EFFECT_CODES.has(segment.effect_code))) return 'no_penetration';
+  if (!health || !shell.damage || health.event.is_destroyed) return 'penetration';
+  return health.event.damage >= shell.damage * EXPLOSIVE_PIERCED_DAMAGE_SHARE ? 'penetration' : 'no_penetration';
+}
+
+function classifyHit(hit, flags, shell = null, health = null) {
+  if (hit.damage_factor > 0 && EXPLOSIVE_KINDS.has(shell?.kind)) return classifyExplosiveHit(hit, shell, health);
   if (hit.damage_factor > 0) return 'penetration';
 
   if (flags !== null) {
@@ -368,8 +499,16 @@ function findTracer(tracers, clock, hit) {
  * Запись эффекта общая у снарядов одного вида: обычный и специальный
  * бронебойный у пушки неразличимы по ней. Летевший узнаётся по скорости трассера.
  */
-function pickShell(shells, effectsIndex, tracer) {
-  const candidates = shells.filter((shell) => shell.effects_index === effectsIndex);
+function pickShell(shells, effectsIndex, tracer, effectNames = []) {
+  let candidates = shells.filter((shell) => shell.effects_index === effectsIndex);
+  // Снаряды, у которых запись эффекта не восстановилась, подходят к попаданию
+  // этой машины того же вида — вид читается из имени эффекта в реплее.
+  if (!candidates.length) {
+    const unresolved = shells.filter((shell) => shell.effects_index === null);
+    const kind = effectKind(effectNames[effectsIndex]);
+    const sameKind = unresolved.filter((shell) => shell.kind === kind);
+    candidates = sameKind.length ? sameKind : unresolved;
+  }
   if (candidates.length < 2 || !tracer) return candidates[0] || null;
 
   const { x, y, z } = tracer.velocity;
@@ -384,7 +523,7 @@ function pickShell(shells, effectsIndex, tracer) {
  * к нему подтягиваются снятые HP, критованные модули, трассер выстрела и — для
  * выстрелов автора реплея — точные флаги исхода.
  */
-function buildShots(packets, entityInfo, tanksDb, vehicleDb, critEvents) {
+function buildShots(packets, entityInfo, tanksDb, vehicleDb, critEvents, effectNames) {
   const positions = new Map();
   for (const p of packets) {
     if (p.type === 0x0a && p.decoded?.position) {
@@ -413,40 +552,34 @@ function buildShots(packets, entityInfo, tanksDb, vehicleDb, critEvents) {
     const clock = p.decoded.clock;
     if (p.decoded.hit) hits.push({ clock, hit: p.decoded.hit });
     if (p.decoded.tracer) tracers.push({ clock, tracer: p.decoded.tracer });
-    if (p.decoded.damage_event) healthEvents.push({ clock, event: p.decoded.damage_event, used: false });
+    if (p.decoded.damage_event) healthEvents.push({ clock, event: p.decoded.damage_event });
     if (p.decoded.shot_results) {
-      for (const entry of p.decoded.shot_results) shotResults.push({ clock, entry, used: false });
+      for (const entry of p.decoded.shot_results) shotResults.push({ clock, entry });
     }
   }
-  const take = (list, clock, match) => {
-    let best = null;
-    let bestDelta = MATCH_WINDOW_SEC;
-    for (const row of list) {
-      if (row.used) continue;
-      const delta = Math.abs(row.clock - clock);
-      if (delta > bestDelta || !match(row)) continue;
-      best = row;
-      bestDelta = delta;
-    }
-    if (best) best.used = true;
-    return best;
-  };
+
+  // Снятые HP берутся только от выстрела: таран и резервы того же игрока
+  // приходят рядом по времени, но к снаряду отношения не имеют.
+  const healthByHit = pairByClock(hits, healthEvents,
+    ({ hit }, row) => row.event.attack_reason === ATTACK_REASON_SHOT
+      && row.event.victim_id === hit.victim_id && row.event.attacker_id === hit.attacker_id,
+    ({ hit }) => (hit.damage_factor > 0 ? 0 : 1));
+  const resultByHit = pairByClock(hits, shotResults, ({ hit }, row) => row.entry.vehicle_id === hit.victim_id);
 
   const shots = [];
-  for (const { clock, hit } of hits) {
+  hits.forEach(({ clock, hit }, hitIndex) => {
     const shooterState = nearestByClock(positions.get(hit.attacker_id), clock);
     const victimState = nearestByClock(positions.get(hit.victim_id), clock);
 
     const [attackerRaw, attackerTank] = tankOf(hit.attacker_id);
     const [victimRaw, victimTank] = tankOf(hit.victim_id);
 
-    const health = take(healthEvents, clock,
-      (row) => row.event.victim_id === hit.victim_id && row.event.attacker_id === hit.attacker_id);
-    const result = take(shotResults, clock, (row) => row.entry.vehicle_id === hit.victim_id);
+    const health = healthByHit[hitIndex];
+    const result = resultByHit[hitIndex];
 
     const flags = result ? result.entry.flags : null;
     const tracer = findTracer(tracers, clock, hit);
-    const shell = pickShell(vehicleDb?.[attackerRaw]?.shells || [], hit.effects_index, tracer);
+    const shell = pickShell(vehicleDb?.[attackerRaw]?.shells || [], hit.effects_index, tracer, effectNames);
     // Пробитие падает с расстоянием, которое пролетел снаряд. Точка вылета
     // трассера точнее позиции стрелка: та у невидимой машины устаревает.
     const origin = tracer?.start ?? shooterState?.position ?? null;
@@ -466,7 +599,7 @@ function buildShots(packets, entityInfo, tanksDb, vehicleDb, critEvents) {
       victim_team: entityInfo.get(hit.victim_id)?.team ?? null,
       damage: health ? health.event.damage : 0,
       is_destroyed: health ? health.event.is_destroyed : false,
-      outcome: classifyHit(hit, flags),
+      outcome: classifyHit(hit, flags, shell, health),
       segments: hit.segments,
       effects_index: hit.effects_index,
       damage_factor: hit.damage_factor,
@@ -484,7 +617,7 @@ function buildShots(packets, entityInfo, tanksDb, vehicleDb, critEvents) {
       victim_pos: victimState?.position ?? null,
       victim_ypr: victimState?.hull_orientation ?? null,
     });
-  }
+  });
 
   // Крит относится к последнему попаданию по этой машине.
   for (const event of critEvents) {
@@ -521,6 +654,8 @@ async function buildFarPositions(packets, inflateFn) {
     if (!decoded) continue;
 
     if (decoded.arena_update) {
+      // Смена техники не меняет состав арены, а значит и номера в списке.
+      if (decoded.arena_update.type === ARENA_UPDATE.VEHICLE_UPDATED) continue;
       let rows = null;
       try {
         rows = loadPickle(await inflateFn(decoded.arena_update.data));
@@ -649,8 +784,19 @@ export async function buildReport(arrayBuffer, sourceName, deps) {
   const gb = replay.gameBegin || {};
   const common = (replay.playerInfo && replay.playerInfo[0]?.common) || {};
 
-  const entityInfo = buildEntityInfo(replay);
-  const clanDbidByAccount = buildClanDbidLookup(replay);
+  const incomplete = !Array.isArray(replay.playerInfo);
+  let entityInfo;
+  let clanDbidByAccount;
+  if (incomplete) {
+    const resolveType = deps.loadGameXml
+      ? buildVehicleTypeResolver({ loadGameXml: deps.loadGameXml })
+      : async () => '';
+    ({ info: entityInfo, clanDbids: clanDbidByAccount } = await buildEntityInfoFromArena(
+      replay, deps.inflate || inflate, resolveType));
+  } else {
+    entityInfo = buildEntityInfo(replay);
+    clanDbidByAccount = buildClanDbidLookup(replay);
+  }
 
   const ownAccountDbid = gb.playerID;
   let ownEntityId = null;
@@ -672,10 +818,12 @@ export async function buildReport(arrayBuffer, sourceName, deps) {
   const ownClanEntry = teamClans.get(ownTeam) || {};
   const enemyClanEntry = otherTeams.length ? teamClans.get(otherTeams[0]) : {};
 
-  const ownClan = ownClanEntry.clan ?? '';
-  const ownClanDbid = ownClanEntry.clan_id ?? null;
-  const enemyClan = enemyClanEntry.clan ?? '';
-  const enemyClanDbid = enemyClanEntry.clan_id ?? null;
+  // В случайном бою команда не клановая: самый частый тег в ней ничего не значит.
+  const clanTeams = BATTLE_MODES[gb.battleType ?? common.bonusType]?.clanTeams !== false;
+  const ownClan = clanTeams ? ownClanEntry.clan ?? '' : '';
+  const ownClanDbid = clanTeams ? ownClanEntry.clan_id ?? null : null;
+  const enemyClan = clanTeams ? enemyClanEntry.clan ?? '' : '';
+  const enemyClanDbid = clanTeams ? enemyClanEntry.clan_id ?? null : null;
 
   const ownPersonalClan = ownInfo.clan ?? '';
 
@@ -705,11 +853,13 @@ export async function buildReport(arrayBuffer, sourceName, deps) {
   const vehicleTypes = [...entityInfo.values()].map((info) => info.vehicle_type_full).filter(Boolean);
   let vehicleDb = {};
   let extras = [];
+  let effectNames = [];
   if (deps.loadGameXml) {
     try {
       const db = await buildVehicleDb(vehicleTypes, { loadGameXml: deps.loadGameXml });
       vehicleDb = db.vehicles;
       extras = db.extras;
+      effectNames = db.effects;
     } catch (err) {
       console.warn('Не удалось прочитать данные техники:', err);
     }
@@ -717,13 +867,14 @@ export async function buildReport(arrayBuffer, sourceName, deps) {
 
   const critEvents = buildCritTimeline(packets, extras);
   const { dealt, received } = buildDamageLists(packets, entityInfo, critEvents);
-  const shots = buildShots(packets, entityInfo, tanksDb, vehicleDb, critEvents);
+  const shots = buildShots(packets, entityInfo, tanksDb, vehicleDb, critEvents, effectNames);
 
   // Дальние позиции, метки и поломки не влияют на остальной отчёт: если что-то
   // из этого не разобралось, бой всё равно собирается.
   const { far, spotted } = await buildFarPositions(packets, deps.inflate || inflate);
   const { marks, reloads } = buildChatMarks(packets, entityInfo, relativeTo);
   const destruction = buildDestruction(packets, relativeTo, destructibles);
+  if (incomplete) fillDeathsFromHealth(packets, entityInfo);
 
   const playersOut = [];
   for (const eid of [...entityInfo.keys()].sort((a, b) => a - b)) {
@@ -779,7 +930,8 @@ export async function buildReport(arrayBuffer, sourceName, deps) {
         damage_received_from_invisibles: raw.damageReceivedFromInvisibles ?? 0,
         credits: raw.credits ?? 0,
 
-        health: raw.health ?? 0,
+        // null — итогов нет (реплей записан не до конца).
+        health: raw.health ?? null,
         is_destroyed: isDestroyed,
         killed_by: killedBy,
       },
@@ -802,10 +954,12 @@ export async function buildReport(arrayBuffer, sourceName, deps) {
       source_file: sourceName,
       map_name_tech: gb.mapName ?? null,
       map_name_ru: gb.mapDisplayName ?? null,
-      battle_datetime: formatBattleDatetime(common.arenaCreateTime),
+      battle_datetime: formatBattleDatetime(common.arenaCreateTime) ?? parseBeginDatetime(gb.dateTime),
       game_version: gb.clientVersionFromExe ?? null,
-      // Тип боя (ARENA_BONUS_TYPE): 20 — Вылазки.
+      // Тип боя (ARENA_BONUS_TYPE): 20 — Вылазки, 43 — Натиск.
       battle_type: gb.battleType ?? common.bonusType ?? null,
+      // Реплей оборвался до конца боя: итоговой статистики и победителя нет.
+      incomplete,
       creator_name: gb.playerName ?? null,
       creator_team: ownTeam,
 

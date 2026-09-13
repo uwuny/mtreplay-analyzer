@@ -167,6 +167,7 @@ export function buildMapView(data, { mapFileList = null } = {}) {
     if (capTime < 0) continue;
     captureTimeline.push({
       time: capTime,
+      team: cap.team ?? null,
       base_index: cap.base_index ?? 0,
       players_capturing: cap.players_capturing ?? 0,
       percent: cap.percent ?? 0,
@@ -370,6 +371,18 @@ export function buildMapView(data, { mapFileList = null } = {}) {
         icon: teamNum === myTeam ? `Base_${idx}_our.png` : `Base_${idx}.png`,
         team: teamNum, number: idx,
       });
+    });
+  }
+  // Натиск на части карт идёт за одну точку захвата вместо баз команды.
+  // Номер у неё тот, что приходит в прогрессе захвата.
+  if (!mapMarkers.length && mapBounds.control_point) {
+    const [sx, sy] = worldToScreen(mapBounds.control_point[0], mapBounds.control_point[1]);
+    const captured = [...new Set(captureTimeline
+      .filter((cap) => cap.percent > 0 || cap.players_capturing > 0)
+      .map((cap) => cap.base_index))];
+    mapMarkers.push({
+      type: 'base', x: sx, y: sy, icon: 'Base_N.png',
+      team: null, number: captured.length === 1 ? captured[0] : 1,
     });
   }
   for (const [teamTag, pos] of Object.entries(mapBounds.team_spawn_points || {})) {

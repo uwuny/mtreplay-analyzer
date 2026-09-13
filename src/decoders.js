@@ -77,11 +77,18 @@ const METHOD = {
   UPDATE_POSITIONS: 67,
 };
 
-/** Типы обновлений арены (ARENA_UPDATE), нужные для списка машин. */
+/**
+ * Типы обновлений арены (ARENA_UPDATE), нужные для списка машин. VEHICLE_UPDATED
+ * приходит, когда игрок сменил технику на отсчёте (в Натиске её выбирают уже
+ * на арене) или когда у противника впервые открылся тип машины.
+ */
 export const ARENA_UPDATE = {
   VEHICLE_LIST: 1,
   VEHICLE_ADDED: 2,
+  VEHICLE_UPDATED: 11,
 };
+
+const ARENA_VEHICLE_UPDATES = new Set(Object.values(ARENA_UPDATE));
 
 /** Номер сущности AreaDestructibles — квадрата карты с разрушаемыми объектами. */
 export const ENTITY_DESTRUCTIBLES = 7;
@@ -247,8 +254,7 @@ export function decodeBattleEvent(view, raw) {
   if (methodId === METHOD.UPDATE_ARENA) {
     const [size, at] = readPackedLength(tail, 1);
     // Список машин арены приходит сжатым: под туманом войны он пополняется по ходу боя.
-    if ((tail[0] === ARENA_UPDATE.VEHICLE_LIST || tail[0] === ARENA_UPDATE.VEHICLE_ADDED)
-        && size > 0 && at + size <= tail.length) {
+    if (ARENA_VEHICLE_UPDATES.has(tail[0]) && size > 0 && at + size <= tail.length) {
       result.arena_update = { type: tail[0], data: tail.subarray(at, at + size) };
       return result;
     }
@@ -260,6 +266,7 @@ export function decodeBattleEvent(view, raw) {
           const obj = loadPickle(tail.subarray(marker));
           if (Array.isArray(obj) && obj.length === 6) {
             result.capture_progress = {
+              team: obj[0],
               base_index: obj[1],
               percent: obj[2],
               seconds_remaining: obj[3],

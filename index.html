@@ -27,6 +27,7 @@
     --color-text-muted: var(--text-secondary);
     --color-text-faint: var(--text-dim);
     --table-sticky-bg: #1b1c20;
+    --onslaught-rgb: 72 146 255;
 }
 
 html {
@@ -231,6 +232,16 @@ button.spotlight svg { width: 15px; height: 15px; flex-shrink: 0; }
 #grid tbody tr.off-format:last-child td:first-child,
 #grid tbody tr.off-format:last-child td:last-child { border-radius: 0; }
 #grid tbody tr.off-format:hover td { background: rgb(var(--danger-rgb) / 15%); }
+
+/* Натиск: тусклая синяя неоновая подсветка строки. */
+#grid tbody tr.onslaught td {
+    background: rgb(var(--onslaught-rgb) / 7%);
+    box-shadow: inset 0 0 22px -8px rgb(var(--onslaught-rgb) / 55%);
+    border-radius: 0;
+}
+#grid tbody tr.onslaught:last-child td:first-child,
+#grid tbody tr.onslaught:last-child td:last-child { border-radius: 0; }
+#grid tbody tr.onslaught:hover td { background: rgb(var(--onslaught-rgb) / 13%); }
 
 .clan-link {
     font-family: var(--font-mono); font-weight: 600;
@@ -732,15 +743,15 @@ button.spotlight svg { width: 15px; height: 15px; flex-shrink: 0; }
 </div>
 
 <script type="module">
-import { buildReport, parseTanksDb } from './src/report.js?v=3';
-import { buildMapView, buildHitsView } from './src/viewmodel.js?v=3';
+import { buildReport, parseTanksDb } from './src/report.js?v=6';
+import { buildMapView, buildHitsView } from './src/viewmodel.js?v=5';
 import { renderMapPage, renderHitsPage } from './src/render.js?v=2';
-import { renderResultsPage } from './src/results.js?v=2';
-import { renderStatsTable, renderStatButtons } from './src/stats.js?v=2';
+import { renderResultsPage } from './src/results.js?v=3';
+import { renderStatsTable, renderStatButtons } from './src/stats.js?v=4';
 import {
   putBattle, listSummaries, getReport, existingIds, clearAll,
-  storageEstimate, makeSummary, rebuildSummaries,
-} from './src/storage.js?v=2';
+  storageEstimate, makeSummary, rebuildSummaries, BATTLE_MODES,
+} from './src/storage.js?v=4';
 
 const RES_PREFIX = document.documentElement.dataset.resPrefix || '../';
 
@@ -754,12 +765,12 @@ const text = (url) => fetch(url).then((r) => (r.ok ? r.text() : ''));
 const getTanksDb = () => once('tanks', () => text('./tank_db.txt').then(parseTanksDb).catch(() => ({})));
 const getTokens = () => once('tokens', () => text('./assets/tokens.css?v=2').catch(() => ''));
 
-const getMapTemplate = () => once('tpl-map', () => text('./templates/index.html?v=2'));
+const getMapTemplate = () => once('tpl-map', () => text('./templates/index.html?v=4'));
 
 const getMapFileList = () => once('map-files', () => fetch('./maps/index.json')
   .then((r) => (r.ok ? r.json() : null))
   .catch(() => null));
-const getHitsTemplate = () => once('tpl-hits', () => text('./templates/hits.html?v=2'));
+const getHitsTemplate = () => once('tpl-hits', () => text('./templates/hits.html?v=3'));
 
 const mapBuffers = new Map();
 async function loadMapBuffer(mapName) {
@@ -800,13 +811,18 @@ function loadGameXml(path) {
   return gameXmlBuffers.get(path);
 }
 
-const resultOf = (r) => (r.winner_team === 0 ? 'ничья'
-  : r.winner_team === r.creator_team ? 'победа' : 'поражение');
+const resultOf = (r) => (r.incomplete ? 'нет итогов'
+  : r.winner_team === 0 ? 'ничья'
+    : r.winner_team === r.creator_team ? 'победа' : 'поражение');
+
+const modeName = (r) => Object.values(BATTLE_MODES).find((m) => m.key === r.mode)?.name || '';
 
 function winRateNote() {
-  if (!rows.length) return '';
-  const wins = rows.filter((r) => resultOf(r) === 'победа').length;
-  return ` <span class="winrate">Побед: ${Math.round((wins / rows.length) * 100)}%</span>`;
+  // Недописанный реплей не знает победителя и в процент не входит.
+  const finished = rows.filter((r) => !r.incomplete);
+  if (!finished.length) return '';
+  const wins = finished.filter((r) => resultOf(r) === 'победа').length;
+  return ` <span class="winrate">Побед: ${Math.round((wins / finished.length) * 100)}%</span>`;
 }
 
 const mmss = (sec) => `${Math.floor((sec || 0) / 60)}:${String((sec || 0) % 60).padStart(2, '0')}`;
@@ -829,7 +845,7 @@ const COLUMNS = [
     html: (r) => `${r.battle_datetime.slice(0, 10)} <span class="dim">${r.battle_datetime.slice(11, 16)}</span>`,
   },
 
-  { key: 'map_name', title: 'Карта', fit: true, html: (r) => `<span>${r.map_name}</span>` },
+  { key: 'map_name', title: 'Карта', fit: true, tip: modeName, html: (r) => `<span>${r.map_name}</span>` },
   {
 
     key: 'enemy_clan', title: 'Противник', width: '100px',
@@ -839,7 +855,7 @@ const COLUMNS = [
       const href = `https://hemero.ru/ru/ru2026may/personal.php?tag=${encodeURIComponent(tag)}`;
 
       return `<a class="clan-link" href="${href}" target="_blank" rel="noopener" data-tip="Открыть клан на Hemero">${tag}</a>`
-        + (r.creator_personal_clan !== r.creator_clan
+        + (r.creator_clan && r.creator_personal_clan !== r.creator_clan
           ? ' <span class="legion" data-tip="владелец реплея — легионер: играл не за свой клан">*</span>' : '');
     },
   },
@@ -853,8 +869,10 @@ const COLUMNS = [
   },
   {
     key: 'result', title: 'Итог', width: '100px',
-    sort: (r) => ({ поражение: 0, ничья: 1, победа: 2 })[resultOf(r)],
-    tip: (r) => r.finish_reason_name || 'причина окончания неизвестна',
+    sort: (r) => ({ поражение: 0, ничья: 1, 'нет итогов': 1, победа: 2 })[resultOf(r)],
+    tip: (r) => (r.incomplete
+      ? 'реплей записан не до конца — итогов боя в нём нет'
+      : r.finish_reason_name || 'причина окончания неизвестна'),
     html: (r) => {
       const v = resultOf(r);
       const cls = v === 'победа' ? 'win' : v === 'поражение' ? 'lose' : 'draw';
@@ -864,7 +882,7 @@ const COLUMNS = [
   {
 
     key: 'duration_sec', title: 'Время боя', width: '90px',
-    html: (r) => `<span class="score">${mmss(r.duration_sec)}</span>`,
+    html: (r) => (r.incomplete ? '<span class="dim">—</span>' : `<span class="score">${mmss(r.duration_sec)}</span>`),
   },
   { key: 'tank', title: 'Танк', width: '95px', html: (r) => `<span class="tank">${r.tank || '—'}</span>` },
   { key: 'damage_dealt', title: 'Урон', width: '80px', avg: true, html: (r) => n(r.damage_dealt) },
@@ -881,8 +899,9 @@ const COLUMNS = [
   { key: 'xp', title: 'Опыт', width: '80px', avg: true, tip: (r) => `засвечено машин: ${r.spotted}`, html: (r) => n(r.xp) },
   {
     key: 'survived', title: 'Жив', width: '55px', sort: (r) => (r.survived ? 1 : 0),
-    tip: (r) => (r.survived ? 'дожил до конца боя' : 'уничтожен'),
-    html: (r) => (r.survived ? '<span class="ok">✓</span>' : '<span class="no">✗</span>'),
+    tip: (r) => (r.survived ? (r.incomplete ? 'реплей оборвался раньше конца боя' : 'дожил до конца боя') : 'уничтожен'),
+    html: (r) => (!r.survived ? '<span class="no">✗</span>'
+      : r.incomplete ? '<span class="dim">—</span>' : '<span class="ok">✓</span>'),
   },
 ];
 
@@ -918,10 +937,12 @@ function renderBody() {
 
   bodyEl.innerHTML = sorted.map((r) => {
     const cells = COLUMNS.map((c) => {
-      const tip = c.tip ? ` data-tip="${escAttr(c.tip(r))}"` : '';
+      const tipText = c.tip ? c.tip(r) : '';
+      const tip = tipText ? ` data-tip="${escAttr(tipText)}"` : '';
       return `<td class="${c.fit ? 'fit' : ''}"${tip}>${c.html(r)}</td>`;
     }).join('');
-    return `<tr class="${r.off_format ? 'off-format' : ''}" data-id="${encodeURIComponent(r.id)}">${cells}</tr>`;
+    const rowClass = r.off_format ? 'off-format' : r.mode === 'onslaught' ? 'onslaught' : '';
+    return `<tr class="${rowClass}" data-id="${encodeURIComponent(r.id)}">${cells}</tr>`;
   }).join('');
 
   fitTextColumns();
@@ -1032,7 +1053,7 @@ async function processFiles(files) {
   const taken = fresh.length - failures;
 
   const rejected = offFormat
-    ? ` <span class="rejected">Некорректный формата боя: ${offFormat}</span>`
+    ? ` <span class="rejected">Некорректный формат боя: ${offFormat}</span>`
     : '';
   statusEl.innerHTML = `Готово: ${taken} из ${fresh.length} боёв за ${seconds} с`
     + rejected

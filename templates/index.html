@@ -1476,6 +1476,9 @@ canvas:active { cursor: grabbing; }
 
 .dmg-entry__icon.is-fire { color: #ff9a3d; }
 .dmg-entry__icon.is-ram  { color: #ffd166; }
+.dmg-entry__icon.is-artillery { color: #ff7a59; }
+.dmg-entry__icon.is-bomber    { color: #c9a0ff; }
+.dmg-entry__icon.is-mine      { color: #ffb347; }
 
 .dmg-entry__tick {
     margin-left: 2px;
@@ -1960,14 +1963,26 @@ function isRealCaptureEntry(entry) {
 }
 const REAL_CAPTURE_ENTRIES = CAPTURE_TIMELINE.filter(isRealCaptureEntry);
 
+// Владелец базы приходит в прогрессе захвата. В режимах со штурмом обе базы
+// у первой команды; в стандартном бою у каждой команды своя база, и номер у
+// обеих первый — поэтому база узнаётся по паре «команда, номер».
 const BASE_OWNER_TEAM = 1;
-const ATTACKING_TEAM = BASE_OWNER_TEAM === 1 ? 2 : 1;
-const WE_ARE_ATTACKING = isAlly(ATTACKING_TEAM);
 const CAPTURE_LEAD_IN = 2.5;
 
-const CAPTURED_BASE_INDICES = [...new Set(REAL_CAPTURE_ENTRIES.map(c => c.base_index))];
-const HAS_ANY_CAPTURE = CAPTURED_BASE_INDICES.length > 0;
-const IS_SINGLE_BASE = CAPTURED_BASE_INDICES.length === 1;
+const baseOwnerOf = entry => entry.team ?? BASE_OWNER_TEAM;
+const baseKeyOf = entry => `${baseOwnerOf(entry)}:${entry.base_index}`;
+const HAS_TEAM_BASES = new Set(CAPTURE_TIMELINE.map(baseOwnerOf)).size > 1;
+
+const CAPTURED_BASES = [...new Map(REAL_CAPTURE_ENTRIES.map(c => [baseKeyOf(c), {
+    key: baseKeyOf(c), team: baseOwnerOf(c), index: c.base_index,
+}])).values()].sort((a, b) => a.team - b.team || a.index - b.index);
+const HAS_ANY_CAPTURE = CAPTURED_BASES.length > 0;
+const IS_SINGLE_BASE = CAPTURED_BASES.length === 1;
+
+function baseLabel(base) {
+    if (!HAS_TEAM_BASES) return `БАЗА ${base.index}`;
+    return isAlly(base.team) ? 'НАША БАЗА' : 'БАЗА ПРОТИВНИКА';
+}
 
 const FIRST_CAPTURE_TIME = HAS_ANY_CAPTURE ? REAL_CAPTURE_ENTRIES[0].time : Infinity;
 const CAPTURE_REVEAL_TIME = Math.max(0, FIRST_CAPTURE_TIME - CAPTURE_LEAD_IN);
@@ -1993,16 +2008,15 @@ function formatCaptureClock(seconds) {
 function buildCaptureLines() {
     if (!captureIndicatorEl || !HAS_ANY_CAPTURE) return;
 
-    const sortedIndices = [...CAPTURED_BASE_INDICES].sort((a, b) => a - b);
     const sizeClass = IS_SINGLE_BASE ? 'size-lg' : 'size-sm';
 
     captureIndicatorEl.classList.add(IS_SINGLE_BASE ? 'lines-1' : 'lines-2');
 
-    sortedIndices.forEach(baseIndex => {
+    CAPTURED_BASES.forEach(base => {
         const line = document.createElement('div');
         line.className = `capture-line ${sizeClass}`;
         line.innerHTML = `
-            <span class="capture-line__name">БАЗА ${baseIndex}</span>
+            <span class="capture-line__name">${baseLabel(base)}</span>
             <div class="capture-line__bar">
                 <div class="capture-line__bar-fill" data-role="fill"></div>
             </div>
@@ -2015,7 +2029,8 @@ function buildCaptureLines() {
         `;
 
         captureIndicatorEl.insertBefore(line, finishOverlayEl || null);
-        captureLineEls.set(baseIndex, {
+        captureLineEls.set(base.key, {
+            team: base.team,
             root: line,
             percentEl: line.querySelector('[data-role="percent"]'),
             timerTextEl: line.querySelector('[data-role="timer-text"]'),
@@ -2038,7 +2053,7 @@ function showWinnerTrophy() {
 }
 requestAnimationFrame(showWinnerTrophy);
 
-function captureAtTimeForBase(t, baseIndex) {
+function captureAtTimeForBase(t, baseKey) {
     const list = CAPTURE_TIMELINE;
     let lo = 0, hi = list.length - 1;
     while (lo <= hi) {
@@ -2048,7 +2063,7 @@ function captureAtTimeForBase(t, baseIndex) {
 
     let result = null;
     for (let i = lo - 1; i >= 0; i--) {
-        if (list[i].base_index === baseIndex) { result = list[i]; break; }
+        if (baseKeyOf(list[i]) === baseKey) { result = list[i]; break; }
         if (t - list[i].time > 5) break;
     }
     if (result && (t - result.time) > 2.5) return null;
@@ -2146,8 +2161,8 @@ function updateCaptureIndicator() {
     }
     if (!captureRevealed) return;
 
-    captureLineEls.forEach((els, baseIndex) => {
-        const cap = captureAtTimeForBase(currentTime, baseIndex);
+    captureLineEls.forEach((els, baseKey) => {
+        const cap = captureAtTimeForBase(currentTime, baseKey);
 
         els.fillEl.classList.remove('capturing-us', 'capturing-enemy');
         els.percentEl.classList.remove('capturing-us', 'capturing-enemy');
@@ -2160,7 +2175,8 @@ function updateCaptureIndicator() {
             return;
         }
 
-        const cls = WE_ARE_ATTACKING ? 'capturing-us' : 'capturing-enemy';
+        // Свою базу захватывает противник, базу противника — мы.
+        const cls = isAlly(els.team) ? 'capturing-enemy' : 'capturing-us';
         const pct = Math.max(0, Math.min(100, cap.percent));
 
         els.fillEl.style.width = `${pct}%`;
@@ -2533,7 +2549,12 @@ function updateTime() {
 let lastRenderedEventIndex = 0;
 
 // Причина урона из события изменения прочности: касания и столкновения считаем тараном.
-const REASON_KIND = { 0: 'shot', 1: 'fire', 2: 'ram', 3: 'ram', 7: 'ram' };
+// Причины урона (ATTACK_REASON): 9, 10, 13 — артудар, 11, 14 — авиаудар,
+// 15 — минное поле. Последние три — резервы Натиска.
+const REASON_KIND = {
+    0: 'shot', 1: 'fire', 2: 'ram', 3: 'ram', 7: 'ram',
+    9: 'artillery', 10: 'artillery', 13: 'artillery', 11: 'bomber', 14: 'bomber', 15: 'mine',
+};
 const FIRE_MERGE_SEC = 12;
 
 const REASON_ICON_PATHS = {
@@ -2544,6 +2565,10 @@ const REASON_ICON_PATHS = {
     ram: '<path d="M1.6 8h3.4M11 8h3.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>'
         + '<path d="M5.6 4.9 8.2 8l-2.6 3.1M10.4 4.9 7.8 8l2.6 3.1" stroke="currentColor" stroke-width="1.6"'
         + ' fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+    artillery: '<path d="M8 1.2 9.4 5l3.9-1.5L11.6 7.3l3.2 1.9-3.9.9.6 4.1L8.6 11.8 6.3 14.9l-.4-4.1-4.1.1 2.7-3.1L1.4 5.6l4 .4z" fill="currentColor"/>',
+    bomber: '<path d="M8 1.3c.6 0 1 .6 1 1.4v3.4l5.6 3.2v1.5L9 9.3v3l1.8 1.3v1.1L8 14l-2.8.7v-1.1L7 12.3v-3l-5.6 1.5V9.3L7 6.1V2.7c0-.8.4-1.4 1-1.4z" fill="currentColor"/>',
+    mine: '<circle cx="8" cy="9" r="4.2" fill="currentColor"/>'
+        + '<path d="M8 1.6v2.2M3.2 3.8l1.5 1.5M12.8 3.8l-1.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>',
 };
 
 const CRIT_ICON_PATH = '<path d="M8 5.7a2.3 2.3 0 1 0 0 4.6 2.3 2.3 0 0 0 0-4.6zm5.5 2.3c0-.35-.03-.7-.09-1.03'

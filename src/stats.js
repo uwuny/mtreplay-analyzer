@@ -1,3 +1,4 @@
+import { BATTLE_MODES } from './modes.js?v=1';
 import { STAT_ICON_MARKUP } from './stat_icons.js?v=2';
 
 export const STAT_TYPES = [
@@ -116,7 +117,12 @@ function playerCell(type, cell) {
   return `<td>${tank}<br>${value}</td>`;
 }
 
-export function renderStatsTable(summaries, type, avgPosition = 'left') {
+export function renderStatsTable(allSummaries, type, avgPosition = 'left') {
+  // В неполном реплее нет итоговой статистики: нули испортили бы средние.
+  // Статистика ведётся по составу клана, поэтому случайные бои с их
+  // случайными союзниками в неё тоже не входят.
+  const summaries = allSummaries.filter((s) => !s.incomplete
+    && BATTLE_MODES[s.battle_type]?.clanTeams !== false);
   if (!summaries.length) return '<div class="stats-empty">Нет загруженных боёв</div>';
 
   const grid = buildGrid(summaries, type);
