@@ -27,7 +27,9 @@
     --color-text-muted: var(--text-secondary);
     --color-text-faint: var(--text-dim);
     --table-sticky-bg: #1b1c20;
-    --onslaught-rgb: 72 146 255;
+    --glow-green-rgb: 69 214 111;
+    --glow-blue-rgb:  72 146 255;
+    --glow-red-rgb:   255 84 96;
 }
 
 html {
@@ -224,24 +226,38 @@ button.spotlight svg { width: 15px; height: 15px; flex-shrink: 0; }
 #grid tbody tr:last-child td:first-child { border-bottom-left-radius:  calc(var(--radius-xl) - 1px); }
 #grid tbody tr:last-child td:last-child  { border-bottom-right-radius: calc(var(--radius-xl) - 1px); }
 
-#grid tbody tr.off-format td {
-    background: rgb(var(--danger-rgb) / 9%);
-    box-shadow: inset 0 0 22px -8px rgb(var(--danger-rgb) / 60%);
-    border-radius: 0;
-}
-#grid tbody tr.off-format:last-child td:first-child,
-#grid tbody tr.off-format:last-child td:last-child { border-radius: 0; }
-#grid tbody tr.off-format:hover td { background: rgb(var(--danger-rgb) / 15%); }
+/*
+ * Неоновая подсветка строки одним блоком. Свечение у ячеек только по
+ * вертикали — такие градиенты и линии сверху и снизу стыкуются без швов,
+ * а боковые края и скругления есть лишь у крайних ячеек.
+ * Зелёная — Вылазки, синяя — Натиск, красная — неполный реплей или не тот формат.
+ */
+#grid tbody tr.glow-green { --glow-rgb: var(--glow-green-rgb); }
+#grid tbody tr.glow-blue  { --glow-rgb: var(--glow-blue-rgb); }
+#grid tbody tr.glow-red   { --glow-rgb: var(--glow-red-rgb); }
 
-/* Натиск: тусклая синяя неоновая подсветка строки. */
-#grid tbody tr.onslaught td {
-    background: rgb(var(--onslaught-rgb) / 7%);
-    box-shadow: inset 0 0 22px -8px rgb(var(--onslaught-rgb) / 55%);
+#grid tbody tr.glow td {
+    --glow-edge: rgb(var(--glow-rgb) / 55%);
+    --glow-vertical: linear-gradient(180deg,
+        rgb(var(--glow-rgb) / 20%), transparent 40%, transparent 60%, rgb(var(--glow-rgb) / 20%));
+    background: var(--glow-vertical), rgb(var(--glow-rgb) / 6%);
+    box-shadow: inset 0 1px 0 var(--glow-edge), inset 0 -1px 0 var(--glow-edge);
+    border-bottom-color: transparent;
     border-radius: 0;
 }
-#grid tbody tr.onslaught:last-child td:first-child,
-#grid tbody tr.onslaught:last-child td:last-child { border-radius: 0; }
-#grid tbody tr.onslaught:hover td { background: rgb(var(--onslaught-rgb) / 13%); }
+#grid tbody tr.glow td:first-child {
+    background: linear-gradient(90deg, rgb(var(--glow-rgb) / 20%), transparent 28px),
+        var(--glow-vertical), rgb(var(--glow-rgb) / 6%);
+    box-shadow: inset 1px 0 0 var(--glow-edge), inset 0 1px 0 var(--glow-edge), inset 0 -1px 0 var(--glow-edge);
+    border-radius: 12px 0 0 12px;
+}
+#grid tbody tr.glow td:last-child {
+    background: linear-gradient(270deg, rgb(var(--glow-rgb) / 20%), transparent 28px),
+        var(--glow-vertical), rgb(var(--glow-rgb) / 6%);
+    box-shadow: inset -1px 0 0 var(--glow-edge), inset 0 1px 0 var(--glow-edge), inset 0 -1px 0 var(--glow-edge);
+    border-radius: 0 12px 12px 0;
+}
+#grid tbody tr.glow:hover td { background-color: rgb(var(--glow-rgb) / 13%); }
 
 .clan-link {
     font-family: var(--font-mono); font-weight: 600;
@@ -744,10 +760,10 @@ button.spotlight svg { width: 15px; height: 15px; flex-shrink: 0; }
 
 <script type="module">
 import { buildReport, parseTanksDb } from './src/report.js?v=6';
-import { buildMapView, buildHitsView } from './src/viewmodel.js?v=5';
-import { renderMapPage, renderHitsPage } from './src/render.js?v=2';
+import { buildMapView, buildHitsView } from './src/viewmodel.js?v=6';
+import { renderMapPage, renderHitsPage } from './src/render.js?v=3';
 import { renderResultsPage } from './src/results.js?v=3';
-import { renderStatsTable, renderStatButtons } from './src/stats.js?v=4';
+import { renderStatsTable, renderStatButtons } from './src/stats.js?v=5';
 import {
   putBattle, listSummaries, getReport, existingIds, clearAll,
   storageEstimate, makeSummary, rebuildSummaries, BATTLE_MODES,
@@ -765,7 +781,7 @@ const text = (url) => fetch(url).then((r) => (r.ok ? r.text() : ''));
 const getTanksDb = () => once('tanks', () => text('./tank_db.txt').then(parseTanksDb).catch(() => ({})));
 const getTokens = () => once('tokens', () => text('./assets/tokens.css?v=2').catch(() => ''));
 
-const getMapTemplate = () => once('tpl-map', () => text('./templates/index.html?v=4'));
+const getMapTemplate = () => once('tpl-map', () => text('./templates/index.html?v=5'));
 
 const getMapFileList = () => once('map-files', () => fetch('./maps/index.json')
   .then((r) => (r.ok ? r.json() : null))
@@ -941,7 +957,9 @@ function renderBody() {
       const tip = tipText ? ` data-tip="${escAttr(tipText)}"` : '';
       return `<td class="${c.fit ? 'fit' : ''}"${tip}>${c.html(r)}</td>`;
     }).join('');
-    const rowClass = r.off_format ? 'off-format' : r.mode === 'onslaught' ? 'onslaught' : '';
+    const rowClass = r.incomplete || r.off_format ? 'glow glow-red'
+      : r.mode === 'sortie' ? 'glow glow-green'
+        : r.mode === 'onslaught' ? 'glow glow-blue' : '';
     return `<tr class="${rowClass}" data-id="${encodeURIComponent(r.id)}">${cells}</tr>`;
   }).join('');
 
